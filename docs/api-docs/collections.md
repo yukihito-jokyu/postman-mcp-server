@@ -9,6 +9,7 @@
     - 200: `#/components/responses/getCollections`
     - 401: `#/components/responses/common401Error`
     - 500: `#/components/responses/common500ErrorServerError`
+
 - Get a specific collection (`GET /collections/{collectionId}`)
   - Optional parameters: access_key
   - Parameters:
@@ -19,6 +20,7 @@
     - 400: `#/components/responses/collection400ErrorCollectionNotFound`
     - 401: `#/components/responses/common401Error`
     - 500: `#/components/responses/common500ErrorServerError`
+
 - Create collection (`POST /collections`)
   - Supports Postman Collection v2.1.0 format
   - Note: Creates in "My Workspace" if workspace not specified
@@ -29,6 +31,7 @@
     - 400: `#/components/responses/collection400ErrorInstanceFound`
     - 401: `#/components/responses/common401Error`
     - 500: `#/components/responses/common500ErrorServerError`
+
 - Update collection (`PUT /collections/{collectionId}`)
   - Full collection replacement
   - Note: Maximum collection size: 20 MB
@@ -40,15 +43,13 @@
     - 403: `#/components/responses/common403Error`
     - 404: `#/components/responses/instanceNotFoundCollection`
     - 500: `#/components/responses/common500ErrorServerError`
+
 - Delete collection (`DELETE /collections/{collectionId}`)
   - Responses:
     - 200: `#/components/responses/deleteCollection`
     - 401: `#/components/responses/common401Error`
     - 404: `#/components/responses/instanceNotFoundCollection`
     - 500: `#/components/responses/common500ErrorServerError`
-- Create collection folder (`POST /collections/{collectionId}/folders`)
-- Create collection request (`POST /collections/{collectionId}/requests`)
-- Create collection response (`POST /collections/{collectionId}/responses`)
 
 #### Collection Items Management
 - Get folder (`GET /collections/{collectionId}/folders/{folderId}`)
@@ -61,6 +62,7 @@
     - 401: `#/components/responses/collectionFolder401Error`
     - 404: `#/components/responses/collectionFolder404Error`
     - 500: `#/components/responses/common500Error`
+
 - Update folder (`PUT /collections/{collectionId}/folders/{folderId}`)
   - Note: Acts like PATCH, only updates provided values
   - Responses:
@@ -69,12 +71,14 @@
     - 401: `#/components/responses/collectionFolder401Error`
     - 404: `#/components/responses/collectionFolder404Error`
     - 500: `#/components/responses/common500Error`
+
 - Delete folder (`DELETE /collections/{collectionId}/folders/{folderId}`)
   - Responses:
     - 200: `#/components/responses/deleteCollectionFolder`
     - 401: `#/components/responses/collectionFolder401Error`
     - 404: `#/components/responses/collectionFolder404Error`
     - 500: `#/components/responses/common500Error`
+
 - Create folder (`POST /collections/{collectionId}/folders`)
   - Note: Empty name creates folder with blank name
   - Responses:
@@ -82,12 +86,80 @@
     - 400: `#/components/responses/collectionFolder400Error`
     - 401: `#/components/responses/collectionFolder401Error`
     - 500: `#/components/responses/common500Error`
+
 - Get request (`GET /collections/{collectionId}/requests/{requestId}`)
+  - Parameters:
+    - collectionItemsIdQuery
+    - collectionItemsUidFormatQuery
+    - collectionItemsPopulateQuery
+  - Responses:
+    - 200: `#/components/responses/getCollectionRequest`
+    - 401: `#/components/responses/collectionRequest401Error`
+    - 404: `#/components/responses/collectionRequest404Error`
+    - 500: `#/components/responses/common500Error`
+
 - Update request (`PUT /collections/{collectionId}/requests/{requestId}`)
+  - Note: Cannot change request folder
+  - Responses:
+    - 200: `#/components/responses/updateCollectionRequest`
+    - 400: `#/components/responses/collectionRequest400Error`
+    - 401: `#/components/responses/collectionRequest401Error`
+    - 404: `#/components/responses/collectionRequest404Error`
+    - 500: `#/components/responses/common500Error`
+
 - Delete request (`DELETE /collections/{collectionId}/requests/{requestId}`)
+  - Responses:
+    - 200: `#/components/responses/deleteCollectionRequest`
+    - 401: `#/components/responses/collectionRequest401Error`
+    - 404: `#/components/responses/collectionRequest404Error`
+    - 500: `#/components/responses/common500Error`
+
+- Create request (`POST /collections/{collectionId}/requests`)
+  - Note: Empty name creates request with blank name
+  - Parameters:
+    - collectionRequestFolderIdQuery
+  - Responses:
+    - 200: `#/components/responses/createCollectionRequest`
+    - 400: `#/components/responses/collectionRequest400Error`
+    - 401: `#/components/responses/collectionRequest401Error`
+    - 500: `#/components/responses/common500Error`
+
 - Get response (`GET /collections/{collectionId}/responses/{responseId}`)
+  - Parameters:
+    - collectionItemsIdQuery
+    - collectionItemsUidFormatQuery
+    - collectionItemsPopulateQuery
+  - Responses:
+    - 200: `#/components/responses/getCollectionResponse`
+    - 401: `#/components/responses/collectionResponse401Error`
+    - 404: `#/components/responses/collectionResponse404Error`
+    - 500: `#/components/responses/common500Error`
+
 - Update response (`PUT /collections/{collectionId}/responses/{responseId}`)
+  - Note: Acts like PATCH, only updates provided values
+  - Responses:
+    - 200: `#/components/responses/updateCollectionResponse`
+    - 400: `#/components/responses/collectionResponse400Error`
+    - 401: `#/components/responses/collectionResponse401Error`
+    - 404: `#/components/responses/collectionResponse404Error`
+    - 500: `#/components/responses/common500Error`
+
 - Delete response (`DELETE /collections/{collectionId}/responses/{responseId}`)
+  - Responses:
+    - 200: `#/components/responses/deleteCollectionResponse`
+    - 401: `#/components/responses/collectionResponse401Error`
+    - 404: `#/components/responses/collectionResponse404Error`
+    - 500: `#/components/responses/common500Error`
+
+- Create response (`POST /collections/{collectionId}/responses`)
+  - Note: Empty name creates response with blank name
+  - Parameters:
+    - collectionResponseParentRequestId
+  - Responses:
+    - 200: `#/components/responses/createCollectionResponse`
+    - 400: `#/components/responses/collectionResponse400Error`
+    - 401: `#/components/responses/collectionResponse401Error`
+    - 500: `#/components/responses/common500Error`
 
 #### Collection Transfers
 - Transfer folders (`POST /collection-folders-transfers`)
@@ -96,12 +168,14 @@
     - 200: `#/components/responses/transferCollectionItems200Error`
     - 400: `#/components/responses/transferCollectionItems400Error`
     - 500: `#/components/responses/common500Error`
+
 - Transfer requests (`POST /collection-requests-transfers`)
   - Copy or move requests between collections/folders
   - Responses:
     - 200: `#/components/responses/transferCollectionItems200Error`
     - 400: `#/components/responses/transferCollectionItems400Error`
     - 500: `#/components/responses/common500Error`
+
 - Transfer responses (`POST /collection-responses-transfers`)
   - Copy or move responses between requests
   - Responses:
@@ -118,6 +192,7 @@
     - 401: `#/components/responses/common401Error`
     - 404: `#/components/responses/instanceNotFoundCollection`
     - 500: `#/components/responses/common500ErrorServerError`
+
 - Get collection forks (`GET /collections/{collectionId}/forks`)
   - Parameters:
     - cursor
@@ -128,6 +203,7 @@
     - 400: `#/components/responses/forkCollection400ErrorNoForks`
     - 404: `#/components/responses/fork404Error`
     - 500: `#/components/responses/common500Error`
+
 - Get all forked collections (`GET /collections/collection-forks`)
   - Parameters:
     - cursor
@@ -138,6 +214,7 @@
     - 400: `#/components/responses/fork400ErrorNoUserFound`
     - 401: `#/components/responses/common401Error`
     - 500: `#/components/responses/common500Error`
+
 - Merge or pull changes (`PUT /collection-merges`)
   - Asynchronous operation with task status tracking
   - Responses:
@@ -146,6 +223,7 @@
     - 401: `#/components/responses/common401Error`
     - 403: `#/components/responses/collectionForks403ErrorForbidden`
     - 500: `#/components/responses/common500Error`
+
 - Get merge/pull task status (`GET /collections-merges-tasks/{taskId}`)
   - Note: Task status available for 24 hours after completion
   - Parameters:
@@ -156,12 +234,14 @@
     - 403: `#/components/responses/collectionForks403ErrorForbidden`
     - 404: `#/components/responses/collectionForks404ErrorTaskNotFound`
     - 500: `#/components/responses/common500Error`
+
 - Pull changes (`PUT /collections/{collectionId}/pulls`)
   - Responses:
     - 200: `#/components/responses/pullCollectionChanges`
     - 400: `#/components/responses/forkCollection400ErrorBadId`
     - 404: `#/components/responses/instanceNotFoundCollection`
     - 500: `#/components/responses/common500Error`
+
 - Get source collection status (`GET /collections/{collectionId}/source-status`)
   - Note: May take a few minutes to return updated status
   - Responses:
@@ -178,6 +258,7 @@
     - 403: `#/components/responses/comment403Error`
     - 404: `#/components/responses/comment404Error`
     - 500: `#/components/responses/comment500Error`
+
 - Create collection comment (`POST /collections/{collectionId}/comments`)
   - Note: Maximum 10,000 characters
   - Responses:
@@ -186,6 +267,7 @@
     - 403: `#/components/responses/comment403Error`
     - 404: `#/components/responses/comment404Error`
     - 500: `#/components/responses/comment500Error`
+
 - Update collection comment (`PUT /collections/{collectionId}/comments/{commentId}`)
   - Note: Maximum 10,000 characters
   - Responses:
@@ -194,6 +276,7 @@
     - 403: `#/components/responses/comment403Error`
     - 404: `#/components/responses/comment404Error`
     - 500: `#/components/responses/comment500Error`
+
 - Delete collection comment (`DELETE /collections/{collectionId}/comments/{commentId}`)
   - Note: Deleting first comment deletes entire thread
   - Responses:
@@ -229,27 +312,6 @@
 - Create collection comment (`POST /collections/{collectionId}/comments`)
 - Update collection comment (`PUT /collections/{collectionId}/comments/{commentId}`)
 - Delete collection comment (`DELETE /collections/{collectionId}/comments/{commentId}`)
-
-#### Collection Access Keys
-- Get collection access keys (`GET /collection-access-keys`)
-  - Lists personal and team collection access keys
-  - Includes expiration and last used information
-  - Parameters:
-    - collectionUidQuery
-    - cursor
-  - Responses:
-    - 200: `#/components/responses/getCollectionAccessKeys`
-    - 400: `#/components/responses/common400ErrorInvalidCursor`
-    - 401: `#/components/responses/common401Error`
-    - 403: `#/components/responses/common403ErrorForbidden`
-    - 500: `#/components/responses/common500ErrorSomethingWrong`
-- Delete collection access key (`DELETE /collection-access-keys/{keyId}`)
-  - Responses:
-    - 204: No Content
-    - 401: `#/components/responses/common401Error`
-    - 403: `#/components/responses/common403ErrorForbidden`
-    - 404: `#/components/responses/cakNotFound404Error`
-    - 500: `#/components/responses/common500ErrorSomethingWrong`
 
 ### Key Features
 - Collection CRUD operations

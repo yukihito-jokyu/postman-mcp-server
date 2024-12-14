@@ -3,29 +3,200 @@
 ### Implemented Operations
 - Get all APIs (`GET /apis`)
   - Query Parameters: workspace, createdBy, cursor, description, limit
+  - Responses:
+    - 200: `#/components/responses/getApis`
+    - 401: `#/components/responses/common401Error`
+    - 403: `#/components/responses/featureUnavailable403Error`
+    - 404: `#/components/responses/api404ErrorNotFound`
+    - 422: `#/components/responses/v9Unsupported`
+    - 500: `#/components/responses/common500Error`
 - Create API (`POST /apis`)
+  - Responses:
+    - 200: `#/components/responses/createApi`
+    - 400: `#/components/responses/workspace400ErrorParamMissing`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: Multiple possible responses:
+      - `#/components/schemas/api403ErrorForbidden`
+      - `#/components/schemas/api403ErrorLimitReached`
+      - `#/components/schemas/featureUnavailable403Error`
+    - 404: `#/components/responses/workspace404Error`
+    - 500: `#/components/responses/common500Error`
 - Get specific API (`GET /apis/{apiId}`)
+  - Responses:
+    - 200: `#/components/responses/getApi`
+    - 400: `#/components/responses/v10HeaderMissing`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: `#/components/responses/featureUnavailable403Error`
+    - 404: `#/components/responses/api404ErrorNotFound`
+    - 422: `#/components/responses/v9Unsupported`
+    - 500: `#/components/responses/common500Error`
 - Update API (`PUT /apis/{apiId}`)
+  - Responses:
+    - 200: `#/components/responses/updateApi`
+    - 400: `#/components/responses/v10HeaderMissing`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: `#/components/responses/api403ErrorAndFeatureUnavailable`
+    - 404: `#/components/responses/api404ErrorNotFound`
+    - 422: `#/components/responses/v9Unsupported`
+    - 500: `#/components/responses/common500Error`
 - Delete API (`DELETE /apis/{apiId}`)
+  - Responses:
+    - 204: No Content
+    - 400: `#/components/responses/v10HeaderMissing`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: `#/components/responses/api403ErrorAndFeatureUnavailable`
+    - 404: `#/components/responses/api404ErrorNotFound`
+    - 422: `#/components/responses/v9Unsupported`
+    - 500: `#/components/responses/common500Error`
 
 #### API Collections
 - Add collection (`POST /apis/{apiId}/collections`)
+  - Responses:
+    - 200: `#/components/responses/addApiCollection`
+    - 400: `#/components/responses/v10HeaderMissing`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: Multiple possible responses:
+      - `#/components/schemas/apiSchema403ErrorForbidden`
+      - `#/components/schemas/featureUnavailable403Error`
+    - 404: `#/components/responses/api404ErrorNotFound`
+    - 500: `#/components/responses/common500Error`
 - Get collection (`GET /apis/{apiId}/collections/{collectionId}`)
+  - Note: Cannot be used for Git-linked API collections
+  - Responses:
+    - 200: `#/components/responses/getApiCollection`
+    - 400: Multiple possible responses:
+      - `#/components/schemas/api400ErrorVersionIdMissing`
+      - `#/components/schemas/v10HeaderMissing`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: `#/components/responses/api403ErrorAndFeatureUnavailable`
+    - 404: `#/components/responses/apiCollection404ErrorNotFound`
+    - 422: `#/components/responses/gitLinkedApi422Error`
+    - 500: `#/components/responses/common500Error`
 - Sync collection with schema (`PUT /apis/{apiId}/collections/{collectionId}/sync-with-schema-tasks`)
+  - Note: Only supports OpenAPI 3 schema type
+  - Responses:
+    - 202: `#/components/responses/syncCollectionWithSchema`
+    - 400: Multiple possible responses:
+      - `#/components/schemas/apiCollection400InvalidParam`
+      - `#/components/schemas/v10HeaderMissing`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: Multiple possible responses:
+      - `#/components/schemas/apiSchema403ErrorForbidden`
+      - `#/components/schemas/featureUnavailable403Error`
+    - 404: `#/components/responses/apiSchema404ErrorNotFound`
+    - 422: `#/components/responses/apiSchema422ErrorActionNotAllowed`
+    - 500: `#/components/responses/common500Error`
 
 #### API Schemas
 - Create schema (`POST /apis/{apiId}/schemas`)
+  - Responses:
+    - 200: `#/components/responses/createApiSchema`
+    - 400: Multiple possible responses:
+      - `#/components/schemas/apiSchema400ErrorInvalidParams`
+      - `#/components/schemas/v10HeaderMissing`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: Multiple possible responses:
+      - `#/components/schemas/apiSchema403ErrorForbidden`
+      - `#/components/schemas/featureUnavailable403Error`
+    - 404: `#/components/responses/api404ErrorInstanceNotFound`
+    - 422: `#/components/responses/gitLinkedApi422Error`
+    - 500: `#/components/responses/common500Error`
 - Get schema (`GET /apis/{apiId}/schemas/{schemaId}`)
+  - Responses:
+    - 200: `#/components/responses/getApiSchema`
+    - 400: Multiple possible responses:
+      - `#/components/schemas/apiSchema400ErrorNotLinked`
+      - `#/components/schemas/v10HeaderMissing`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: `#/components/responses/api403ErrorAndFeatureUnavailable`
+    - 404: `#/components/responses/api404ErrorInstanceNotFound`
+    - 422: `#/components/responses/gitLinkedApi422Error`
+    - 500: `#/components/responses/common500Error`
 - Get schema files (`GET /apis/{apiId}/schemas/{schemaId}/files`)
+  - Responses:
+    - 200: `#/components/responses/getApiSchemaFiles`
+    - 400: Multiple possible responses:
+      - `#/components/schemas/apiSchema400ErrorNotLinked`
+      - `#/components/schemas/v10HeaderMissing`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: `#/components/responses/featureUnavailable403Error`
+    - 404: `#/components/responses/api404ErrorInstanceNotFound`
+    - 422: `#/components/responses/gitLinkedApi422Error`
+    - 500: `#/components/responses/common500Error`
 - Get schema file contents (`GET /apis/{apiId}/schemas/{schemaId}/files/{file-path}`)
+  - Responses:
+    - 200: `#/components/responses/getApiSchemaFileContents`
+    - 400: Multiple possible responses:
+      - `#/components/schemas/apiSchema400ErrorNotLinked`
+      - `#/components/schemas/v10HeaderMissing`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: `#/components/responses/featureUnavailable403Error`
+    - 404: `#/components/responses/api404ErrorInstanceNotFound`
+    - 422: `#/components/responses/gitLinkedApi422Error`
+    - 500: `#/components/responses/common500Error`
 - Create/update schema file (`PUT /apis/{apiId}/schemas/{schemaId}/files/{file-path}`)
+  - Responses:
+    - 200: `#/components/responses/createUpdateApiSchemaFile`
+    - 400: Multiple possible responses:
+      - `#/components/schemas/apiSchema400ErrorNotLinked`
+      - `#/components/schemas/v10HeaderMissing`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: Multiple possible responses:
+      - `#/components/schemas/apiSchema403ErrorForbidden`
+      - `#/components/schemas/featureUnavailable403Error`
+    - 404: `#/components/responses/apiSchema404ErrorNotFound`
+    - 422: `#/components/responses/gitLinkedApi422Error`
+    - 500: `#/components/responses/common500Error`
 - Delete schema file (`DELETE /apis/{apiId}/schemas/{schemaId}/files/{file-path}`)
+  - Responses:
+    - 204: Deleted
+    - 400: Multiple possible responses:
+      - `#/components/schemas/apiSchema400ErrorNotLinked`
+      - `#/components/schemas/v10HeaderMissing`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: Multiple possible responses:
+      - `#/components/schemas/apiSchema403ErrorForbidden`
+      - `#/components/schemas/featureUnavailable403Error`
+    - 404: `#/components/responses/api404ErrorInstanceNotFound`
+    - 422: `#/components/responses/gitLinkedApi422Error`
+    - 500: `#/components/responses/common500Error`
 
 #### API Comments
 - Get API comments (`GET /apis/{apiId}/comments`)
+  - Responses:
+    - 200: `#/components/responses/commentGet`
+    - 400: `#/components/responses/v10HeaderMissing`
+    - 401: `#/components/responses/comment401Error`
+    - 403: `#/components/responses/comment403ErrorAndFeatureUnavailable`
+    - 404: `#/components/responses/comment404Error`
+    - 500: `#/components/responses/comment500Error`
 - Create API comment (`POST /apis/{apiId}/comments`)
+  - Note: Maximum 10,000 characters
+  - Responses:
+    - 201: `#/components/responses/commentCreated`
+    - 400: `#/components/responses/v10HeaderMissing`
+    - 401: `#/components/responses/comment401Error`
+    - 403: `#/components/responses/comment403ErrorAndFeatureUnavailable`
+    - 404: `#/components/responses/comment404Error`
+    - 500: `#/components/responses/comment500Error`
 - Update API comment (`PUT /apis/{apiId}/comments/{commentId}`)
+  - Note: Maximum 10,000 characters
+  - Responses:
+    - 200: `#/components/responses/commentUpdated`
+    - 400: `#/components/responses/v10HeaderMissing`
+    - 401: `#/components/responses/comment401Error`
+    - 403: `#/components/responses/comment403ErrorAndFeatureUnavailable`
+    - 404: `#/components/responses/comment404Error`
+    - 500: `#/components/responses/comment500Error`
 - Delete API comment (`DELETE /apis/{apiId}/comments/{commentId}`)
+  - Note: Deleting first comment deletes entire thread
+  - Responses:
+    - 204: No Content
+    - 400: `#/components/responses/v10HeaderMissing`
+    - 401: `#/components/responses/comment401Error`
+    - 403: `#/components/responses/comment403ErrorAndFeatureUnavailable`
+    - 404: `#/components/responses/comment404Error`
+    - 500: `#/components/responses/comment500Error`
 
 ### Key Features
 - API definition management
