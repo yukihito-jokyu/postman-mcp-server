@@ -1,6 +1,6 @@
 # postman-api-server MCP Server
 
-an MCP server for Postman API
+An MCP server for Postman API
 
 This is a TypeScript-based MCP server that implements a simple notes system. It demonstrates core MCP concepts by providing:
 
