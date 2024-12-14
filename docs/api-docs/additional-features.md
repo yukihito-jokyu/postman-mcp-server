@@ -16,6 +16,7 @@
     - `#/components/parameters/limitDefault1000`
     - `#/components/parameters/panParentFolderId`
     - `#/components/parameters/elementTypeQuery`
+  - Note: limit/offset applied separately to elements and folders
   - Responses:
     - 200: `#/components/responses/getPanElementsAndFolders`
     - 401: `#/components/responses/common401Error`
@@ -24,6 +25,7 @@
 
 - Add element or folder (`POST /network/private`)
   - Note: Only one element object type per call
+  - Request Body: `#/components/requestBodies/postPanElementOrFolder`
   - Responses:
     - 201: `#/components/responses/postPanElementOrFolder`
     - 401: `#/components/responses/common401Error`
@@ -36,6 +38,7 @@
     - `#/components/parameters/elementId` (required)
     - `#/components/parameters/elementType` (required)
   - Note: Only one element object type per call
+  - Request Body: `#/components/requestBodies/updatePanElementOrFolder`
   - Responses:
     - 200: `#/components/responses/updatePanElementOrFolder`
     - 401: `#/components/responses/common401Error`
@@ -78,6 +81,7 @@
 - Respond to element add request (`PUT /network/private/network-entity/request/{requestId}`)
   - Parameters:
     - `#/components/parameters/panRequestId` (required)
+  - Request Body: `#/components/requestBodies/respondPanElementAddRequest`
   - Responses:
     - 200: `#/components/responses/respondPanElementAddRequest`
     - 400: `#/components/responses/pan400ErrorInvalidParams`
@@ -89,6 +93,9 @@
 - Create webhook (`POST /webhooks`)
   - Parameters:
     - `#/components/parameters/workspaceQuery`
+  - Description: Creates webhook that triggers collection with custom payload
+  - Note: Webhook URL returned in webhookUrl response property
+  - Request Body: `#/components/requestBodies/createWebhook`
   - Responses:
     - 200: `#/components/responses/createWebhook`
     - 400: `#/components/responses/createWebhookParamMissing400Error`
@@ -125,6 +132,7 @@
 - Update workspace tags (`PUT /workspaces/{workspaceId}/tags`)
   - Parameters:
     - `#/components/parameters/workspaceId` (required)
+  - Request Body: `#/components/requestBodies/tagUpdateTags`
   - Responses:
     - 200: `#/components/responses/tagGetPut`
     - 400: `#/components/responses/tag400Error`
@@ -145,6 +153,7 @@
 - Update collection tags (`PUT /collections/{collectionId}/tags`)
   - Parameters:
     - `#/components/parameters/collectionUid` (required)
+  - Request Body: `#/components/requestBodies/tagUpdateTags`
   - Responses:
     - 200: `#/components/responses/tagGetPut`
     - 400: `#/components/responses/tag400Error`
@@ -171,6 +180,7 @@
   - Parameters:
     - `#/components/parameters/apiId` (required)
     - `#/components/parameters/v10Accept`
+  - Request Body: `#/components/requestBodies/tagUpdateTags`
   - Responses:
     - 200: `#/components/responses/tagGetPut`
     - 400: Multiple possible responses:
@@ -182,3 +192,22 @@
       - `#/components/schemas/featureUnavailable403Error`
     - 404: `#/components/responses/tag404Error`
     - 500: `#/components/responses/tag500Error`
+
+### Key Features
+- Private API Network
+  - Element and folder management
+  - Request approval workflow
+  - Enterprise-level control
+  - Resource organization
+
+- Webhooks
+  - Collection triggering
+  - Custom payloads
+  - Workspace integration
+
+- Tags
+  - Enterprise feature
+  - Multi-resource tagging
+  - Tag-based search
+  - Consistent tag operations
+  - Workspace/API/Collection support

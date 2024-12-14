@@ -39,6 +39,7 @@
 
 ##### Workspace Roles
 - GET `/workspaces-roles`
+  - Description: Gets all available roles based on team's plan
   - Responses:
     - 200: `#/components/responses/getAllWorkspaceRoles`
     - 401: `#/components/responses/api401ErrorUnauthorized`
@@ -67,6 +68,7 @@
     - Does not support Partner or Guest external roles
     - Limited to 50 operations per call
     - Request body must contain one unique action per user/group
+  - Request Body: `#/components/requestBodies/updateWorkspaceRoles`
   - Responses:
     - 200: `#/components/responses/updateWorkspaceRoles`
     - 400: `#/components/responses/workspaceRoles400Error`
@@ -93,6 +95,7 @@
   - Notes:
     - Only users with EDITOR role can use this endpoint
     - Does not support Partner or Guest external roles
+  - Request Body: `#/components/requestBodies/updateCollectionRoles`
   - Responses:
     - 204: No Content (successful update)
     - 400: `#/components/responses/collectionRoles400ErrorMissingProperty`
@@ -110,8 +113,25 @@
     - 401: `#/components/responses/common401Error`
     - 500: `#/components/responses/common500ErrorServerError`
 
+### Key Features
+- Multiple authentication methods
+  - API key
+  - SCIM API key
+  - Collection access keys
+- Role-based access control
+  - Workspace roles
+  - Collection roles
+  - Team roles
+- Permission management
+  - User permissions
+  - Group permissions (Enterprise)
+  - Role assignment limits
+- Enterprise features
+  - SCIM support
+  - Group management
+  - Advanced role controls
 
-Notes:
+### Notes
 - Role operations support both user and user group management
 - SCIM ID support available with `identifierType=scim` header
 - Role operations are limited to 50 operations per call

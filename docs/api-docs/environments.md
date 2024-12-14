@@ -23,6 +23,7 @@
   - Note: Creates in "My Workspace" if workspace not specified
   - Parameters:
     - workspaceQuery (`#/components/parameters/workspaceQuery`)
+  - Request Body: `#/components/requestBodies/createEnvironment`
   - Responses:
     - 200: `#/components/responses/createEnvironment`
     - 400: `#/components/responses/environments400ErrorMalformedRequest`
@@ -33,6 +34,7 @@
 - Update environment (`PUT /environments/{environmentId}`)
   - Parameters:
     - environmentId (`#/components/parameters/environmentId`)
+  - Request Body: `#/components/requestBodies/updateEnvironment`
   - Responses:
     - 200: `#/components/responses/updateEnvironment`
     - 400: `#/components/responses/environments400ErrorMalformedRequest`
@@ -53,6 +55,7 @@
   - Parameters:
     - environmentUid (`#/components/parameters/environmentUid`)
     - workspaceIdQueryTrue (`#/components/parameters/workspaceIdQueryTrue`)
+  - Request Body: `#/components/requestBodies/forkEnvironment`
   - Responses:
     - 200: `#/components/responses/forkEnvironment`
     - 401: `#/components/responses/common401Error`
@@ -77,6 +80,7 @@
   - Description: Merges a forked environment back into its parent environment
   - Parameters:
     - environmentUid (`#/components/parameters/environmentUid`)
+  - Request Body: `#/components/requestBodies/mergeEnvironmentFork`
   - Responses:
     - 200: `#/components/responses/mergeEnvironmentFork`
     - 400: `#/components/responses/environmentForks400Error`
@@ -88,6 +92,7 @@
   - Description: Pulls changes from parent (source) environment into forked environment
   - Parameters:
     - environmentUid (`#/components/parameters/environmentUid`)
+  - Request Body: `#/components/requestBodies/pullEnvironment`
   - Responses:
     - 200: `#/components/responses/pullEnvironment`
     - 400: `#/components/responses/environmentForks400Error`

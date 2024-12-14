@@ -14,6 +14,7 @@
   - Parameters:
     - `#/components/parameters/workspaceQuery`
   - Note: Cannot create monitors for collections added to an API definition
+  - Request Body: `#/components/requestBodies/createMonitor`
   - Responses:
     - 200: `#/components/responses/createMonitor`
     - 400: `#/components/responses/monitors400CreateErrors`
@@ -34,6 +35,7 @@
 - Update monitor (`PUT /monitors/{monitorId}`)
   - Parameters:
     - `#/components/parameters/monitorId` (required)
+  - Request Body: `#/components/requestBodies/updateMonitor`
   - Responses:
     - 200: `#/components/responses/updateMonitor`
     - 400: `#/components/responses/monitors400ErrorInvalidCronPattern`
@@ -56,6 +58,7 @@
     - `#/components/parameters/monitorId` (required)
     - `#/components/parameters/async`
   - Note: For async=true, response won't include stats, executions, and failures
+  - Note: Use GET /monitors/{id} to get this information for async runs
   - Responses:
     - 200: `#/components/responses/runMonitor`
     - 401: `#/components/responses/common401Error`
@@ -68,3 +71,5 @@
 - Manual run capability
 - Run results and statistics
 - Workspace integration
+- Async/sync run modes
+- Feature availability control

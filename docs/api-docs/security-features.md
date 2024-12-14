@@ -2,9 +2,10 @@
 
 ### API Security Validation
 - API definition security validation (`POST /security/api-validation`)
-  - Note:
-    - Maximum definition size: 10 MB
-    - Requires imported and enabled OWASP security rules
+  - Description: Analyzes API definition against predefined rulesets
+  - Note: Maximum definition size: 10 MB
+  - Note: Requires imported and enabled OWASP security rules
+  - Request Body: `#/components/requestBodies/schemaSecurityValidation`
   - Responses:
     - 200: `#/components/responses/schemaSecurityValidation`
     - 400: `#/components/responses/schemaSecurityValidation400Error`
@@ -14,6 +15,7 @@
 
 ### Secret Scanner (Enterprise)
 - Get secret types (`GET /secret-types`)
+  - Description: Gets metadata of supported secret types
   - Responses:
     - 200: `#/components/responses/getSecretTypes`
     - 401: `#/components/responses/secretScanner401Error`
@@ -21,12 +23,15 @@
     - 500: `#/components/responses/secretScanner500Error`
 
 - Search detected secrets (`POST /detected-secrets-queries`)
+  - Description: Returns secrets detected by Secret Scanner, grouped by workspace/resource
   - Parameters:
     - `#/components/parameters/limit`
     - `#/components/parameters/cursor`
     - `#/components/parameters/include`
     - `#/components/parameters/since`
     - `#/components/parameters/until`
+  - Note: Empty request body returns all results
+  - Request Body: `#/components/requestBodies/detectedSecretsQueries`
   - Responses:
     - 200: `#/components/responses/detectedSecretsQueries`
     - 400: `#/components/responses/detectedSecretsQuery400Errors`
@@ -37,6 +42,7 @@
 - Update secret resolution status (`PUT /detected-secrets/{secretId}`)
   - Parameters:
     - `#/components/parameters/secretId` (required)
+  - Request Body: `#/components/requestBodies/updateSecretResolutions`
   - Responses:
     - 200: `#/components/responses/updateSecretResolutions`
     - 400: `#/components/responses/secretScanner400InvalidResolutionError`
@@ -72,3 +78,24 @@
     - 200: `#/components/responses/getAuditLogs`
     - 401: `#/components/responses/common401Error`
     - 500: `#/components/responses/common500ErrorServerError`
+
+### Key Features
+- API security validation
+  - OWASP security rules integration
+  - Schema validation
+  - CI/CD process integration
+  - Rule violation tracking
+  - Solution suggestions
+
+- Secret scanning
+  - Multiple secret type support
+  - Workspace/resource grouping
+  - Location tracking
+  - Resolution management
+  - Enterprise-level control
+
+- Audit logging
+  - Team activity tracking
+  - Event filtering
+  - Pagination support
+  - Enterprise plan feature

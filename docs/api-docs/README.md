@@ -122,6 +122,31 @@ NOTE: The goal is to be "additive" and "augmentative" so that we continually add
 When completed this file, request the next summary document to continue with. Keep doing this until I say stop or you get bored.
 ```
 
+Add Request Bodies (via paths only -- similar to parameters):
+```
+@/docs/postman-api-pathsonly.yaml
+
+Peruse the postman OpenAPI 3 definition (note this is a very abrridged version of the full document, containing just the paths objects), this time to augment the POST/PUT requests with body content add parameter details by matching the parameter name (e.g. The workspaceQuery in '#/components/requestBodies/updateEnvironment').
+
+Continue updating the individual summary markdown document that we can use later on to cross-check against our tool implementations:
+@/docs/api-docs/environments.md
+@/docs/api-docs/workspaces.md
+@/docs/api-docs/collections.md
+@/docs/api-docs/apis.md
+@/docs/api-docs/mocks.md
+@/docs/api-docs/monitors.md
+@/docs/api-docs/security-features.md
+@/docs/api-docs/additional-features.md
+@/docs/api-docs/auth.md
+@/docs/api-docs/common-features.md
+@/docs/api-docs/notes.md
+
+Workthrough the markdown summary document, operating one endpoint at a time, updating its documentation based on the contents of the definition file. Each POST/PUT/etc request endpoint in the pathsonly OpenAPI 3 definition document should have at least one `requestBody:`. Those are the details we want to add to the summary markdown doc.
+
+Also continue to add missing endpoints that you come across. The goal is to be "additive" and "augmentative" so that we continually add and correct details each time we review. Do not remove details or re-summarize existing content.
+
+When completed this file, request the next summary document to continue with. Keep doing this until I say stop or you get bored.
+```
 
 #### Splitting single summary file into multiple files
 

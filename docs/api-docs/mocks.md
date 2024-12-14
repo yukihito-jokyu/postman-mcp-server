@@ -5,6 +5,7 @@
   - Parameters:
     - `#/components/parameters/teamIdResultsQuery`
     - `#/components/parameters/workspaceResultsQuery`
+  - Note: If both teamId and workspace provided, only workspace is used
   - Responses:
     - 200: `#/components/responses/getMocks`
     - 401: `#/components/responses/common401Error`
@@ -13,6 +14,9 @@
 - Create mock server (`POST /mocks`)
   - Parameters:
     - `#/components/parameters/workspaceIdQuery`
+  - Note: Creates in Personal workspace if workspace not specified
+  - Note: Cannot create mocks for collections added to an API definition
+  - Request Body: `#/components/requestBodies/createMock`
   - Responses:
     - 200: `#/components/responses/mockCreateUpdate`
     - 400: `#/components/responses/paramMissing400Error`
@@ -31,6 +35,7 @@
 - Update mock server (`PUT /mocks/{mockId}`)
   - Parameters:
     - `#/components/parameters/mockId` (required)
+  - Request Body: `#/components/requestBodies/updateMock`
   - Responses:
     - 200: `#/components/responses/mockCreateUpdate`
     - 401: `#/components/responses/common401Error`
@@ -60,6 +65,8 @@
     - `#/components/parameters/mockSortServedAt`
     - `#/components/parameters/direction`
     - `#/components/parameters/mockInclude`
+  - Note: Maximum 6.5MB or 100 call logs per API call
+  - Note: Retention period based on Postman plan
   - Responses:
     - 200: `#/components/responses/getMockCallLogs`
     - 400: `#/components/responses/mock400ErrorLogRetentionPeriodExceeded`
@@ -70,6 +77,7 @@
 - Publish mock server (`POST /mocks/{mockId}/publish`)
   - Parameters:
     - `#/components/parameters/mockId` (required)
+  - Description: Sets Access Control to public
   - Responses:
     - 200: `#/components/responses/publishMock`
     - 400: `#/components/responses/mock400ErrorAlreadyPublished`
@@ -80,6 +88,7 @@
 - Unpublish mock server (`DELETE /mocks/{mockId}/unpublish`)
   - Parameters:
     - `#/components/parameters/mockId` (required)
+  - Description: Sets Access Control to private
   - Responses:
     - 200: `#/components/responses/unpublishMock`
     - 400: `#/components/responses/mock400ErrorAlreadyUnpublished`
@@ -100,6 +109,10 @@
 - Create server response (`POST /mocks/{mockId}/server-responses`)
   - Parameters:
     - `#/components/parameters/mockId` (required)
+  - Description: Simulates server-level responses (e.g., 5xx errors)
+  - Note: Server responses are agnostic to application-level logic
+  - Note: Only one server response can be active at a time
+  - Request Body: `#/components/requestBodies/createMockServerResponse`
   - Responses:
     - 200: `#/components/responses/mockServerResponse`
     - 400: `#/components/responses/paramMissing400Error`
@@ -121,6 +134,7 @@
   - Parameters:
     - `#/components/parameters/mockId` (required)
     - `#/components/parameters/serverResponseId` (required)
+  - Request Body: `#/components/requestBodies/updateMockServerResponse`
   - Responses:
     - 200: `#/components/responses/mockServerResponse`
     - 400: `#/components/responses/paramMissing400Error`
@@ -144,3 +158,5 @@
 - Custom server responses
 - Public/private visibility control
 - Response simulation (5xx errors)
+- Workspace integration
+- Call log retention based on plan

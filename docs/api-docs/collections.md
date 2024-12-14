@@ -30,6 +30,7 @@
   - Note: Creates in "My Workspace" if workspace not specified
   - Parameters:
     - workspaceQuery (`#/components/parameters/workspaceQuery`)
+  - Request Body: `#/components/requestBodies/createCollection`
   - Responses:
     - 200: `#/components/responses/createCollection`
     - 400: `#/components/responses/collection400ErrorInstanceFound`
@@ -42,9 +43,22 @@
   - Important: Include collection item IDs to prevent recreation
   - Parameters:
     - collectionId (`#/components/parameters/collectionId`)
+  - Request Body: `#/components/requestBodies/putCollection`
   - Responses:
     - 200: `#/components/responses/putCollection`
     - 400: `#/components/responses/collection400ErrorMalformedRequest`
+    - 401: `#/components/responses/common401Error`
+    - 403: `#/components/responses/common403Error`
+    - 404: `#/components/responses/instanceNotFoundCollection`
+    - 500: `#/components/responses/common500ErrorServerError`
+
+- Patch collection (`PATCH /collections/{collectionId}`)
+  - Parameters:
+    - collectionId (`#/components/parameters/collectionId`)
+  - Request Body: `#/components/requestBodies/patchCollection`
+  - Responses:
+    - 200: `#/components/responses/patchCollection`
+    - 400: `#/components/responses/collection400ErrorInvalidKeyParam`
     - 401: `#/components/responses/common401Error`
     - 403: `#/components/responses/common403Error`
     - 404: `#/components/responses/instanceNotFoundCollection`
@@ -60,6 +74,17 @@
     - 500: `#/components/responses/common500ErrorServerError`
 
 #### Collection Items Management
+- Create folder (`POST /collections/{collectionId}/folders`)
+  - Note: Empty name creates folder with blank name
+  - Parameters:
+    - collectionId (`#/components/parameters/collectionId`)
+  - Request Body: `#/components/requestBodies/createCollectionFolder`
+  - Responses:
+    - 200: `#/components/responses/createCollectionFolder`
+    - 400: `#/components/responses/collectionFolder400Error`
+    - 401: `#/components/responses/collectionFolder401Error`
+    - 500: `#/components/responses/common500Error`
+
 - Get folder (`GET /collections/{collectionId}/folders/{folderId}`)
   - Parameters:
     - collectionId (`#/components/parameters/collectionId`)
@@ -78,6 +103,7 @@
   - Parameters:
     - collectionId (`#/components/parameters/collectionId`)
     - collectionFolderId (`#/components/parameters/collectionFolderId`)
+  - Request Body: `#/components/requestBodies/updateCollectionFolder`
   - Responses:
     - 200: `#/components/responses/updateCollectionFolder`
     - 400: `#/components/responses/collectionFolder400Error`
@@ -95,18 +121,19 @@
     - 404: `#/components/responses/collectionFolder404Error`
     - 500: `#/components/responses/common500Error`
 
-- Create folder (`POST /collections/{collectionId}/folders`)
-  - Note: Empty name creates folder with blank name
+#### Request and Response Management
+- Create request (`POST /collections/{collectionId}/requests`)
+  - Note: Empty name creates request with blank name
   - Parameters:
     - collectionId (`#/components/parameters/collectionId`)
+    - collectionRequestFolderIdQuery (`#/components/parameters/collectionRequestFolderIdQuery`)
+  - Request Body: `#/components/requestBodies/createCollectionRequest`
   - Responses:
-    - 200: `#/components/responses/createCollectionFolder`
-    - 400: `#/components/responses/collectionFolder400Error`
-    - 401: `#/components/responses/collectionFolder401Error`
+    - 200: `#/components/responses/createCollectionRequest`
+    - 400: `#/components/responses/collectionRequest400Error`
+    - 401: `#/components/responses/collectionRequest401Error`
     - 500: `#/components/responses/common500Error`
 
-
-#### Request and Response Management
 - Get request (`GET /collections/{collectionId}/requests/{requestId}`)
   - Parameters:
     - collectionId (`#/components/parameters/collectionId`)
@@ -125,6 +152,7 @@
   - Parameters:
     - collectionId (`#/components/parameters/collectionId`)
     - collectionRequestId (`#/components/parameters/collectionRequestId`)
+  - Request Body: `#/components/requestBodies/updateCollectionRequest`
   - Responses:
     - 200: `#/components/responses/updateCollectionRequest`
     - 400: `#/components/responses/collectionRequest400Error`
@@ -142,15 +170,16 @@
     - 404: `#/components/responses/collectionRequest404Error`
     - 500: `#/components/responses/common500Error`
 
-- Create request (`POST /collections/{collectionId}/requests`)
-  - Note: Empty name creates request with blank name
+- Create response (`POST /collections/{collectionId}/responses`)
+  - Note: Empty name creates response with blank name
   - Parameters:
     - collectionId (`#/components/parameters/collectionId`)
-    - collectionRequestFolderIdQuery (`#/components/parameters/collectionRequestFolderIdQuery`)
+    - collectionResponseParentRequestId (`#/components/parameters/collectionResponseParentRequestId`)
+  - Request Body: `#/components/requestBodies/createCollectionResponse`
   - Responses:
-    - 200: `#/components/responses/createCollectionRequest`
-    - 400: `#/components/responses/collectionRequest400Error`
-    - 401: `#/components/responses/collectionRequest401Error`
+    - 200: `#/components/responses/createCollectionResponse`
+    - 400: `#/components/responses/collectionResponse400Error`
+    - 401: `#/components/responses/collectionResponse401Error`
     - 500: `#/components/responses/common500Error`
 
 - Get response (`GET /collections/{collectionId}/responses/{responseId}`)
@@ -171,6 +200,7 @@
   - Parameters:
     - collectionId (`#/components/parameters/collectionId`)
     - collectionResponseId (`#/components/parameters/collectionResponseId`)
+  - Request Body: `#/components/requestBodies/updateCollectionResponse`
   - Responses:
     - 200: `#/components/responses/updateCollectionResponse`
     - 400: `#/components/responses/collectionResponse400Error`
@@ -188,20 +218,10 @@
     - 404: `#/components/responses/collectionResponse404Error`
     - 500: `#/components/responses/common500Error`
 
-- Create response (`POST /collections/{collectionId}/responses`)
-  - Note: Empty name creates response with blank name
-  - Parameters:
-    - collectionId (`#/components/parameters/collectionId`)
-    - collectionResponseParentRequestId (`#/components/parameters/collectionResponseParentRequestId`)
-  - Responses:
-    - 200: `#/components/responses/createCollectionResponse`
-    - 400: `#/components/responses/collectionResponse400Error`
-    - 401: `#/components/responses/collectionResponse401Error`
-    - 500: `#/components/responses/common500Error`
-
 #### Collection Transfers
 - Transfer folders (`POST /collection-folders-transfers`)
   - Description: Copy or move folders between collections
+  - Request Body: `#/components/requestBodies/transferCollectionItems`
   - Responses:
     - 200: `#/components/responses/transferCollectionItems200Error`
     - 400: `#/components/responses/transferCollectionItems400Error`
@@ -209,6 +229,7 @@
 
 - Transfer requests (`POST /collection-requests-transfers`)
   - Description: Copy or move requests between collections/folders
+  - Request Body: `#/components/requestBodies/transferCollectionItems`
   - Responses:
     - 200: `#/components/responses/transferCollectionItems200Error`
     - 400: `#/components/responses/transferCollectionItems400Error`
@@ -216,17 +237,18 @@
 
 - Transfer responses (`POST /collection-responses-transfers`)
   - Description: Copy or move responses between requests
+  - Request Body: `#/components/requestBodies/transferCollectionItems`
   - Responses:
     - 200: `#/components/responses/transferCollectionItems200Error`
     - 400: `#/components/responses/transferCollectionItems400Error`
     - 500: `#/components/responses/common500Error`
-
 
 #### Collection Forking & Merging
 - Create fork (`POST /collections/fork/{collectionId}`)
   - Parameters:
     - collectionId (`#/components/parameters/collectionId`)
     - forkWorkspaceQuery (`#/components/parameters/forkWorkspaceQuery`)
+  - Request Body: `#/components/requestBodies/createCollectionFork`
   - Responses:
     - 200: `#/components/responses/createCollectionFork`
     - 401: `#/components/responses/common401Error`
@@ -258,6 +280,7 @@
 
 - Merge or pull changes (`PUT /collection-merges`)
   - Description: Asynchronous operation with task status tracking
+  - Request Body: `#/components/requestBodies/asyncCollectionForkMerge`
   - Responses:
     - 200: `#/components/responses/asyncMergeCollectionFork`
     - 400: `#/components/responses/collectionForks400ErrorMalformedRequest`
@@ -307,9 +330,10 @@
     - 500: `#/components/responses/comment500Error`
 
 - Create collection comment (`POST /collections/{collectionId}/comments`)
-  - Note: Maximum 10,000 characters
   - Parameters:
     - collectionUid (`#/components/parameters/collectionUid`)
+  - Note: Maximum 10,000 characters
+  - Request Body: `#/components/requestBodies/commentCreate`
   - Responses:
     - 201: `#/components/responses/commentCreated`
     - 401: `#/components/responses/comment401Error`
@@ -318,10 +342,11 @@
     - 500: `#/components/responses/comment500Error`
 
 - Update collection comment (`PUT /collections/{collectionId}/comments/{commentId}`)
-  - Note: Maximum 10,000 characters
   - Parameters:
     - collectionUid (`#/components/parameters/collectionUid`)
     - commentId (`#/components/parameters/commentId`)
+  - Note: Maximum 10,000 characters
+  - Request Body: `#/components/requestBodies/commentUpdate`
   - Responses:
     - 200: `#/components/responses/commentUpdated`
     - 401: `#/components/responses/comment401Error`
@@ -364,6 +389,21 @@
     - 403: `#/components/responses/common403ErrorForbidden`
     - 404: `#/components/responses/cakNotFound404Error`
     - 500: `#/components/responses/common500ErrorSomethingWrong`
+    -
+#### Collection Roles
+- Update collection roles (`PATCH /collections/{collectionId}/roles`)
+  - Parameters:
+    - collectionId (`#/components/parameters/collectionId`)
+  - Note: Only EDITOR role can use this endpoint
+  - Note: Does not support Partner or Guest external roles
+  - Request Body: `#/components/requestBodies/updateCollectionRoles`
+  - Responses:
+    - 204: No Content
+    - 400: `#/components/responses/collectionRoles400ErrorMissingProperty`
+    - 401: `#/components/responses/unauthorizedError`
+    - 403: `#/components/responses/common403ErrorPermissions`
+    - 404: `#/components/responses/collection404ErrorInstanceNotFound`
+    - 500: `#/components/responses/common500ErrorInternalServer`
 
 ### Key Features
 - Collection CRUD operations
@@ -374,4 +414,4 @@
 - Version control (fork, merge, pull)
 - Commenting system
 - Collection transfer capabilities
-- Collection access key management
+- Role-based access control

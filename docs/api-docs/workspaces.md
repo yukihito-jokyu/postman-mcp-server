@@ -26,6 +26,7 @@
   - Supports setting name, description, type, and visibility
   - Note: Returns 403 if user lacks permission to create workspaces
   - Important: Linking collections/environments between workspaces is deprecated
+  - Request Body: `#/components/requestBodies/createWorkspace`
   - Responses:
     - 200: `#/components/responses/createWorkspace`
     - 400: `#/components/responses/workspace400ErrorMalformedRequest`
@@ -38,6 +39,7 @@
     - workspaceId (`#/components/parameters/workspaceId`)
   - Can modify workspace properties and linked resources
   - Important: Linking collections/environments between workspaces is deprecated
+  - Request Body: `#/components/requestBodies/updateWorkspace`
   - Responses:
     - 200: `#/components/responses/updateWorkspace`
     - 400: `#/components/responses/workspace400ErrorMalformedRequest`
@@ -66,6 +68,7 @@
   - Parameters:
     - workspaceId (`#/components/parameters/workspaceId`)
   - Note: Replaces all existing global variables
+  - Request Body: `#/components/requestBodies/updateWorkspaceGlobalVariables`
   - Responses:
     - 200: `#/components/responses/updateWorkspaceGlobalVariables`
     - 500: `#/components/responses/globalVariables500Error`
@@ -89,6 +92,7 @@
   - Available roles: Viewer, Editor, Admin
   - Note: Cannot set roles for personal/partner workspaces
   - Limited to 50 operations per call
+  - Request Body: `#/components/requestBodies/updateWorkspaceRoles`
   - Responses:
     - 200: `#/components/responses/updateWorkspaceRoles`
     - 400: `#/components/responses/workspaceRoles400Error`
@@ -120,6 +124,7 @@
   - Parameters:
     - workspaceId (`#/components/parameters/workspaceId`)
   - Description: Updates a workspace's associated tags. Replaces all existing tags.
+  - Request Body: `#/components/requestBodies/tagUpdateTags`
   - Responses:
     - 200: `#/components/responses/tagGetPut`
     - 400: `#/components/responses/tag400Error`
