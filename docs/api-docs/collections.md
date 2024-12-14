@@ -1,0 +1,135 @@
+## Collections
+
+### Implemented Operations
+- Get all collections (`GET /collections`)
+  - Query Parameters: workspace, name, limit, offset
+  - Note: Filtering with name parameter is not supported when using limit/offset
+  - Note: Invalid workspace ID returns empty array with 200 status
+  - Responses:
+    - 200: `#/components/responses/getCollections`
+    - 401: `#/components/responses/common401Error`
+    - 500: `#/components/responses/common500ErrorServerError`
+- Get a specific collection (`GET /collections/{collectionId}`)
+  - Optional parameters: access_key
+  - Parameters:
+    - collectionAccessKeyQuery
+    - collectionModelQuery
+  - Responses:
+    - 200: `#/components/responses/getCollection`
+    - 400: `#/components/responses/collection400ErrorCollectionNotFound`
+    - 401: `#/components/responses/common401Error`
+    - 500: `#/components/responses/common500ErrorServerError`
+- Create collection (`POST /collections`)
+  - Supports Postman Collection v2.1.0 format
+  - Note: Creates in "My Workspace" if workspace not specified
+  - Parameters:
+    - workspaceQuery
+  - Responses:
+    - 200: `#/components/responses/createCollection`
+    - 400: `#/components/responses/collection400ErrorInstanceFound`
+    - 401: `#/components/responses/common401Error`
+    - 500: `#/components/responses/common500ErrorServerError`
+- Update collection (`PUT /collections/{collectionId}`)
+  - Full collection replacement
+  - Note: Maximum collection size: 20 MB
+  - Important: Include collection item IDs to prevent recreation
+  - Responses:
+    - 200: `#/components/responses/putCollection`
+    - 400: `#/components/responses/collection400ErrorMalformedRequest`
+    - 401: `#/components/responses/common401Error`
+    - 403: `#/components/responses/common403Error`
+    - 404: `#/components/responses/instanceNotFoundCollection`
+    - 500: `#/components/responses/common500ErrorServerError`
+- Delete collection (`DELETE /collections/{collectionId}`)
+  - Responses:
+    - 200: `#/components/responses/deleteCollection`
+    - 401: `#/components/responses/common401Error`
+    - 404: `#/components/responses/instanceNotFoundCollection`
+    - 500: `#/components/responses/common500ErrorServerError`
+- Create collection folder (`POST /collections/{collectionId}/folders`)
+- Create collection request (`POST /collections/{collectionId}/requests`)
+- Create collection response (`POST /collections/{collectionId}/responses`)
+
+#### Collection Items Management
+- Get folder (`GET /collections/{collectionId}/folders/{folderId}`)
+  - Parameters:
+    - collectionItemsIdQuery
+    - collectionItemsUidFormatQuery
+    - collectionItemsPopulateQuery
+  - Responses:
+    - 200: `#/components/responses/getCollectionFolder`
+    - 401: `#/components/responses/collectionFolder401Error`
+    - 404: `#/components/responses/collectionFolder404Error`
+    - 500: `#/components/responses/common500Error`
+- Update folder (`PUT /collections/{collectionId}/folders/{folderId}`)
+  - Note: Acts like PATCH, only updates provided values
+  - Responses:
+    - 200: `#/components/responses/updateCollectionFolder`
+    - 400: `#/components/responses/collectionFolder400Error`
+    - 401: `#/components/responses/collectionFolder401Error`
+    - 404: `#/components/responses/collectionFolder404Error`
+    - 500: `#/components/responses/common500Error`
+- Delete folder (`DELETE /collections/{collectionId}/folders/{folderId}`)
+  - Responses:
+    - 200: `#/components/responses/deleteCollectionFolder`
+    - 401: `#/components/responses/collectionFolder401Error`
+    - 404: `#/components/responses/collectionFolder404Error`
+    - 500: `#/components/responses/common500Error`
+- Create folder (`POST /collections/{collectionId}/folders`)
+  - Note: Empty name creates folder with blank name
+  - Responses:
+    - 200: `#/components/responses/createCollectionFolder`
+    - 400: `#/components/responses/collectionFolder400Error`
+    - 401: `#/components/responses/collectionFolder401Error`
+    - 500: `#/components/responses/common500Error`
+- Get request (`GET /collections/{collectionId}/requests/{requestId}`)
+- Update request (`PUT /collections/{collectionId}/requests/{requestId}`)
+- Delete request (`DELETE /collections/{collectionId}/requests/{requestId}`)
+- Get response (`GET /collections/{collectionId}/responses/{responseId}`)
+- Update response (`PUT /collections/{collectionId}/responses/{responseId}`)
+- Delete response (`DELETE /collections/{collectionId}/responses/{responseId}`)
+
+#### Collection Forking & Merging
+- Create fork (`POST /collections/fork/{collectionId}`)
+- Get collection forks (`GET /collections/{collectionId}/forks`)
+- Merge fork (`POST /collections/merge`)
+- Pull changes (`PUT /collections/{collectionId}/pulls`)
+- Get source collection status (`GET /collections/{collectionId}/source-status`)
+
+#### Collection Comments
+- Get collection comments (`GET /collections/{collectionId}/comments`)
+- Create collection comment (`POST /collections/{collectionId}/comments`)
+- Update collection comment (`PUT /collections/{collectionId}/comments/{commentId}`)
+- Delete collection comment (`DELETE /collections/{collectionId}/comments/{commentId}`)
+
+#### Collection Access Keys
+- Get collection access keys (`GET /collection-access-keys`)
+  - Lists personal and team collection access keys
+  - Includes expiration and last used information
+  - Parameters:
+    - collectionUidQuery
+    - cursor
+  - Responses:
+    - 200: `#/components/responses/getCollectionAccessKeys`
+    - 400: `#/components/responses/common400ErrorInvalidCursor`
+    - 401: `#/components/responses/common401Error`
+    - 403: `#/components/responses/common403ErrorForbidden`
+    - 500: `#/components/responses/common500ErrorSomethingWrong`
+- Delete collection access key (`DELETE /collection-access-keys/{keyId}`)
+  - Responses:
+    - 204: No Content
+    - 401: `#/components/responses/common401Error`
+    - 403: `#/components/responses/common403ErrorForbidden`
+    - 404: `#/components/responses/cakNotFound404Error`
+    - 500: `#/components/responses/common500ErrorSomethingWrong`
+
+### Key Features
+- Collection CRUD operations
+- Support for Postman Collection Format v2.1.0
+- Collection metadata management
+- Nested folder structure support
+- Request and response management
+- Version control (fork, merge, pull)
+- Commenting system
+- Collection transfer capabilities
+- Collection access key management

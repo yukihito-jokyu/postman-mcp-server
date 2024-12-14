@@ -1,0 +1,94 @@
+## Workspaces
+
+### Implemented Operations
+- Get all workspaces (`GET /workspaces`)
+  - Query Parameters: type, createdBy, include
+  - Supports filtering by workspace type and creator
+  - Responses:
+    - 200: `#/components/responses/getWorkspaces`
+    - 401: `#/components/responses/common401Error`
+    - 500: `#/components/responses/common500ErrorServerError`
+- Get a specific workspace (`GET /workspaces/{workspaceId}`)
+  - Optional include parameter for additional details
+  - Parameters:
+    - workspaceInclude
+  - Responses:
+    - 200: `#/components/responses/getWorkspace`
+    - 401: `#/components/responses/common401Error`
+    - 404: `#/components/responses/workspace404ErrorNotFound`
+    - 500: `#/components/responses/common500ErrorServerError`
+- Create workspace (`POST /workspaces`)
+  - Supports setting name, description, type, and visibility
+  - Note: Returns 403 if user lacks permission to create workspaces
+  - Important: Linking collections/environments between workspaces is deprecated
+  - Responses:
+    - 200: `#/components/responses/createWorkspace`
+    - 400: `#/components/responses/workspace400ErrorMalformedRequest`
+    - 401: `#/components/responses/common401Error`
+    - 403: `#/components/responses/workspace403ErrorUnauthorized`
+    - 500: `#/components/responses/common500ErrorServerError`
+- Update workspace (`PUT /workspaces/{workspaceId}`)
+  - Can modify workspace properties and linked resources
+  - Important: Linking collections/environments between workspaces is deprecated
+  - Responses:
+    - 200: `#/components/responses/updateWorkspace`
+    - 400: `#/components/responses/workspace400ErrorMalformedRequest`
+    - 403: `#/components/responses/workspace403Error`
+    - 404: `#/components/responses/instanceNotFoundWorkspace`
+    - 500: `#/components/responses/common500ErrorServerError`
+- Delete workspace (`DELETE /workspaces/{workspaceId}`)
+  - Important: Deleting a workspace with linked collections/environments affects all workspaces
+  - Responses:
+    - 200: `#/components/responses/deleteWorkspace`
+    - 400: `#/components/responses/workspace400Error`
+    - 401: `#/components/responses/common401Error`
+    - 500: `#/components/responses/common500ErrorServerError`
+- Get workspace global variables (`GET /workspaces/{workspaceId}/global-variables`)
+  - Responses:
+    - 200: `#/components/responses/getWorkspaceGlobalVariables`
+    - 500: `#/components/responses/globalVariables500Error`
+- Update workspace global variables (`PUT /workspaces/{workspaceId}/global-variables`)
+  - Note: Replaces all existing global variables
+  - Responses:
+    - 200: `#/components/responses/updateWorkspaceGlobalVariables`
+    - 500: `#/components/responses/globalVariables500Error`
+- Get workspace roles (`GET /workspaces/{workspaceId}/roles`)
+  - Parameters:
+    - workspaceIncludeScimQuery (optional)
+  - Responses:
+    - 200: `#/components/responses/getWorkspaceRoles`
+    - 401: `#/components/responses/unauthorizedError`
+    - 403: `#/components/responses/common403ErrorPermissions`
+    - 404: `#/components/responses/resourceNotFound404Error`
+    - 500: `#/components/responses/common500ErrorInternalServer`
+- Update workspace roles (`PATCH /workspaces/{workspaceId}/roles`)
+  - Supports updating roles for users and user groups
+  - Available roles: Viewer, Editor, Admin
+  - Note: Cannot set roles for personal/partner workspaces
+  - Limited to 50 operations per call
+  - Parameters:
+    - identifierType (for SCIM IDs)
+  - Responses:
+    - 200: `#/components/responses/updateWorkspaceRoles`
+    - 400: `#/components/responses/workspaceRoles400Error`
+    - 401: `#/components/responses/unauthorizedError`
+    - 403: `#/components/responses/common403ErrorPermissions`
+    - 404: `#/components/responses/resourceNotFound404Error`
+    - 422: `#/components/responses/workspaceRoles422UnsupportRoleError`
+    - 500: `#/components/responses/common500ErrorInternalServer`
+- Get all roles (`GET /workspaces-roles`)
+  - Lists available roles based on team's plan
+  - Responses:
+    - 200: `#/components/responses/getAllWorkspaceRoles`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: `#/components/responses/common403ErrorPermissions`
+    - 500: `#/components/responses/common500ErrorInternalServer`
+
+### Key Features
+- Support for workspace types: personal, team, private, public, partner
+- Workspace visibility control
+- Basic workspace metadata (name, description)
+- Workspace resource listings (collections, environments, mocks, monitors, APIs)
+- Global variables management
+- Role-based access control
+- Tags management (Enterprise plans)
