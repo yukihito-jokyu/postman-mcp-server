@@ -8,19 +8,85 @@ This document summarizes the core Postman API functionality implemented in our M
 - Get all workspaces (`GET /workspaces`)
   - Query Parameters: type, createdBy, include
   - Supports filtering by workspace type and creator
+  - Responses:
+    - 200: `#/components/responses/getWorkspaces`
+    - 401: `#/components/responses/common401Error`
+    - 500: `#/components/responses/common500ErrorServerError`
 - Get a specific workspace (`GET /workspaces/{workspaceId}`)
   - Optional include parameter for additional details
+  - Parameters:
+    - workspaceInclude
+  - Responses:
+    - 200: `#/components/responses/getWorkspace`
+    - 401: `#/components/responses/common401Error`
+    - 404: `#/components/responses/workspace404ErrorNotFound`
+    - 500: `#/components/responses/common500ErrorServerError`
 - Create workspace (`POST /workspaces`)
   - Supports setting name, description, type, and visibility
+  - Note: Returns 403 if user lacks permission to create workspaces
+  - Important: Linking collections/environments between workspaces is deprecated
+  - Responses:
+    - 200: `#/components/responses/createWorkspace`
+    - 400: `#/components/responses/workspace400ErrorMalformedRequest`
+    - 401: `#/components/responses/common401Error`
+    - 403: `#/components/responses/workspace403ErrorUnauthorized`
+    - 500: `#/components/responses/common500ErrorServerError`
 - Update workspace (`PUT /workspaces/{workspaceId}`)
   - Can modify workspace properties and linked resources
+  - Important: Linking collections/environments between workspaces is deprecated
+  - Responses:
+    - 200: `#/components/responses/updateWorkspace`
+    - 400: `#/components/responses/workspace400ErrorMalformedRequest`
+    - 403: `#/components/responses/workspace403Error`
+    - 404: `#/components/responses/instanceNotFoundWorkspace`
+    - 500: `#/components/responses/common500ErrorServerError`
 - Delete workspace (`DELETE /workspaces/{workspaceId}`)
+  - Important: Deleting a workspace with linked collections/environments affects all workspaces
+  - Responses:
+    - 200: `#/components/responses/deleteWorkspace`
+    - 400: `#/components/responses/workspace400Error`
+    - 401: `#/components/responses/common401Error`
+    - 500: `#/components/responses/common500ErrorServerError`
 - Get workspace global variables (`GET /workspaces/{workspaceId}/global-variables`)
+  - Responses:
+    - 200: `#/components/responses/getWorkspaceGlobalVariables`
+    - 500: `#/components/responses/globalVariables500Error`
 - Update workspace global variables (`PUT /workspaces/{workspaceId}/global-variables`)
+  - Note: Replaces all existing global variables
+  - Responses:
+    - 200: `#/components/responses/updateWorkspaceGlobalVariables`
+    - 500: `#/components/responses/globalVariables500Error`
 - Get workspace roles (`GET /workspaces/{workspaceId}/roles`)
+  - Parameters:
+    - workspaceIncludeScimQuery (optional)
+  - Responses:
+    - 200: `#/components/responses/getWorkspaceRoles`
+    - 401: `#/components/responses/unauthorizedError`
+    - 403: `#/components/responses/common403ErrorPermissions`
+    - 404: `#/components/responses/resourceNotFound404Error`
+    - 500: `#/components/responses/common500ErrorInternalServer`
 - Update workspace roles (`PATCH /workspaces/{workspaceId}/roles`)
   - Supports updating roles for users and user groups
   - Available roles: Viewer, Editor, Admin
+  - Note: Cannot set roles for personal/partner workspaces
+  - Limited to 50 operations per call
+  - Parameters:
+    - identifierType (for SCIM IDs)
+  - Responses:
+    - 200: `#/components/responses/updateWorkspaceRoles`
+    - 400: `#/components/responses/workspaceRoles400Error`
+    - 401: `#/components/responses/unauthorizedError`
+    - 403: `#/components/responses/common403ErrorPermissions`
+    - 404: `#/components/responses/resourceNotFound404Error`
+    - 422: `#/components/responses/workspaceRoles422UnsupportRoleError`
+    - 500: `#/components/responses/common500ErrorInternalServer`
+- Get all roles (`GET /workspaces-roles`)
+  - Lists available roles based on team's plan
+  - Responses:
+    - 200: `#/components/responses/getAllWorkspaceRoles`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: `#/components/responses/common403ErrorPermissions`
+    - 500: `#/components/responses/common500ErrorInternalServer`
 
 ### Key Features
 - Support for workspace types: personal, team, private, public, partner
@@ -36,21 +102,85 @@ This document summarizes the core Postman API functionality implemented in our M
 ### Implemented Operations
 - Get all collections (`GET /collections`)
   - Query Parameters: workspace, name, limit, offset
+  - Note: Filtering with name parameter is not supported when using limit/offset
+  - Note: Invalid workspace ID returns empty array with 200 status
+  - Responses:
+    - 200: `#/components/responses/getCollections`
+    - 401: `#/components/responses/common401Error`
+    - 500: `#/components/responses/common500ErrorServerError`
 - Get a specific collection (`GET /collections/{collectionId}`)
   - Optional parameters: access_key
+  - Parameters:
+    - collectionAccessKeyQuery
+    - collectionModelQuery
+  - Responses:
+    - 200: `#/components/responses/getCollection`
+    - 400: `#/components/responses/collection400ErrorCollectionNotFound`
+    - 401: `#/components/responses/common401Error`
+    - 500: `#/components/responses/common500ErrorServerError`
 - Create collection (`POST /collections`)
   - Supports Postman Collection v2.1.0 format
+  - Note: Creates in "My Workspace" if workspace not specified
+  - Parameters:
+    - workspaceQuery
+  - Responses:
+    - 200: `#/components/responses/createCollection`
+    - 400: `#/components/responses/collection400ErrorInstanceFound`
+    - 401: `#/components/responses/common401Error`
+    - 500: `#/components/responses/common500ErrorServerError`
 - Update collection (`PUT /collections/{collectionId}`)
   - Full collection replacement
+  - Note: Maximum collection size: 20 MB
+  - Important: Include collection item IDs to prevent recreation
+  - Responses:
+    - 200: `#/components/responses/putCollection`
+    - 400: `#/components/responses/collection400ErrorMalformedRequest`
+    - 401: `#/components/responses/common401Error`
+    - 403: `#/components/responses/common403Error`
+    - 404: `#/components/responses/instanceNotFoundCollection`
+    - 500: `#/components/responses/common500ErrorServerError`
 - Delete collection (`DELETE /collections/{collectionId}`)
+  - Responses:
+    - 200: `#/components/responses/deleteCollection`
+    - 401: `#/components/responses/common401Error`
+    - 404: `#/components/responses/instanceNotFoundCollection`
+    - 500: `#/components/responses/common500ErrorServerError`
 - Create collection folder (`POST /collections/{collectionId}/folders`)
 - Create collection request (`POST /collections/{collectionId}/requests`)
 - Create collection response (`POST /collections/{collectionId}/responses`)
 
 #### Collection Items Management
 - Get folder (`GET /collections/{collectionId}/folders/{folderId}`)
+  - Parameters:
+    - collectionItemsIdQuery
+    - collectionItemsUidFormatQuery
+    - collectionItemsPopulateQuery
+  - Responses:
+    - 200: `#/components/responses/getCollectionFolder`
+    - 401: `#/components/responses/collectionFolder401Error`
+    - 404: `#/components/responses/collectionFolder404Error`
+    - 500: `#/components/responses/common500Error`
 - Update folder (`PUT /collections/{collectionId}/folders/{folderId}`)
+  - Note: Acts like PATCH, only updates provided values
+  - Responses:
+    - 200: `#/components/responses/updateCollectionFolder`
+    - 400: `#/components/responses/collectionFolder400Error`
+    - 401: `#/components/responses/collectionFolder401Error`
+    - 404: `#/components/responses/collectionFolder404Error`
+    - 500: `#/components/responses/common500Error`
 - Delete folder (`DELETE /collections/{collectionId}/folders/{folderId}`)
+  - Responses:
+    - 200: `#/components/responses/deleteCollectionFolder`
+    - 401: `#/components/responses/collectionFolder401Error`
+    - 404: `#/components/responses/collectionFolder404Error`
+    - 500: `#/components/responses/common500Error`
+- Create folder (`POST /collections/{collectionId}/folders`)
+  - Note: Empty name creates folder with blank name
+  - Responses:
+    - 200: `#/components/responses/createCollectionFolder`
+    - 400: `#/components/responses/collectionFolder400Error`
+    - 401: `#/components/responses/collectionFolder401Error`
+    - 500: `#/components/responses/common500Error`
 - Get request (`GET /collections/{collectionId}/requests/{requestId}`)
 - Update request (`PUT /collections/{collectionId}/requests/{requestId}`)
 - Delete request (`DELETE /collections/{collectionId}/requests/{requestId}`)
@@ -70,6 +200,27 @@ This document summarizes the core Postman API functionality implemented in our M
 - Create collection comment (`POST /collections/{collectionId}/comments`)
 - Update collection comment (`PUT /collections/{collectionId}/comments/{commentId}`)
 - Delete collection comment (`DELETE /collections/{collectionId}/comments/{commentId}`)
+
+#### Collection Access Keys
+- Get collection access keys (`GET /collection-access-keys`)
+  - Lists personal and team collection access keys
+  - Includes expiration and last used information
+  - Parameters:
+    - collectionUidQuery
+    - cursor
+  - Responses:
+    - 200: `#/components/responses/getCollectionAccessKeys`
+    - 400: `#/components/responses/common400ErrorInvalidCursor`
+    - 401: `#/components/responses/common401Error`
+    - 403: `#/components/responses/common403ErrorForbidden`
+    - 500: `#/components/responses/common500ErrorSomethingWrong`
+- Delete collection access key (`DELETE /collection-access-keys/{keyId}`)
+  - Responses:
+    - 204: No Content
+    - 401: `#/components/responses/common401Error`
+    - 403: `#/components/responses/common403ErrorForbidden`
+    - 404: `#/components/responses/cakNotFound404Error`
+    - 500: `#/components/responses/common500ErrorSomethingWrong`
 
 ### Key Features
 - Collection CRUD operations
