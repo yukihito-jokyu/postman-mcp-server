@@ -30,6 +30,19 @@ export interface UpdateEnvironmentArgs extends EnvironmentIdArg {
   values: EnvironmentValue[];
 }
 
+export interface ForkEnvironmentArgs extends EnvironmentIdArg, WorkspaceIdArg {}
+
+export interface GetEnvironmentForksArgs extends EnvironmentIdArg {
+  cursor?: string;
+  direction?: 'asc' | 'desc';
+  limit?: number;
+  sort_by?: 'created_at';
+}
+
+export interface MergeEnvironmentForkArgs extends EnvironmentIdArg {}
+
+export interface PullEnvironmentArgs extends EnvironmentIdArg {}
+
 export interface CreateCollectionArgs extends WorkspaceIdArg {
   name: string;
   description?: string;
@@ -92,6 +105,29 @@ export function isUpdateEnvironmentArgs(obj: unknown): obj is UpdateEnvironmentA
     Array.isArray(args.values) &&
     args.values.every(isEnvironmentValue)
   );
+}
+
+export function isForkEnvironmentArgs(obj: unknown): obj is ForkEnvironmentArgs {
+  return isEnvironmentIdArg(obj) && isWorkspaceIdArg(obj);
+}
+
+export function isGetEnvironmentForksArgs(obj: unknown): obj is GetEnvironmentForksArgs {
+  if (!isEnvironmentIdArg(obj)) return false;
+  const args = obj as GetEnvironmentForksArgs;
+  return (
+    (args.cursor === undefined || typeof args.cursor === 'string') &&
+    (args.direction === undefined || args.direction === 'asc' || args.direction === 'desc') &&
+    (args.limit === undefined || typeof args.limit === 'number') &&
+    (args.sort_by === undefined || args.sort_by === 'created_at')
+  );
+}
+
+export function isMergeEnvironmentForkArgs(obj: unknown): obj is MergeEnvironmentForkArgs {
+  return isEnvironmentIdArg(obj);
+}
+
+export function isPullEnvironmentArgs(obj: unknown): obj is PullEnvironmentArgs {
+  return isEnvironmentIdArg(obj);
 }
 
 export function isCreateCollectionArgs(obj: unknown): obj is CreateCollectionArgs {

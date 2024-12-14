@@ -15,3 +15,63 @@ This document summarizes the core Postman API functionality implemented in our M
 9. [Authentication & Authorization](auth.md)
 10. [Common Features](common-features.md)
 11. [Notes](notes.md)
+
+## Prompts
+
+Using Cline 2.2.2.
+
+### Using MCP server tools
+
+```
+Use postman tools to list ouru workspaces
+```
+
+```
+Use postman tools to list envriorments in a workspace: 0ddc8458-12e6-48bf-8ff0-490ca0a8f775
+
+
+```
+
+### Improving MCP server tools
+
+```
+@/docs/api-docs/workspaces.md
+
+Review the postman MCP tools workspace API access against the Postman API summary. Make corrections in our implementation.
+
+```
+
+### Expanding Postman API summaries
+
+#### Working on individual files
+
+```
+@/docs/postman-api-pathsonly.yaml
+
+Peruse the postman OpenAPI 3 paths definition (note this is a very abrridged version of the full document, containing just the paths objects), this time to add the expected response references and associated http status (e.g. 200 '#/components/responses/getAccounts').
+
+Continue updating the individual summary markdown document that we can use later on to cross-check against our tool implementations:
+@/docs/api-docs/collections.md
+
+Workthrough the markdown summary document, operating one endpoint at a time, updating its documentation based on the contents of the pathsonly file. Each request endpoint in the pathsonly OpenAPI 3 definition document should have a list of `responses:`. Those are the details we want to add to the summary markdown doc.
+
+Also continue to add missing endpoints that you come across. The goal is to be "additive" and "augmentative" so that we continually add and correct details each time we review. Do not remove details or re-summarize existing content.
+
+When completed this file, request the next summary document to continue with. Keep doing this until I say stop or you get bored.
+```
+
+#### Splitting single summary file into multiple files
+
+```
+@docs/postman-api-summary.md'
+
+Let's split the single summary doc into multiple docs to help keep the size manageable. Create a new directory under docs/ and split the content at the `##` header level (e.g. "## Workspaces" is one document)
+```
+
+#### Creating a summary document
+
+```
+@/docs/postman-api-index.yaml
+
+Review the postman environment, collection API from the OpenAPI 3 definition. Make a summary document that we can use to cross-check against our tool implementations (This implementation covers the basic Postman API functionality in MCP)
+```
