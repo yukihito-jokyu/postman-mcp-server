@@ -15,59 +15,101 @@
 
 #### Collection Access Keys
 - GET `/collection-access-keys`
-  - 200: Returns collection access keys
-  - 400: Invalid cursor error
-  - 401: Unauthorized error
-  - 403: Forbidden error
-  - 500: Server error
+  - Parameters:
+    - `#/components/parameters/collectionUidQuery`
+    - `#/components/parameters/cursor`
+  - Responses:
+    - 200: `#/components/responses/getCollectionAccessKeys`
+    - 400: `#/components/responses/common400ErrorInvalidCursor`
+    - 401: `#/components/responses/common401Error`
+    - 403: `#/components/responses/common403ErrorForbidden`
+    - 500: `#/components/responses/common500ErrorSomethingWrong`
 
 - DELETE `/collection-access-keys/{keyId}`
-  - 204: No Content (successful deletion)
-  - 401: Unauthorized error
-  - 403: Forbidden error
-  - 404: Access key not found
-  - 500: Server error
+  - Parameters:
+    - `#/components/parameters/collectionAccessKeyId` (required)
+  - Responses:
+    - 204: No Content (successful deletion)
+    - 401: `#/components/responses/common401Error`
+    - 403: `#/components/responses/common403ErrorForbidden`
+    - 404: `#/components/responses/cakNotFound404Error`
+    - 500: `#/components/responses/common500ErrorSomethingWrong`
 
 #### Roles & Permissions
 
 ##### Workspace Roles
 - GET `/workspaces-roles`
-  - 200: Returns all workspace roles
-  - 401: Unauthorized error
-  - 403: Permission error
-  - 500: Internal server error
+  - Responses:
+    - 200: `#/components/responses/getAllWorkspaceRoles`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: `#/components/responses/common403ErrorPermissions`
+    - 500: `#/components/responses/common500ErrorInternalServer`
 
 - GET `/workspaces/{workspaceId}/roles`
-  - 200: Returns workspace roles
-  - 401: Unauthorized error
-  - 403: Permission error
-  - 404: Resource not found
-  - 500: Internal server error
+  - Parameters:
+    - `#/components/parameters/workspaceId` (required)
+    - `#/components/parameters/workspaceIncludeScimQuery`
+  - Responses:
+    - 200: `#/components/responses/getWorkspaceRoles`
+    - 401: `#/components/responses/unauthorizedError`
+    - 403: `#/components/responses/common403ErrorPermissions`
+    - 404: `#/components/responses/resourceNotFound404Error`
+    - 500: `#/components/responses/common500ErrorInternalServer`
 
 - PATCH `/workspaces/{workspaceId}/roles`
-  - 200: Updates workspace roles
-  - 400: Invalid request error
-  - 401: Unauthorized error
-  - 403: Permission error
-  - 404: Resource not found
-  - 422: Unsupported role error
-  - 500: Internal server error
+  - Parameters:
+    - `#/components/parameters/workspaceId` (required)
+    - `#/components/parameters/identifierType`
+  - Notes:
+    - Groups available on Enterprise plans
+    - Include `identifierType=scim` header for SCIM IDs
+    - Cannot set roles for personal and partner workspaces
+    - Does not support Partner or Guest external roles
+    - Limited to 50 operations per call
+    - Request body must contain one unique action per user/group
+  - Responses:
+    - 200: `#/components/responses/updateWorkspaceRoles`
+    - 400: `#/components/responses/workspaceRoles400Error`
+    - 401: `#/components/responses/unauthorizedError`
+    - 403: `#/components/responses/common403ErrorPermissions`
+    - 404: `#/components/responses/resourceNotFound404Error`
+    - 422: `#/components/responses/workspaceRoles422UnsupportRoleError`
+    - 500: `#/components/responses/common500ErrorInternalServer`
 
 ##### Collection Roles
 - GET `/collections/{collectionId}/roles`
-  - 200: Returns collection roles
-  - 401: Unauthorized error
-  - 403: Permission error
-  - 404: Collection not found
-  - 500: Internal server error
+  - Parameters:
+    - `#/components/parameters/collectionId` (required)
+  - Responses:
+    - 200: `#/components/responses/getCollectionRoles`
+    - 401: `#/components/responses/unauthorizedError`
+    - 403: `#/components/responses/common403ErrorPermissions`
+    - 404: `#/components/responses/collection404ErrorInstanceNotFound`
+    - 500: `#/components/responses/common500ErrorInternalServer`
 
 - PATCH `/collections/{collectionId}/roles`
-  - 204: No Content (successful update)
-  - 400: Missing property error
-  - 401: Unauthorized error
-  - 403: Permission error
-  - 404: Collection not found
-  - 500: Internal server error
+  - Parameters:
+    - `#/components/parameters/collectionId` (required)
+  - Notes:
+    - Only users with EDITOR role can use this endpoint
+    - Does not support Partner or Guest external roles
+  - Responses:
+    - 204: No Content (successful update)
+    - 400: `#/components/responses/collectionRoles400ErrorMissingProperty`
+    - 401: `#/components/responses/unauthorizedError`
+    - 403: `#/components/responses/common403ErrorPermissions`
+    - 404: `#/components/responses/collection404ErrorInstanceNotFound`
+    - 500: `#/components/responses/common500ErrorInternalServer`
+
+### User Information
+- GET `/me` (Get authenticated user)
+  - Note: Different response for Guest and Partner roles
+  - Note: `flow_count` only returns for Free plan users
+  - Responses:
+    - 200: `#/components/responses/getAuthenticatedUser`
+    - 401: `#/components/responses/common401Error`
+    - 500: `#/components/responses/common500ErrorServerError`
+
 
 Notes:
 - Role operations support both user and user group management

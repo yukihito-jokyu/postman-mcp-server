@@ -2,7 +2,12 @@
 
 ### Implemented Operations
 - Get all APIs (`GET /apis`)
-  - Query Parameters: workspace, createdBy, cursor, description, limit
+  - Parameters:
+    - `#/components/parameters/workspaceIdQueryTrue` (required)
+    - `#/components/parameters/createdBy`
+    - `#/components/parameters/cursor`
+    - `#/components/parameters/apiDescription`
+    - `#/components/parameters/limit`
   - Responses:
     - 200: `#/components/responses/getApis`
     - 401: `#/components/responses/common401Error`
@@ -11,6 +16,9 @@
     - 422: `#/components/responses/v9Unsupported`
     - 500: `#/components/responses/common500Error`
 - Create API (`POST /apis`)
+  - Parameters:
+    - `#/components/parameters/workspaceIdQueryTrue`
+    - `#/components/parameters/v10Accept`
   - Responses:
     - 200: `#/components/responses/createApi`
     - 400: `#/components/responses/workspace400ErrorParamMissing`
@@ -22,6 +30,10 @@
     - 404: `#/components/responses/workspace404Error`
     - 500: `#/components/responses/common500Error`
 - Get specific API (`GET /apis/{apiId}`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/v10Accept`
+    - `#/components/parameters/apiInclude`
   - Responses:
     - 200: `#/components/responses/getApi`
     - 400: `#/components/responses/v10HeaderMissing`
@@ -31,6 +43,9 @@
     - 422: `#/components/responses/v9Unsupported`
     - 500: `#/components/responses/common500Error`
 - Update API (`PUT /apis/{apiId}`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/v10Accept`
   - Responses:
     - 200: `#/components/responses/updateApi`
     - 400: `#/components/responses/v10HeaderMissing`
@@ -40,6 +55,9 @@
     - 422: `#/components/responses/v9Unsupported`
     - 500: `#/components/responses/common500Error`
 - Delete API (`DELETE /apis/{apiId}`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/v10Accept`
   - Responses:
     - 204: No Content
     - 400: `#/components/responses/v10HeaderMissing`
@@ -51,6 +69,9 @@
 
 #### API Collections
 - Add collection (`POST /apis/{apiId}/collections`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/v10Accept`
   - Responses:
     - 200: `#/components/responses/addApiCollection`
     - 400: `#/components/responses/v10HeaderMissing`
@@ -61,6 +82,11 @@
     - 404: `#/components/responses/api404ErrorNotFound`
     - 500: `#/components/responses/common500Error`
 - Get collection (`GET /apis/{apiId}/collections/{collectionId}`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/collectionIdApi` (required)
+    - `#/components/parameters/v10Accept`
+    - `#/components/parameters/apiVersionQuery`
   - Note: Cannot be used for Git-linked API collections
   - Responses:
     - 200: `#/components/responses/getApiCollection`
@@ -73,6 +99,10 @@
     - 422: `#/components/responses/gitLinkedApi422Error`
     - 500: `#/components/responses/common500Error`
 - Sync collection with schema (`PUT /apis/{apiId}/collections/{collectionId}/sync-with-schema-tasks`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/collectionIdApi` (required)
+    - `#/components/parameters/v10Accept`
   - Note: Only supports OpenAPI 3 schema type
   - Responses:
     - 202: `#/components/responses/syncCollectionWithSchema`
@@ -89,6 +119,9 @@
 
 #### API Schemas
 - Create schema (`POST /apis/{apiId}/schemas`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/v10Accept`
   - Responses:
     - 200: `#/components/responses/createApiSchema`
     - 400: Multiple possible responses:
@@ -102,6 +135,12 @@
     - 422: `#/components/responses/gitLinkedApi422Error`
     - 500: `#/components/responses/common500Error`
 - Get schema (`GET /apis/{apiId}/schemas/{schemaId}`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/apiSchemaId` (required)
+    - `#/components/parameters/v10Accept`
+    - `#/components/parameters/apiVersionQuery`
+    - `#/components/parameters/apiSchemaOutput`
   - Responses:
     - 200: `#/components/responses/getApiSchema`
     - 400: Multiple possible responses:
@@ -113,6 +152,13 @@
     - 422: `#/components/responses/gitLinkedApi422Error`
     - 500: `#/components/responses/common500Error`
 - Get schema files (`GET /apis/{apiId}/schemas/{schemaId}/files`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/apiSchemaId` (required)
+    - `#/components/parameters/v10Accept`
+    - `#/components/parameters/apiVersionQuery`
+    - `#/components/parameters/limit`
+    - `#/components/parameters/cursor`
   - Responses:
     - 200: `#/components/responses/getApiSchemaFiles`
     - 400: Multiple possible responses:
@@ -124,6 +170,12 @@
     - 422: `#/components/responses/gitLinkedApi422Error`
     - 500: `#/components/responses/common500Error`
 - Get schema file contents (`GET /apis/{apiId}/schemas/{schemaId}/files/{file-path}`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/apiSchemaId` (required)
+    - `#/components/parameters/file-path` (required)
+    - `#/components/parameters/v10Accept`
+    - `#/components/parameters/apiVersionQuery`
   - Responses:
     - 200: `#/components/responses/getApiSchemaFileContents`
     - 400: Multiple possible responses:
@@ -135,6 +187,11 @@
     - 422: `#/components/responses/gitLinkedApi422Error`
     - 500: `#/components/responses/common500Error`
 - Create/update schema file (`PUT /apis/{apiId}/schemas/{schemaId}/files/{file-path}`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/apiSchemaId` (required)
+    - `#/components/parameters/file-path` (required)
+    - `#/components/parameters/v10Accept`
   - Responses:
     - 200: `#/components/responses/createUpdateApiSchemaFile`
     - 400: Multiple possible responses:
@@ -148,6 +205,11 @@
     - 422: `#/components/responses/gitLinkedApi422Error`
     - 500: `#/components/responses/common500Error`
 - Delete schema file (`DELETE /apis/{apiId}/schemas/{schemaId}/files/{file-path}`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/apiSchemaId` (required)
+    - `#/components/parameters/file-path` (required)
+    - `#/components/parameters/v10Accept`
   - Responses:
     - 204: Deleted
     - 400: Multiple possible responses:
@@ -163,6 +225,8 @@
 
 #### API Comments
 - Get API comments (`GET /apis/{apiId}/comments`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
   - Responses:
     - 200: `#/components/responses/commentGet`
     - 400: `#/components/responses/v10HeaderMissing`
@@ -171,6 +235,8 @@
     - 404: `#/components/responses/comment404Error`
     - 500: `#/components/responses/comment500Error`
 - Create API comment (`POST /apis/{apiId}/comments`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
   - Note: Maximum 10,000 characters
   - Responses:
     - 201: `#/components/responses/commentCreated`
@@ -180,6 +246,9 @@
     - 404: `#/components/responses/comment404Error`
     - 500: `#/components/responses/comment500Error`
 - Update API comment (`PUT /apis/{apiId}/comments/{commentId}`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/commentId` (required)
   - Note: Maximum 10,000 characters
   - Responses:
     - 200: `#/components/responses/commentUpdated`
@@ -189,6 +258,9 @@
     - 404: `#/components/responses/comment404Error`
     - 500: `#/components/responses/comment500Error`
 - Delete API comment (`DELETE /apis/{apiId}/comments/{commentId}`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/commentId` (required)
   - Note: Deleting first comment deletes entire thread
   - Responses:
     - 204: No Content

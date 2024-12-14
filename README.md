@@ -76,3 +76,8 @@ npm run inspector
 ```
 
 The Inspector will provide a URL to access debugging tools in your browser.
+
+## Other MCP Servers
+
+https://github.com/appcypher/awesome-mcp-servers
+https://github.com/punkpeye/awesome-mcp-servers
