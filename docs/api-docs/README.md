@@ -87,6 +87,11 @@ Also continue to add missing endpoints that you come across. The goal is to be "
 When completed this file, request the next summary document to continue with. Keep doing this until I say stop or you get bored.
 ```
 
+Add Parameter Details:
+```
+```
+
+
 #### Splitting single summary file into multiple files
 
 ```
