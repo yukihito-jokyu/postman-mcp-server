@@ -59,6 +59,14 @@ On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
 }
 ```
 
+### Documentation
+
+The API documentation is available in the Postman public workspace:
+https://www.postman.com/postman/postman-public-workspace/api/72a32ca3-f06a-4e83-a933-2821a0e6616f/definition/024624cf-e622-4836-9d19-efd067f6cbdb/file/024624cf-e622-4836-9d19-efd067f6cbdb?version=67667e0a-44fd-4746-b7a9-6c3980a7d9de&ctx=documentation
+
+See also docs/postman-api-index.yaml for a local copy of the OpenAPI definition.
+
+
 ### Debugging
 
 Since MCP servers communicate over stdio, debugging can be challenging. We recommend using the [MCP Inspector](https://github.com/modelcontextprotocol/inspector), which is available as a package script:
