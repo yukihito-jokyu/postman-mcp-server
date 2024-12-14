@@ -188,18 +188,120 @@ This document summarizes the core Postman API functionality implemented in our M
 - Update response (`PUT /collections/{collectionId}/responses/{responseId}`)
 - Delete response (`DELETE /collections/{collectionId}/responses/{responseId}`)
 
+#### Collection Transfers
+- Transfer folders (`POST /collection-folders-transfers`)
+  - Copy or move folders between collections
+  - Responses:
+    - 200: `#/components/responses/transferCollectionItems200Error`
+    - 400: `#/components/responses/transferCollectionItems400Error`
+    - 500: `#/components/responses/common500Error`
+- Transfer requests (`POST /collection-requests-transfers`)
+  - Copy or move requests between collections/folders
+  - Responses:
+    - 200: `#/components/responses/transferCollectionItems200Error`
+    - 400: `#/components/responses/transferCollectionItems400Error`
+    - 500: `#/components/responses/common500Error`
+- Transfer responses (`POST /collection-responses-transfers`)
+  - Copy or move responses between requests
+  - Responses:
+    - 200: `#/components/responses/transferCollectionItems200Error`
+    - 400: `#/components/responses/transferCollectionItems400Error`
+    - 500: `#/components/responses/common500Error`
+
 #### Collection Forking & Merging
 - Create fork (`POST /collections/fork/{collectionId}`)
+  - Parameters:
+    - forkWorkspaceQuery
+  - Responses:
+    - 200: `#/components/responses/createCollectionFork`
+    - 401: `#/components/responses/common401Error`
+    - 404: `#/components/responses/instanceNotFoundCollection`
+    - 500: `#/components/responses/common500ErrorServerError`
 - Get collection forks (`GET /collections/{collectionId}/forks`)
-- Merge fork (`POST /collections/merge`)
+  - Parameters:
+    - cursor
+    - limit
+    - createdAtSort
+  - Responses:
+    - 200: `#/components/responses/getCollectionForks`
+    - 400: `#/components/responses/forkCollection400ErrorNoForks`
+    - 404: `#/components/responses/fork404Error`
+    - 500: `#/components/responses/common500Error`
+- Get all forked collections (`GET /collections/collection-forks`)
+  - Parameters:
+    - cursor
+    - limit
+    - createdAtSort
+  - Responses:
+    - 200: `#/components/responses/getCollectionsForkedByUser`
+    - 400: `#/components/responses/fork400ErrorNoUserFound`
+    - 401: `#/components/responses/common401Error`
+    - 500: `#/components/responses/common500Error`
+- Merge or pull changes (`PUT /collection-merges`)
+  - Asynchronous operation with task status tracking
+  - Responses:
+    - 200: `#/components/responses/asyncMergeCollectionFork`
+    - 400: `#/components/responses/collectionForks400ErrorMalformedRequest`
+    - 401: `#/components/responses/common401Error`
+    - 403: `#/components/responses/collectionForks403ErrorForbidden`
+    - 500: `#/components/responses/common500Error`
+- Get merge/pull task status (`GET /collections-merges-tasks/{taskId}`)
+  - Note: Task status available for 24 hours after completion
+  - Parameters:
+    - collectionForkTaskId
+  - Responses:
+    - 200: `#/components/responses/asyncMergePullCollectionTaskStatus`
+    - 401: `#/components/responses/common401Error`
+    - 403: `#/components/responses/collectionForks403ErrorForbidden`
+    - 404: `#/components/responses/collectionForks404ErrorTaskNotFound`
+    - 500: `#/components/responses/common500Error`
 - Pull changes (`PUT /collections/{collectionId}/pulls`)
+  - Responses:
+    - 200: `#/components/responses/pullCollectionChanges`
+    - 400: `#/components/responses/forkCollection400ErrorBadId`
+    - 404: `#/components/responses/instanceNotFoundCollection`
+    - 500: `#/components/responses/common500Error`
 - Get source collection status (`GET /collections/{collectionId}/source-status`)
+  - Note: May take a few minutes to return updated status
+  - Responses:
+    - 200: `#/components/responses/getSourceCollectionStatus`
+    - 400: `#/components/responses/forkCollection400ErrorNotForked`
+    - 403: `#/components/responses/pullRequest403ErrorForbidden`
+    - 500: `#/components/responses/common500Error`
 
 #### Collection Comments
 - Get collection comments (`GET /collections/{collectionId}/comments`)
+  - Responses:
+    - 200: `#/components/responses/commentGet`
+    - 401: `#/components/responses/comment401Error`
+    - 403: `#/components/responses/comment403Error`
+    - 404: `#/components/responses/comment404Error`
+    - 500: `#/components/responses/comment500Error`
 - Create collection comment (`POST /collections/{collectionId}/comments`)
+  - Note: Maximum 10,000 characters
+  - Responses:
+    - 201: `#/components/responses/commentCreated`
+    - 401: `#/components/responses/comment401Error`
+    - 403: `#/components/responses/comment403Error`
+    - 404: `#/components/responses/comment404Error`
+    - 500: `#/components/responses/comment500Error`
 - Update collection comment (`PUT /collections/{collectionId}/comments/{commentId}`)
+  - Note: Maximum 10,000 characters
+  - Responses:
+    - 200: `#/components/responses/commentUpdated`
+    - 401: `#/components/responses/comment401Error`
+    - 403: `#/components/responses/comment403Error`
+    - 404: `#/components/responses/comment404Error`
+    - 500: `#/components/responses/comment500Error`
 - Delete collection comment (`DELETE /collections/{collectionId}/comments/{commentId}`)
+  - Note: Deleting first comment deletes entire thread
+  - Responses:
+    - 204: No Content
+    - 401: `#/components/responses/comment401Error`
+    - 403: `#/components/responses/comment403Error`
+    - 404: `#/components/responses/comment404Error`
+    - 500: `#/components/responses/comment500Error`
+
 
 #### Collection Access Keys
 - Get collection access keys (`GET /collection-access-keys`)
