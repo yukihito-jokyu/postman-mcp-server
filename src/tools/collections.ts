@@ -9,8 +9,8 @@ import {
 export class CollectionTools implements ToolHandler {
   constructor(public axiosInstance: AxiosInstance) {}
 
-  async listCollections(workspace_id: string) {
-    const response = await this.axiosInstance.get(`/workspaces/${workspace_id}/collections`);
+  async listCollections(workspace: string) {
+    const response = await this.axiosInstance.get(`/workspaces/${workspace}/collections`);
     return {
       content: [
         {
@@ -33,7 +33,7 @@ export class CollectionTools implements ToolHandler {
     };
   }
 
-  async createCollection({ workspace_id, name, description, schema }: CreateCollectionArgs) {
+  async createCollection({ workspace, name, description, schema }: CreateCollectionArgs) {
     const response = await this.axiosInstance.post('/collections', {
       collection: {
         info: {
@@ -44,7 +44,7 @@ export class CollectionTools implements ToolHandler {
         ...schema
       },
       workspace: {
-        id: workspace_id,
+        id: workspace,
         type: 'workspace'
       }
     });
@@ -91,10 +91,10 @@ export class CollectionTools implements ToolHandler {
     };
   }
 
-  async forkCollection({ collection_id, workspace_id, label }: ForkCollectionArgs) {
+  async forkCollection({ collection_id, workspace, label }: ForkCollectionArgs) {
     const response = await this.axiosInstance.post(`/collections/fork/${collection_id}`, {
       workspace: {
-        id: workspace_id,
+        id: workspace,
         type: 'workspace'
       },
       label

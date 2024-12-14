@@ -21,10 +21,10 @@ import {
 export class EnvironmentTools implements ToolHandler {
   constructor(public axiosInstance: AxiosInstance) {}
 
-  async listEnvironments(workspace_id?: string) {
+  async listEnvironments(workspace?: string) {
     try {
       const response = await this.axiosInstance.get('/environments', {
-        params: workspace_id ? { workspace: workspace_id } : undefined
+        params: workspace ? { workspace } : undefined
       });
       return {
         content: [
@@ -45,9 +45,13 @@ export class EnvironmentTools implements ToolHandler {
     }
   }
 
-  async getEnvironment(environment_id: string) {
+  async getEnvironment(environmentId: string) {
+    if (!this.isValidUid(environmentId)) {
+      throw new McpError(ErrorCode.InvalidRequest, 'Invalid environment ID format');
+    }
+
     try {
-      const response = await this.axiosInstance.get(`/environments/${environment_id}`);
+      const response = await this.axiosInstance.get(`/environments/${environmentId}`);
       return {
         content: [
           {
@@ -70,7 +74,7 @@ export class EnvironmentTools implements ToolHandler {
   async createEnvironment(args: CreateEnvironmentArgs) {
     try {
       validateArgs(args, isCreateEnvironmentArgs, 'Invalid create environment arguments');
-      const { workspace_id, name, values } = args;
+      const { workspace, name, values } = args;
 
       const response = await this.axiosInstance.post('/environments', {
         environment: {
@@ -81,8 +85,8 @@ export class EnvironmentTools implements ToolHandler {
             enabled: v.enabled !== false
           }))
         },
-        workspace: workspace_id ? {
-          id: workspace_id,
+        workspace: workspace ? {
+          id: workspace,
           type: 'workspace'
         } : undefined
       });
@@ -112,9 +116,13 @@ export class EnvironmentTools implements ToolHandler {
   async updateEnvironment(args: UpdateEnvironmentArgs) {
     try {
       validateArgs(args, isUpdateEnvironmentArgs, 'Invalid update environment arguments');
-      const { environment_id, name, values } = args;
+      const { environmentId, name, values } = args;
 
-      const response = await this.axiosInstance.put(`/environments/${environment_id}`, {
+      if (!this.isValidUid(environmentId)) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Invalid environment ID format');
+      }
+
+      const response = await this.axiosInstance.put(`/environments/${environmentId}`, {
         environment: {
           name,
           values: values.map((v: EnvironmentValue) => ({
@@ -144,9 +152,13 @@ export class EnvironmentTools implements ToolHandler {
     }
   }
 
-  async deleteEnvironment(environment_id: string) {
+  async deleteEnvironment(environmentId: string) {
+    if (!this.isValidUid(environmentId)) {
+      throw new McpError(ErrorCode.InvalidRequest, 'Invalid environment ID format');
+    }
+
     try {
-      const response = await this.axiosInstance.delete(`/environments/${environment_id}`);
+      const response = await this.axiosInstance.delete(`/environments/${environmentId}`);
       return {
         content: [
           {
@@ -169,11 +181,15 @@ export class EnvironmentTools implements ToolHandler {
   async createEnvironmentFork(args: ForkEnvironmentArgs) {
     try {
       validateArgs(args, isForkEnvironmentArgs, 'Invalid fork environment arguments');
-      const { environment_id, workspace_id } = args;
+      const { environmentId, workspace } = args;
 
-      const response = await this.axiosInstance.post(`/environments/${environment_id}/forks`, {
+      if (!this.isValidUid(environmentId)) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Invalid environment ID format');
+      }
+
+      const response = await this.axiosInstance.post(`/environments/${environmentId}/forks`, {
         workspace: {
-          id: workspace_id,
+          id: workspace,
           type: 'workspace'
         }
       });
@@ -200,14 +216,26 @@ export class EnvironmentTools implements ToolHandler {
   async getEnvironmentForks(args: GetEnvironmentForksArgs) {
     try {
       validateArgs(args, isGetEnvironmentForksArgs, 'Invalid get environment forks arguments');
-      const { environment_id, cursor, direction, limit, sort_by } = args;
+      const { environmentId, cursor, direction, limit, sort } = args;
 
-      const response = await this.axiosInstance.get(`/environments/${environment_id}/forks`, {
+      if (!this.isValidUid(environmentId)) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Invalid environment ID format');
+      }
+
+      if (direction && !['asc', 'desc'].includes(direction)) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Direction must be either "asc" or "desc"');
+      }
+
+      if (sort && sort !== 'createdAt') {
+        throw new McpError(ErrorCode.InvalidRequest, 'Sort must be "createdAt"');
+      }
+
+      const response = await this.axiosInstance.get(`/environments/${environmentId}/forks`, {
         params: {
           cursor,
           direction,
           limit,
-          sort: sort_by
+          sort
         }
       });
 
@@ -236,9 +264,13 @@ export class EnvironmentTools implements ToolHandler {
   async mergeEnvironmentFork(args: MergeEnvironmentForkArgs) {
     try {
       validateArgs(args, isMergeEnvironmentForkArgs, 'Invalid merge environment fork arguments');
-      const { environment_id } = args;
+      const { environmentId } = args;
 
-      const response = await this.axiosInstance.post(`/environments/${environment_id}/merges`);
+      if (!this.isValidUid(environmentId)) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Invalid environment ID format');
+      }
+
+      const response = await this.axiosInstance.post(`/environments/${environmentId}/merges`);
 
       return {
         content: [
@@ -265,9 +297,13 @@ export class EnvironmentTools implements ToolHandler {
   async pullEnvironment(args: PullEnvironmentArgs) {
     try {
       validateArgs(args, isPullEnvironmentArgs, 'Invalid pull environment arguments');
-      const { environment_id } = args;
+      const { environmentId } = args;
 
-      const response = await this.axiosInstance.post(`/environments/${environment_id}/pulls`);
+      if (!this.isValidUid(environmentId)) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Invalid environment ID format');
+      }
+
+      const response = await this.axiosInstance.post(`/environments/${environmentId}/pulls`);
 
       return {
         content: [
@@ -289,5 +325,10 @@ export class EnvironmentTools implements ToolHandler {
       }
       throw new McpError(ErrorCode.InternalError, 'Server error occurred');
     }
+  }
+
+  private isValidUid(id: string): boolean {
+    // Format: userId-uuid, e.g., "12345678-12ece9e1-2abf-4edc-8e34-de66e74114d2"
+    return /^\d+-[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/.test(id);
   }
 }

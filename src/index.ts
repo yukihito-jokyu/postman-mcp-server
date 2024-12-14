@@ -15,7 +15,7 @@ import { CollectionTools } from './tools/collections.js';
 import { UserTools } from './tools/users.js';
 import {
   validateArgs,
-  isWorkspaceIdArg,
+  isWorkspaceArg,
   isEnvironmentIdArg,
   isCollectionIdArg,
   isCreateEnvironmentArgs,
@@ -92,12 +92,12 @@ class PostmanAPIServer {
           inputSchema: {
             type: 'object',
             properties: {
-              workspace_id: {
+              workspace: {
                 type: 'string',
                 description: 'Workspace ID',
               },
             },
-            required: ['workspace_id'],
+            required: ['workspace'],
           },
         },
         // Environment management tools
@@ -107,12 +107,12 @@ class PostmanAPIServer {
           inputSchema: {
             type: 'object',
             properties: {
-              workspace_id: {
+              workspace: {
                 type: 'string',
                 description: 'Workspace ID',
               },
             },
-            required: ['workspace_id'],
+            required: ['workspace'],
           },
         },
         {
@@ -121,12 +121,12 @@ class PostmanAPIServer {
           inputSchema: {
             type: 'object',
             properties: {
-              environment_id: {
+              environmentId: {
                 type: 'string',
                 description: 'Environment ID',
               },
             },
-            required: ['environment_id'],
+            required: ['environmentId'],
           },
         },
         {
@@ -135,7 +135,7 @@ class PostmanAPIServer {
           inputSchema: {
             type: 'object',
             properties: {
-              workspace_id: {
+              workspace: {
                 type: 'string',
                 description: 'Workspace ID',
               },
@@ -158,7 +158,7 @@ class PostmanAPIServer {
                 },
               },
             },
-            required: ['workspace_id', 'name', 'values'],
+            required: ['workspace', 'name', 'values'],
           },
         },
         {
@@ -167,7 +167,7 @@ class PostmanAPIServer {
           inputSchema: {
             type: 'object',
             properties: {
-              environment_id: {
+              environmentId: {
                 type: 'string',
                 description: 'Environment ID',
               },
@@ -190,7 +190,7 @@ class PostmanAPIServer {
                 },
               },
             },
-            required: ['environment_id', 'name', 'values'],
+            required: ['environmentId', 'name', 'values'],
           },
         },
         {
@@ -199,12 +199,12 @@ class PostmanAPIServer {
           inputSchema: {
             type: 'object',
             properties: {
-              environment_id: {
+              environmentId: {
                 type: 'string',
                 description: 'Environment ID',
               },
             },
-            required: ['environment_id'],
+            required: ['environmentId'],
           },
         },
         // Enhanced collection management tools
@@ -214,12 +214,12 @@ class PostmanAPIServer {
           inputSchema: {
             type: 'object',
             properties: {
-              workspace_id: {
+              workspace: {
                 type: 'string',
                 description: 'Workspace ID',
               },
             },
-            required: ['workspace_id'],
+            required: ['workspace'],
           },
         },
         {
@@ -242,7 +242,7 @@ class PostmanAPIServer {
           inputSchema: {
             type: 'object',
             properties: {
-              workspace_id: {
+              workspace: {
                 type: 'string',
                 description: 'Workspace ID',
               },
@@ -259,7 +259,7 @@ class PostmanAPIServer {
                 description: 'Collection schema in Postman Collection format v2.1',
               },
             },
-            required: ['workspace_id', 'name', 'schema'],
+            required: ['workspace', 'name', 'schema'],
           },
         },
         {
@@ -312,7 +312,7 @@ class PostmanAPIServer {
                 type: 'string',
                 description: 'Collection ID to fork',
               },
-              workspace_id: {
+              workspace: {
                 type: 'string',
                 description: 'Destination workspace ID',
               },
@@ -321,7 +321,7 @@ class PostmanAPIServer {
                 description: 'Label for the forked collection',
               },
             },
-            required: ['collection_id', 'workspace_id', 'label'],
+            required: ['collection_id', 'workspace', 'label'],
           },
         },
         {
@@ -346,17 +346,17 @@ class PostmanAPIServer {
             return await this.workspaceTools.listWorkspaces();
           case 'get_workspace':
             return await this.workspaceTools.getWorkspace(
-              validateArgs(args, isWorkspaceIdArg, 'Invalid workspace ID argument').workspace_id
+              validateArgs(args, isWorkspaceArg, 'Invalid workspace ID argument').workspace
             );
 
           // Environment handlers
           case 'list_environments':
             return await this.environmentTools.listEnvironments(
-              validateArgs(args, isWorkspaceIdArg, 'Invalid workspace ID argument').workspace_id
+              validateArgs(args, isWorkspaceArg, 'Invalid workspace ID argument').workspace
             );
           case 'get_environment':
             return await this.environmentTools.getEnvironment(
-              validateArgs(args, isEnvironmentIdArg, 'Invalid environment ID argument').environment_id
+              validateArgs(args, isEnvironmentIdArg, 'Invalid environment ID argument').environmentId
             );
           case 'create_environment':
             return await this.environmentTools.createEnvironment(
@@ -368,13 +368,13 @@ class PostmanAPIServer {
             );
           case 'delete_environment':
             return await this.environmentTools.deleteEnvironment(
-              validateArgs(args, isEnvironmentIdArg, 'Invalid environment ID argument').environment_id
+              validateArgs(args, isEnvironmentIdArg, 'Invalid environment ID argument').environmentId
             );
 
           // Collection handlers
           case 'list_collections':
             return await this.collectionTools.listCollections(
-              validateArgs(args, isWorkspaceIdArg, 'Invalid workspace ID argument').workspace_id
+              validateArgs(args, isWorkspaceArg, 'Invalid workspace ID argument').workspace
             );
           case 'get_collection':
             return await this.collectionTools.getCollection(
