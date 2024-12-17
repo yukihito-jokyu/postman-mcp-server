@@ -7,6 +7,10 @@ import {
   ToolDefinition
 } from '../types.js';
 
+/**
+ * Implements Postman Collection API operations
+ * @see https://www.postman.com/postman/workspace/postman-public-workspace/documentation/12959542-c8142d51-e97c-46b6-bd77-52bb66712c9a
+ */
 export class CollectionTools implements ToolHandler {
   constructor(public axiosInstance: AxiosInstance) {}
 
@@ -42,33 +46,53 @@ export class CollectionTools implements ToolHandler {
       },
       {
         name: 'create_collection',
-        description: 'Create a new collection in a workspace',
+        description: 'Create a new collection in a workspace. Supports Postman Collection v2.1.0 format.',
         inputSchema: {
           type: 'object',
           properties: {
             workspace: {
               type: 'string',
-              description: 'Workspace ID',
+              description: 'Workspace ID. Creates in "My Workspace" if not specified.',
             },
-            name: {
-              type: 'string',
-              description: 'Collection name',
-            },
-            description: {
-              type: 'string',
-              description: 'Collection description',
-            },
-            schema: {
+            collection: {
               type: 'object',
-              description: 'Collection schema in Postman Collection format v2.1',
-            },
+              description: 'Collection details in Postman Collection Format v2.1',
+              required: ['info'],
+              properties: {
+                info: {
+                  type: 'object',
+                  required: ['name', 'schema'],
+                  properties: {
+                    name: {
+                      type: 'string',
+                      description: "The collection's name"
+                    },
+                    description: {
+                      type: 'string',
+                      description: "The collection's description"
+                    },
+                    schema: {
+                      type: 'string',
+                      description: "The collection's schema URL"
+                    }
+                  }
+                },
+                item: {
+                  type: 'array',
+                  description: 'Collection items (requests, folders)',
+                  items: {
+                    type: 'object'
+                  }
+                }
+              }
+            }
           },
-          required: ['workspace', 'name', 'schema'],
+          required: ['workspace', 'collection'],
         },
       },
       {
         name: 'update_collection',
-        description: 'Update an existing collection',
+        description: 'Update an existing collection. Full collection replacement with maximum size of 20 MB.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -76,20 +100,40 @@ export class CollectionTools implements ToolHandler {
               type: 'string',
               description: 'Collection ID',
             },
-            name: {
-              type: 'string',
-              description: 'Collection name',
-            },
-            description: {
-              type: 'string',
-              description: 'Collection description',
-            },
-            schema: {
+            collection: {
               type: 'object',
-              description: 'Collection schema in Postman Collection format v2.1',
-            },
+              description: 'Collection details in Postman Collection Format v2.1',
+              required: ['info', 'item'],
+              properties: {
+                info: {
+                  type: 'object',
+                  required: ['name', 'schema'],
+                  properties: {
+                    name: {
+                      type: 'string',
+                      description: "The collection's name"
+                    },
+                    description: {
+                      type: 'string',
+                      description: "The collection's description"
+                    },
+                    schema: {
+                      type: 'string',
+                      description: "The collection's schema URL"
+                    }
+                  }
+                },
+                item: {
+                  type: 'array',
+                  description: 'Collection items (requests, folders)',
+                  items: {
+                    type: 'object'
+                  }
+                }
+              }
+            }
           },
-          required: ['collection_id', 'name', 'schema'],
+          required: ['collection_id', 'collection'],
         },
       },
       {
@@ -131,6 +175,11 @@ export class CollectionTools implements ToolHandler {
     ];
   }
 
+  /**
+   * List all collections in a workspace
+   * @param workspace Workspace ID
+   * @returns List of collections
+   */
   async listCollections(workspace: string) {
     const response = await this.axiosInstance.get(`/workspaces/${workspace}/collections`);
     return {
@@ -143,6 +192,11 @@ export class CollectionTools implements ToolHandler {
     };
   }
 
+  /**
+   * Get details of a specific collection
+   * @param collection_id Collection ID
+   * @returns Collection details
+   */
   async getCollection(collection_id: string) {
     const response = await this.axiosInstance.get(`/collections/${collection_id}`);
     return {
@@ -155,16 +209,14 @@ export class CollectionTools implements ToolHandler {
     };
   }
 
-  async createCollection({ workspace, name, description, schema }: CreateCollectionArgs) {
+  /**
+   * Create a new collection in a workspace
+   * @param args CreateCollectionArgs containing workspace and collection details
+   * @returns Created collection details
+   */
+  async createCollection({ workspace, collection }: CreateCollectionArgs) {
     const response = await this.axiosInstance.post('/collections', {
-      collection: {
-        info: {
-          name,
-          description,
-          schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-        },
-        ...schema
-      },
+      collection,
       workspace: {
         id: workspace,
         type: 'workspace'
@@ -180,16 +232,14 @@ export class CollectionTools implements ToolHandler {
     };
   }
 
-  async updateCollection({ collection_id, name, description, schema }: UpdateCollectionArgs) {
+  /**
+   * Update an existing collection
+   * @param args UpdateCollectionArgs containing collection ID and updated details
+   * @returns Updated collection details
+   */
+  async updateCollection({ collection_id, collection }: UpdateCollectionArgs) {
     const response = await this.axiosInstance.put(`/collections/${collection_id}`, {
-      collection: {
-        info: {
-          name,
-          description,
-          schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-        },
-        ...schema
-      }
+      collection
     });
     return {
       content: [
@@ -201,6 +251,11 @@ export class CollectionTools implements ToolHandler {
     };
   }
 
+  /**
+   * Delete a collection
+   * @param collection_id Collection ID
+   * @returns Deletion confirmation
+   */
   async deleteCollection(collection_id: string) {
     const response = await this.axiosInstance.delete(`/collections/${collection_id}`);
     return {
@@ -213,6 +268,11 @@ export class CollectionTools implements ToolHandler {
     };
   }
 
+  /**
+   * Fork a collection to a workspace
+   * @param args ForkCollectionArgs containing collection ID, workspace, and label
+   * @returns Forked collection details
+   */
   async forkCollection({ collection_id, workspace, label }: ForkCollectionArgs) {
     const response = await this.axiosInstance.post(`/collections/fork/${collection_id}`, {
       workspace: {

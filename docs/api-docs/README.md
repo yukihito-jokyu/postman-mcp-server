@@ -66,7 +66,7 @@ Review the postman workspaces and environment docs. Understand the details and n
 
 ```bash
 @/docs/api-docs/environments.md
-@/docs/postman-api-requestBodies.yaml
+@/docs/reference/postman-api-requestBodies.yaml
 
 Review the postman environment md docs and yaml definitions. Understand the details and nuance of request bodies for POST/PUT requests. Modify out MCP tools implementation accordingly, including inline jsdocs.
 
@@ -78,6 +78,24 @@ Review the postman environment md docs and yaml definitions. Understand the deta
 We may also need to update the MCP protocol endpoints to reflect the changes. IOW, updating our code that communicates with the Postman API is one part but we also may need to update the MCP protocol code that communicates with the MCP clients.
 
 ```
+
+```bash
+@/docs/api-docs/collections.md
+@/docs/reference/postman-api-requestBodies.yaml
+
+Review the postman collection md docs and yaml definitions. Understand the details and nuance of request bodies for POST/PUT requests. Modify out MCP tools implementation accordingly, including inline jsdocs.
+
+
+@src/api/collections.ts
+@src/types.ts
+
+
+Refer to @/docs/dev/updating-request-bodies.md for what areas of the code need to be updated.
+
+```
+
+
+
 
 ##### MCP Protocol
 
@@ -119,7 +137,7 @@ For example:
 
 ##### Add Responses
 ```bash
-@/docs/postman-api-pathsonly.yaml
+@/docs/reference/postman-api-pathsonly.yaml
 
 Peruse the postman OpenAPI 3 paths definition (note this is a very abrridged version of the full document, containing just the paths objects), this time to add the expected response references and associated http status (e.g. 200 '#/components/responses/getAccounts').
 
@@ -135,7 +153,7 @@ When completed this file, request the next summary document to continue with. Ke
 
 ##### Add Parameters
 ```bash
-@/docs/postman-api-pathsonly.yaml
+@/docs/reference/postman-api-pathsonly.yaml
 
 Peruse the postman OpenAPI 3 paths definition (note this is a very abrridged version of the full document, containing just the paths objects), this time to add the expected parameters references and associated http status (e.g. '#/components/parameters/workspaceQuery').
 
@@ -161,7 +179,7 @@ When completed this file, request the next summary document to continue with. Ke
 
 ##### Add Parameter Details
 ```bash
-@/docs/postman-api-parameters.yaml
+@/docs/reference/postman-api-parameters.yaml
 
 Peruse the postman OpenAPI 3 definition (note this is a very abrridged version of the full document, containing just the parameters objects), this time to add parameter details by matching the parameter name (e.g. The workspaceQuery in '#/components/parameters/workspaceQuery').
 
@@ -187,7 +205,7 @@ When completed this file, request the next summary document to continue with. Ke
 
 ##### Add Request Bodies (Paths Only)
 ```bash
-@/docs/postman-api-pathsonly.yaml
+@/docs/reference/postman-api-pathsonly.yaml
 
 Peruse the postman OpenAPI 3 definition (note this is a very abrridged version of the full document, containing just the paths objects), this time to augment the POST/PUT requests with body content add parameter details by matching the parameter name (e.g. The updateEnvironment in '#/components/requestBodies/updateEnvironment').
 
@@ -212,7 +230,7 @@ When completed this file, request the next summary document to continue with. Ke
 
 ##### Add Request Bodies
 ```bash
-@/docs/postman-api-requestbodies.yaml
+@/docs/reference/postman-api-requestbodies.yaml
 
 Review the abridged Postman OpenAPI 3 definition (containing only the requestBody objects) to augment POST/PUT requests with body content by matching request body names (e.g., `updateEnvironment` in '#/components/requestBodies/updateEnvironment').
 
@@ -245,7 +263,7 @@ Let's split the single summary doc into multiple docs to help keep the size mana
 
 ### Creating a Summary Document
 ```bash
-@/docs/postman-api-index.yaml
+@/docs/reference/postman-api-index.yaml
 
 Review the postman environment, collection API from the OpenAPI 3 definition. Make a summary document that we can use to cross-check against our tool implementations (This implementation covers the basic Postman API functionality in MCP)
 ```

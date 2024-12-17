@@ -75,16 +75,101 @@ export interface PullEnvironmentArgs {
   destination: string;
 }
 
-export interface CreateCollectionArgs extends WorkspaceArg {
+/**
+ * Collection request/response related interfaces
+ */
+
+export interface CollectionInfo {
   name: string;
   description?: string;
-  schema: object;
+  schema: string;
+}
+
+export interface CollectionItem {
+  id?: string;
+  name?: string;
+  description?: string;
+  request?: CollectionRequest;
+  response?: CollectionResponse[];
+  item?: CollectionItem[];
+  auth?: CollectionAuth;
+  event?: CollectionEvent[];
+  variable?: CollectionVariable[];
+  protocolProfileBehavior?: Record<string, any>;
+}
+
+export interface CollectionRequest {
+  method?: string;
+  header?: Array<{key: string; value: string; description?: string}>;
+  url?: string | {
+    raw?: string;
+    protocol?: string;
+    host?: string[];
+    path?: string[];
+    variable?: Array<{
+      key: string;
+      value?: string;
+      description?: string;
+    }>;
+  };
+  description?: string;
+  body?: any;
+}
+
+export interface CollectionResponse {
+  id?: string;
+  name?: string;
+  originalRequest?: CollectionRequest;
+  status?: string;
+  code?: number;
+  header?: Array<{key: string; value: string}>;
+  body?: string;
+  cookie?: any[];
+}
+
+export interface CollectionAuth {
+  type: string;
+  [key: string]: any;
+}
+
+export interface CollectionEvent {
+  listen: string;
+  script?: {
+    id?: string;
+    type?: string;
+    exec?: string[];
+  };
+}
+
+export interface CollectionVariable {
+  key: string;
+  value?: string;
+  type?: string;
+  enabled?: boolean;
+}
+
+/**
+ * Collection operation interfaces
+ */
+
+export interface CreateCollectionArgs extends WorkspaceArg {
+  collection: {
+    info: CollectionInfo;
+    item?: CollectionItem[];
+    auth?: CollectionAuth;
+    event?: CollectionEvent[];
+    variable?: CollectionVariable[];
+  };
 }
 
 export interface UpdateCollectionArgs extends CollectionIdArg {
-  name: string;
-  description?: string;
-  schema: object;
+  collection: {
+    info: CollectionInfo;
+    item: CollectionItem[];
+    auth?: CollectionAuth;
+    event?: CollectionEvent[];
+    variable?: CollectionVariable[];
+  };
 }
 
 export interface ForkCollectionArgs extends CollectionIdArg, WorkspaceArg {
@@ -117,6 +202,32 @@ export function isEnvironmentValue(obj: unknown): obj is EnvironmentValue {
     typeof value.value === 'string' &&
     (value.type === undefined || value.type === 'default' || value.type === 'secret') &&
     (value.enabled === undefined || typeof value.enabled === 'boolean')
+  );
+}
+
+export function isCollectionInfo(obj: unknown): obj is CollectionInfo {
+  if (typeof obj !== 'object' || obj === null) return false;
+  const info = obj as CollectionInfo;
+  return (
+    typeof info.name === 'string' &&
+    typeof info.schema === 'string' &&
+    (info.description === undefined || typeof info.description === 'string')
+  );
+}
+
+export function isCollectionItem(obj: unknown): obj is CollectionItem {
+  if (typeof obj !== 'object' || obj === null) return false;
+  const item = obj as CollectionItem;
+  return (
+    (item.id === undefined || typeof item.id === 'string') &&
+    (item.name === undefined || typeof item.name === 'string') &&
+    (item.description === undefined || typeof item.description === 'string') &&
+    (item.request === undefined || typeof item.request === 'object') &&
+    (item.response === undefined || Array.isArray(item.response)) &&
+    (item.item === undefined || Array.isArray(item.item)) &&
+    (item.auth === undefined || typeof item.auth === 'object') &&
+    (item.event === undefined || Array.isArray(item.event)) &&
+    (item.variable === undefined || Array.isArray(item.variable))
   );
 }
 
@@ -224,9 +335,13 @@ export function isCreateCollectionArgs(obj: unknown): obj is CreateCollectionArg
   if (!isWorkspaceArg(obj)) return false;
   const args = obj as CreateCollectionArgs;
   return (
-    typeof args.name === 'string' &&
-    (args.description === undefined || typeof args.description === 'string') &&
-    typeof args.schema === 'object' && args.schema !== null
+    typeof args.collection === 'object' &&
+    args.collection !== null &&
+    isCollectionInfo(args.collection.info) &&
+    (args.collection.item === undefined || Array.isArray(args.collection.item) && args.collection.item.every(isCollectionItem)) &&
+    (args.collection.auth === undefined || typeof args.collection.auth === 'object') &&
+    (args.collection.event === undefined || Array.isArray(args.collection.event)) &&
+    (args.collection.variable === undefined || Array.isArray(args.collection.variable))
   );
 }
 
@@ -234,9 +349,14 @@ export function isUpdateCollectionArgs(obj: unknown): obj is UpdateCollectionArg
   if (!isCollectionIdArg(obj)) return false;
   const args = obj as UpdateCollectionArgs;
   return (
-    typeof args.name === 'string' &&
-    (args.description === undefined || typeof args.description === 'string') &&
-    typeof args.schema === 'object' && args.schema !== null
+    typeof args.collection === 'object' &&
+    args.collection !== null &&
+    isCollectionInfo(args.collection.info) &&
+    Array.isArray(args.collection.item) &&
+    args.collection.item.every(isCollectionItem) &&
+    (args.collection.auth === undefined || typeof args.collection.auth === 'object') &&
+    (args.collection.event === undefined || Array.isArray(args.collection.event)) &&
+    (args.collection.variable === undefined || Array.isArray(args.collection.variable))
   );
 }
 
