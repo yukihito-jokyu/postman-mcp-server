@@ -16,25 +16,7 @@ import { WorkspaceTools } from './tools/workspaces.js';
 import { EnvironmentTools } from './tools/environments.js';
 import { CollectionTools } from './tools/collections.js';
 import { UserTools } from './tools/users.js';
-import {
-  validateArgs,
-  isWorkspaceArg,
-  isEnvironmentIdArg,
-  isCollectionIdArg,
-  isCreateEnvironmentArgs,
-  isUpdateEnvironmentArgs,
-  isCreateCollectionArgs,
-  isUpdateCollectionArgs,
-  isForkCollectionArgs,
-  isGetCollectionsArgs,
-  isGetCollectionArgs,
-  isGetCollectionFolderArgs,
-  isDeleteCollectionFolderArgs,
-  isGetCollectionRequestArgs,
-  isDeleteCollectionRequestArgs,
-  isGetCollectionResponseArgs,
-  isDeleteCollectionResponseArgs,
-} from './types.js';
+import { ToolDefinition, ToolHandler } from './types.js';
 
 const API_KEY = process.env.POSTMAN_API_KEY;
 if (!API_KEY) {
@@ -48,6 +30,8 @@ export class PostmanAPIServer {
   private environmentTools: EnvironmentTools;
   private collectionTools: CollectionTools;
   private userTools: UserTools;
+  private toolDefinitions: ToolDefinition[];
+  private toolHandlers: Map<string, ToolHandler>;
 
   constructor() {
     this.server = new Server(
@@ -76,6 +60,34 @@ export class PostmanAPIServer {
     this.environmentTools = new EnvironmentTools(this.axiosInstance);
     this.collectionTools = new CollectionTools(this.axiosInstance);
     this.userTools = new UserTools(this.axiosInstance);
+
+    // Cache tool definitions and create handler map
+    this.toolDefinitions = [
+      ...this.workspaceTools.getToolDefinitions(),
+      ...this.environmentTools.getToolDefinitions(),
+      ...this.collectionTools.getToolDefinitions(),
+      ...this.userTools.getToolDefinitions(),
+    ];
+
+    // Replace forEach loop with direct mapping
+    const toolMapping = {
+      'list_workspaces': this.workspaceTools,
+      'get_workspace': this.workspaceTools,
+      'list_environments': this.environmentTools,
+      'get_environment': this.environmentTools,
+      'create_environment': this.environmentTools,
+      'update_environment': this.environmentTools,
+      'delete_environment': this.environmentTools,
+      'list_collections': this.collectionTools,
+      'get_collection': this.collectionTools,
+      'create_collection': this.collectionTools,
+      'update_collection': this.collectionTools,
+      'delete_collection': this.collectionTools,
+      'get_user': this.userTools,
+      'list_users': this.userTools
+    };
+
+    this.toolHandlers = new Map(Object.entries(toolMapping));
 
     this.setupHandlers();
 
@@ -187,112 +199,49 @@ export class PostmanAPIServer {
 
   private setupToolHandlers() {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
-      tools: [
-        ...this.workspaceTools.getToolDefinitions(),
-        ...this.environmentTools.getToolDefinitions(),
-        ...this.collectionTools.getToolDefinitions(),
-        ...this.userTools.getToolDefinitions(),
-      ],
+      tools: this.toolDefinitions,
     }));
 
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       try {
-        const args = request.params.arguments || {};
+        const { name, arguments: args = {} } = request.params;
 
-        switch (request.params.name) {
-          // Workspace handlers
-          case 'list_workspaces':
-            return await this.workspaceTools.listWorkspaces();
-          case 'get_workspace':
-            return await this.workspaceTools.getWorkspace(
-              validateArgs(args, isWorkspaceArg, 'Invalid workspace ID argument').workspace
-            );
-
-          // Environment handlers
-          case 'list_environments':
-            return await this.environmentTools.listEnvironments(
-              validateArgs(args, isWorkspaceArg, 'Invalid workspace ID argument').workspace
-            );
-          case 'get_environment':
-            return await this.environmentTools.getEnvironment(
-              validateArgs(args, isEnvironmentIdArg, 'Invalid environment ID argument').environmentId
-            );
-          case 'create_environment':
-            return await this.environmentTools.createEnvironment(
-              validateArgs(args, isCreateEnvironmentArgs, 'Invalid create environment arguments')
-            );
-          case 'update_environment':
-            return await this.environmentTools.updateEnvironment(
-              validateArgs(args, isUpdateEnvironmentArgs, 'Invalid update environment arguments')
-            );
-          case 'delete_environment':
-            return await this.environmentTools.deleteEnvironment(
-              validateArgs(args, isEnvironmentIdArg, 'Invalid environment ID argument').environmentId
-            );
-
-          // Collection handlers
-          case 'list_collections':
-            return await this.collectionTools.listCollections(
-              validateArgs(args, isGetCollectionsArgs, 'Invalid list collections arguments')
-            );
-          case 'get_collection':
-            return await this.collectionTools.getCollection(
-              validateArgs(args, isGetCollectionArgs, 'Invalid get collection arguments')
-            );
-          case 'create_collection':
-            return await this.collectionTools.createCollection(
-              validateArgs(args, isCreateCollectionArgs, 'Invalid create collection arguments')
-            );
-          case 'update_collection':
-            return await this.collectionTools.updateCollection(
-              validateArgs(args, isUpdateCollectionArgs, 'Invalid update collection arguments')
-            );
-          case 'delete_collection':
-            return await this.collectionTools.deleteCollection(
-              validateArgs(args, isCollectionIdArg, 'Invalid collection ID argument').collection_id
-            );
-          case 'get_collection_folder':
-            return await this.collectionTools.getCollectionFolder(
-              validateArgs(args, isGetCollectionFolderArgs, 'Invalid get collection folder arguments')
-            );
-          case 'delete_collection_folder':
-            return await this.collectionTools.deleteCollectionFolder(
-              validateArgs(args, isDeleteCollectionFolderArgs, 'Invalid delete collection folder arguments')
-            );
-          case 'get_collection_request':
-            return await this.collectionTools.getCollectionRequest(
-              validateArgs(args, isGetCollectionRequestArgs, 'Invalid get collection request arguments')
-            );
-          case 'delete_collection_request':
-            return await this.collectionTools.deleteCollectionRequest(
-              validateArgs(args, isDeleteCollectionRequestArgs, 'Invalid delete collection request arguments')
-            );
-          case 'get_collection_response':
-            return await this.collectionTools.getCollectionResponse(
-              validateArgs(args, isGetCollectionResponseArgs, 'Invalid get collection response arguments')
-            );
-          case 'delete_collection_response':
-            return await this.collectionTools.deleteCollectionResponse(
-              validateArgs(args, isDeleteCollectionResponseArgs, 'Invalid delete collection response arguments')
-            );
-          case 'fork_collection':
-            return await this.collectionTools.forkCollection(
-              validateArgs(args, isForkCollectionArgs, 'Invalid fork collection arguments')
-            );
-
-          // User handlers
-          case 'get_user_info':
-            return await this.userTools.getUserInfo();
-
-          default:
-            throw new McpError(
-              ErrorCode.MethodNotFound,
-              `Unknown tool: ${request.params.name}`
-            );
+        // Find the tool definition
+        const toolDef = this.toolDefinitions.find(t => t.name === name);
+        if (!toolDef) {
+          throw new McpError(
+            ErrorCode.MethodNotFound,
+            `Unknown tool: ${name}`
+          );
         }
+
+        // Get the appropriate handler
+        const handler = this.toolHandlers.get(name);
+        if (!handler) {
+          throw new McpError(
+            ErrorCode.MethodNotFound,
+            `No handler found for tool: ${name}`
+          );
+        }
+
+        // Execute the tool call
+        const response = await handler.handleToolCall(name, args);
+
+        // Transform the response to match the SDK's expected format
+        return {
+          _meta: {},
+          tools: [toolDef],
+          content: response.content,
+          isError: response.isError,
+        };
       } catch (error) {
+        if (error instanceof McpError) {
+          throw error;
+        }
         if (axios.isAxiosError(error)) {
           return {
+            _meta: {},
+            tools: [],
             content: [
               {
                 type: 'text',
@@ -302,7 +251,10 @@ export class PostmanAPIServer {
             isError: true,
           };
         }
-        throw error;
+        throw new McpError(
+          ErrorCode.InternalError,
+          error instanceof Error ? error.message : 'An unknown error occurred'
+        );
       }
     });
   }

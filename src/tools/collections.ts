@@ -12,8 +12,23 @@ import {
   DeleteCollectionRequestArgs,
   GetCollectionResponseArgs,
   DeleteCollectionResponseArgs,
-  ToolDefinition
+  ToolDefinition,
+  ToolCallResponse,
+  validateArgs,
+  isGetCollectionsArgs,
+  isGetCollectionArgs,
+  isCreateCollectionArgs,
+  isUpdateCollectionArgs,
+  isCollectionIdArg,
+  isGetCollectionFolderArgs,
+  isDeleteCollectionFolderArgs,
+  isGetCollectionRequestArgs,
+  isDeleteCollectionRequestArgs,
+  isGetCollectionResponseArgs,
+  isDeleteCollectionResponseArgs,
+  isForkCollectionArgs,
 } from '../types.js';
+import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 
 /**
  * Implements Postman Collection API operations
@@ -199,7 +214,7 @@ export class CollectionTools implements ToolHandler {
             },
             uid: {
               type: 'boolean',
-              description: 'Return all IDs in UID format (userId-id)',
+              description: 'Return all IDs in UID format',
             },
             populate: {
               type: 'boolean',
@@ -247,7 +262,7 @@ export class CollectionTools implements ToolHandler {
             },
             uid: {
               type: 'boolean',
-              description: 'Return all IDs in UID format (userId-id)',
+              description: 'Return all IDs in UID format',
             },
             populate: {
               type: 'boolean',
@@ -295,7 +310,7 @@ export class CollectionTools implements ToolHandler {
             },
             uid: {
               type: 'boolean',
-              description: 'Return all IDs in UID format (userId-id)',
+              description: 'Return all IDs in UID format',
             },
             populate: {
               type: 'boolean',
@@ -348,12 +363,70 @@ export class CollectionTools implements ToolHandler {
     ];
   }
 
+  async handleToolCall(name: string, args: unknown): Promise<ToolCallResponse> {
+    switch (name) {
+      case 'list_collections':
+        return await this.listCollections(
+          validateArgs(args, isGetCollectionsArgs, 'Invalid list collections arguments')
+        );
+      case 'get_collection':
+        return await this.getCollection(
+          validateArgs(args, isGetCollectionArgs, 'Invalid get collection arguments')
+        );
+      case 'create_collection':
+        return await this.createCollection(
+          validateArgs(args, isCreateCollectionArgs, 'Invalid create collection arguments')
+        );
+      case 'update_collection':
+        return await this.updateCollection(
+          validateArgs(args, isUpdateCollectionArgs, 'Invalid update collection arguments')
+        );
+      case 'delete_collection':
+        return await this.deleteCollection(
+          validateArgs(args, isCollectionIdArg, 'Invalid collection ID argument').collection_id
+        );
+      case 'get_collection_folder':
+        return await this.getCollectionFolder(
+          validateArgs(args, isGetCollectionFolderArgs, 'Invalid get collection folder arguments')
+        );
+      case 'delete_collection_folder':
+        return await this.deleteCollectionFolder(
+          validateArgs(args, isDeleteCollectionFolderArgs, 'Invalid delete collection folder arguments')
+        );
+      case 'get_collection_request':
+        return await this.getCollectionRequest(
+          validateArgs(args, isGetCollectionRequestArgs, 'Invalid get collection request arguments')
+        );
+      case 'delete_collection_request':
+        return await this.deleteCollectionRequest(
+          validateArgs(args, isDeleteCollectionRequestArgs, 'Invalid delete collection request arguments')
+        );
+      case 'get_collection_response':
+        return await this.getCollectionResponse(
+          validateArgs(args, isGetCollectionResponseArgs, 'Invalid get collection response arguments')
+        );
+      case 'delete_collection_response':
+        return await this.deleteCollectionResponse(
+          validateArgs(args, isDeleteCollectionResponseArgs, 'Invalid delete collection response arguments')
+        );
+      case 'fork_collection':
+        return await this.forkCollection(
+          validateArgs(args, isForkCollectionArgs, 'Invalid fork collection arguments')
+        );
+      default:
+        throw new McpError(
+          ErrorCode.MethodNotFound,
+          `Unknown tool: ${name}`
+        );
+    }
+  }
+
   /**
    * List all collections in a workspace
    * @param args GetCollectionsArgs containing optional workspace ID, name filter, and pagination
    * @returns List of collections
    */
-  async listCollections(args: GetCollectionsArgs) {
+  async listCollections(args: GetCollectionsArgs): Promise<ToolCallResponse> {
     const params: Record<string, any> = {};
     if (args.workspace) params.workspace = args.workspace;
     if (args.name) params.name = args.name;
@@ -376,7 +449,7 @@ export class CollectionTools implements ToolHandler {
    * @param args GetCollectionArgs containing collection ID and optional parameters
    * @returns Collection details
    */
-  async getCollection(args: GetCollectionArgs) {
+  async getCollection(args: GetCollectionArgs): Promise<ToolCallResponse> {
     const params: Record<string, any> = {};
     if (args.access_key) params.access_key = args.access_key;
     if (args.model) params.model = args.model;
@@ -397,7 +470,7 @@ export class CollectionTools implements ToolHandler {
    * @param args CreateCollectionArgs containing workspace and collection details
    * @returns Created collection details
    */
-  async createCollection({ workspace, collection }: CreateCollectionArgs) {
+  async createCollection({ workspace, collection }: CreateCollectionArgs): Promise<ToolCallResponse> {
     const response = await this.axiosInstance.post('/collections', {
       collection,
       workspace: {
@@ -420,7 +493,7 @@ export class CollectionTools implements ToolHandler {
    * @param args UpdateCollectionArgs containing collection ID and updated details
    * @returns Updated collection details
    */
-  async updateCollection({ collection_id, collection }: UpdateCollectionArgs) {
+  async updateCollection({ collection_id, collection }: UpdateCollectionArgs): Promise<ToolCallResponse> {
     const response = await this.axiosInstance.put(`/collections/${collection_id}`, {
       collection
     });
@@ -439,7 +512,7 @@ export class CollectionTools implements ToolHandler {
    * @param collection_id Collection ID
    * @returns Deletion confirmation
    */
-  async deleteCollection(collection_id: string) {
+  async deleteCollection(collection_id: string): Promise<ToolCallResponse> {
     const response = await this.axiosInstance.delete(`/collections/${collection_id}`);
     return {
       content: [
@@ -456,7 +529,7 @@ export class CollectionTools implements ToolHandler {
    * @param args GetCollectionFolderArgs containing collection ID, folder ID, and optional parameters
    * @returns Folder details
    */
-  async getCollectionFolder(args: GetCollectionFolderArgs) {
+  async getCollectionFolder(args: GetCollectionFolderArgs): Promise<ToolCallResponse> {
     const params: Record<string, any> = {};
     if (args.ids) params.ids = args.ids;
     if (args.uid) params.uid = args.uid;
@@ -481,7 +554,7 @@ export class CollectionTools implements ToolHandler {
    * @param args DeleteCollectionFolderArgs containing collection ID and folder ID
    * @returns Deletion confirmation
    */
-  async deleteCollectionFolder(args: DeleteCollectionFolderArgs) {
+  async deleteCollectionFolder(args: DeleteCollectionFolderArgs): Promise<ToolCallResponse> {
     const response = await this.axiosInstance.delete(
       `/collections/${args.collection_id}/folders/${args.folder_id}`
     );
@@ -500,7 +573,7 @@ export class CollectionTools implements ToolHandler {
    * @param args GetCollectionRequestArgs containing collection ID, request ID, and optional parameters
    * @returns Request details
    */
-  async getCollectionRequest(args: GetCollectionRequestArgs) {
+  async getCollectionRequest(args: GetCollectionRequestArgs): Promise<ToolCallResponse> {
     const params: Record<string, any> = {};
     if (args.ids) params.ids = args.ids;
     if (args.uid) params.uid = args.uid;
@@ -525,7 +598,7 @@ export class CollectionTools implements ToolHandler {
    * @param args DeleteCollectionRequestArgs containing collection ID and request ID
    * @returns Deletion confirmation
    */
-  async deleteCollectionRequest(args: DeleteCollectionRequestArgs) {
+  async deleteCollectionRequest(args: DeleteCollectionRequestArgs): Promise<ToolCallResponse> {
     const response = await this.axiosInstance.delete(
       `/collections/${args.collection_id}/requests/${args.request_id}`
     );
@@ -544,7 +617,7 @@ export class CollectionTools implements ToolHandler {
    * @param args GetCollectionResponseArgs containing collection ID, response ID, and optional parameters
    * @returns Response details
    */
-  async getCollectionResponse(args: GetCollectionResponseArgs) {
+  async getCollectionResponse(args: GetCollectionResponseArgs): Promise<ToolCallResponse> {
     const params: Record<string, any> = {};
     if (args.ids) params.ids = args.ids;
     if (args.uid) params.uid = args.uid;
@@ -569,7 +642,7 @@ export class CollectionTools implements ToolHandler {
    * @param args DeleteCollectionResponseArgs containing collection ID and response ID
    * @returns Deletion confirmation
    */
-  async deleteCollectionResponse(args: DeleteCollectionResponseArgs) {
+  async deleteCollectionResponse(args: DeleteCollectionResponseArgs): Promise<ToolCallResponse> {
     const response = await this.axiosInstance.delete(
       `/collections/${args.collection_id}/responses/${args.response_id}`
     );
@@ -588,7 +661,7 @@ export class CollectionTools implements ToolHandler {
    * @param args ForkCollectionArgs containing collection ID, workspace, and label
    * @returns Forked collection details
    */
-  async forkCollection({ collection_id, workspace, label }: ForkCollectionArgs) {
+  async forkCollection({ collection_id, workspace, label }: ForkCollectionArgs): Promise<ToolCallResponse> {
     const response = await this.axiosInstance.post(`/collections/fork/${collection_id}`, {
       workspace: {
         id: workspace,

@@ -81,6 +81,8 @@ We may also need to update the MCP protocol endpoints to reflect the changes. IO
 
 ```bash
 @/docs/api-docs/collections.md
+@/docs/reference/postman-api-parameters.yaml
+@/docs/reference/postman-api-responsesonly.yaml
 @/docs/reference/postman-api-requestBodies.yaml
 
 Review the postman collection md docs and yaml definitions. Understand the details and nuance of request bodies for POST/PUT/PATCH requests. Modify out MCP tools implementation accordingly, including inline jsdocs.
@@ -142,6 +144,13 @@ For example:
 
 ```
 
+```bash
+@/src/server.ts
+
+Review the main server src/server.ts to continue reducing duplication and managing complexity as functionality is added.
+
+`this.server.setRequestHandler(CallToolRequestSchema, async (request) => {...` can be update to implement like `ListToolsRequestSchema`.
+```
 
 
 ### Expanding Postman API Summaries

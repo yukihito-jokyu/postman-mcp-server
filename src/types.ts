@@ -1,6 +1,16 @@
 import { AxiosInstance } from 'axios';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 
+export interface ToolCallContent {
+  type: string;
+  text: string;
+}
+
+export interface ToolCallResponse {
+  content: ToolCallContent[];
+  isError?: boolean;
+}
+
 export interface ToolDefinition {
   name: string;
   description: string;
@@ -9,6 +19,12 @@ export interface ToolDefinition {
     properties: Record<string, any>;
     required: string[];
   };
+}
+
+export interface ToolHandler {
+  axiosInstance: AxiosInstance;
+  getToolDefinitions(): ToolDefinition[];
+  handleToolCall(name: string, args: unknown): Promise<ToolCallResponse>;
 }
 
 export interface WorkspaceArg {
@@ -222,11 +238,6 @@ export interface UpdateCollectionArgs extends CollectionIdArg {
 
 export interface ForkCollectionArgs extends CollectionIdArg, WorkspaceArg {
   label: string;
-}
-
-export interface ToolHandler {
-  axiosInstance: AxiosInstance;
-  getToolDefinitions(): ToolDefinition[];
 }
 
 // Type guards

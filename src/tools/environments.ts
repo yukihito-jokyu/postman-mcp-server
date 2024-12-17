@@ -3,6 +3,7 @@ import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import {
   ToolHandler,
   ToolDefinition,
+  ToolCallResponse,
   CreateEnvironmentArgs,
   UpdateEnvironmentArgs,
   EnvironmentValue,
@@ -18,7 +19,9 @@ import {
   isMergeEnvironmentForkArgs,
   isPullEnvironmentArgs,
   isValidUid,
-  constructEnvironmentUid
+  constructEnvironmentUid,
+  isEnvironmentIdArg,
+  isWorkspaceArg
 } from '../types.js';
 
 /**
@@ -27,6 +30,52 @@ import {
  */
 export class EnvironmentTools implements ToolHandler {
   constructor(public axiosInstance: AxiosInstance) {}
+
+  async handleToolCall(name: string, args: unknown): Promise<ToolCallResponse> {
+    switch (name) {
+      case 'list_environments':
+        return await this.listEnvironments(
+          validateArgs(args, isWorkspaceArg, 'Invalid workspace argument').workspace
+        );
+      case 'get_environment':
+        return await this.getEnvironment(
+          validateArgs(args, isEnvironmentIdArg, 'Invalid environment ID argument').environmentId
+        );
+      case 'create_environment':
+        return await this.createEnvironment(
+          validateArgs(args, isCreateEnvironmentArgs, 'Invalid create environment arguments')
+        );
+      case 'update_environment':
+        return await this.updateEnvironment(
+          validateArgs(args, isUpdateEnvironmentArgs, 'Invalid update environment arguments')
+        );
+      case 'delete_environment':
+        return await this.deleteEnvironment(
+          validateArgs(args, isEnvironmentIdArg, 'Invalid environment ID argument').environmentId
+        );
+      case 'fork_environment':
+        return await this.createEnvironmentFork(
+          validateArgs(args, isForkEnvironmentArgs, 'Invalid fork environment arguments')
+        );
+      case 'get_environment_forks':
+        return await this.getEnvironmentForks(
+          validateArgs(args, isGetEnvironmentForksArgs, 'Invalid get environment forks arguments')
+        );
+      case 'merge_environment_fork':
+        return await this.mergeEnvironmentFork(
+          validateArgs(args, isMergeEnvironmentForkArgs, 'Invalid merge environment fork arguments')
+        );
+      case 'pull_environment':
+        return await this.pullEnvironment(
+          validateArgs(args, isPullEnvironmentArgs, 'Invalid pull environment arguments')
+        );
+      default:
+        throw new McpError(
+          ErrorCode.MethodNotFound,
+          `Unknown tool: ${name}`
+        );
+    }
+  }
 
   getToolDefinitions(): ToolDefinition[] {
     return [
@@ -291,7 +340,7 @@ export class EnvironmentTools implements ToolHandler {
    * @param workspace Optional workspace ID to filter environments
    * @returns List of environments with their details
    */
-  async listEnvironments(workspace?: string) {
+  async listEnvironments(workspace?: string): Promise<ToolCallResponse> {
     try {
       const response = await this.axiosInstance.get('/environments', {
         params: workspace ? { workspace } : undefined
@@ -327,7 +376,7 @@ export class EnvironmentTools implements ToolHandler {
    * @param environmentId Environment ID in format: {ownerId}-{environmentId}
    * @returns Environment details
    */
-  async getEnvironment(environmentId: string) {
+  async getEnvironment(environmentId: string): Promise<ToolCallResponse> {
     if (!isValidUid(environmentId)) {
       throw new McpError(ErrorCode.InvalidRequest, 'Invalid environment ID format. Expected format: {ownerId}-{environmentId}');
     }
@@ -365,7 +414,7 @@ export class EnvironmentTools implements ToolHandler {
    * @param args CreateEnvironmentArgs containing workspace, name, and values
    * @returns Created environment details
    */
-  async createEnvironment(args: CreateEnvironmentArgs) {
+  async createEnvironment(args: CreateEnvironmentArgs): Promise<ToolCallResponse> {
     try {
       validateArgs(args, isCreateEnvironmentArgs, 'Invalid create environment arguments');
       const { workspace, environment } = args;
@@ -419,7 +468,7 @@ export class EnvironmentTools implements ToolHandler {
    * @param args UpdateEnvironmentArgs containing environmentId and optional name and values
    * @returns Updated environment details
    */
-  async updateEnvironment(args: UpdateEnvironmentArgs) {
+  async updateEnvironment(args: UpdateEnvironmentArgs): Promise<ToolCallResponse> {
     try {
       validateArgs(args, isUpdateEnvironmentArgs, 'Invalid update environment arguments');
       const { environmentId, environment } = args;
@@ -479,7 +528,7 @@ export class EnvironmentTools implements ToolHandler {
    * @param environmentId Environment ID in format: {ownerId}-{environmentId}
    * @returns Deletion confirmation
    */
-  async deleteEnvironment(environmentId: string) {
+  async deleteEnvironment(environmentId: string): Promise<ToolCallResponse> {
     if (!isValidUid(environmentId)) {
       throw new McpError(ErrorCode.InvalidRequest, 'Invalid environment ID format. Expected format: {ownerId}-{environmentId}');
     }
@@ -510,7 +559,7 @@ export class EnvironmentTools implements ToolHandler {
    * @param args ForkEnvironmentArgs containing environmentId, label, and workspace
    * @returns Forked environment details
    */
-  async createEnvironmentFork(args: ForkEnvironmentArgs) {
+  async createEnvironmentFork(args: ForkEnvironmentArgs): Promise<ToolCallResponse> {
     try {
       validateArgs(args, isForkEnvironmentArgs, 'Invalid fork environment arguments');
       const { environmentId, label, workspace } = args;
@@ -557,7 +606,7 @@ export class EnvironmentTools implements ToolHandler {
    * @param args GetEnvironmentForksArgs containing environmentId and optional pagination params
    * @returns List of environment forks
    */
-  async getEnvironmentForks(args: GetEnvironmentForksArgs) {
+  async getEnvironmentForks(args: GetEnvironmentForksArgs): Promise<ToolCallResponse> {
     try {
       validateArgs(args, isGetEnvironmentForksArgs, 'Invalid get environment forks arguments');
       const { environmentId, cursor, direction, limit, sort } = args;
@@ -616,7 +665,7 @@ export class EnvironmentTools implements ToolHandler {
    * @param args MergeEnvironmentForkArgs containing environmentId, source, destination, and strategy
    * @returns Merge result
    */
-  async mergeEnvironmentFork(args: MergeEnvironmentForkArgs) {
+  async mergeEnvironmentFork(args: MergeEnvironmentForkArgs): Promise<ToolCallResponse> {
     try {
       validateArgs(args, isMergeEnvironmentForkArgs, 'Invalid merge environment fork arguments');
       const { environmentId, source, destination, strategy } = args;
@@ -664,7 +713,7 @@ export class EnvironmentTools implements ToolHandler {
    * @param args PullEnvironmentArgs containing environmentId, source, and destination
    * @returns Pull result
    */
-  async pullEnvironment(args: PullEnvironmentArgs) {
+  async pullEnvironment(args: PullEnvironmentArgs): Promise<ToolCallResponse> {
     try {
       validateArgs(args, isPullEnvironmentArgs, 'Invalid pull environment arguments');
       const { environmentId, source, destination } = args;

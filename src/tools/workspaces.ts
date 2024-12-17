@@ -1,5 +1,12 @@
 import { AxiosInstance } from 'axios';
-import { ToolHandler, ToolDefinition } from '../types.js';
+import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
+import {
+  ToolHandler,
+  ToolDefinition,
+  ToolCallResponse,
+  validateArgs,
+  isWorkspaceArg
+} from '../types.js';
 
 interface ListWorkspacesParams {
   type?: 'personal' | 'team' | 'private' | 'public' | 'partner';
@@ -40,6 +47,22 @@ interface RoleUpdate {
 export class WorkspaceTools implements ToolHandler {
   constructor(public axiosInstance: AxiosInstance) {}
 
+  async handleToolCall(name: string, args: unknown): Promise<ToolCallResponse> {
+    switch (name) {
+      case 'list_workspaces':
+        return await this.listWorkspaces();
+      case 'get_workspace':
+        return await this.getWorkspace(
+          validateArgs(args, isWorkspaceArg, 'Invalid workspace argument').workspace
+        );
+      default:
+        throw new McpError(
+          ErrorCode.MethodNotFound,
+          `Unknown tool: ${name}`
+        );
+    }
+  }
+
   getToolDefinitions(): ToolDefinition[] {
     return [
       {
@@ -47,7 +70,21 @@ export class WorkspaceTools implements ToolHandler {
         description: 'List all workspaces',
         inputSchema: {
           type: 'object',
-          properties: {},
+          properties: {
+            type: {
+              type: 'string',
+              enum: ['personal', 'team', 'private', 'public', 'partner'],
+              description: 'Filter workspaces by type',
+            },
+            createdBy: {
+              type: 'string',
+              description: 'Filter workspaces by creator',
+            },
+            include: {
+              type: 'string',
+              description: 'Additional data to include in response',
+            },
+          },
           required: [],
         },
       },
@@ -61,6 +98,10 @@ export class WorkspaceTools implements ToolHandler {
               type: 'string',
               description: 'Workspace ID',
             },
+            include: {
+              type: 'string',
+              description: 'Additional data to include in response',
+            },
           },
           required: ['workspace'],
         },
@@ -68,7 +109,7 @@ export class WorkspaceTools implements ToolHandler {
     ];
   }
 
-  async listWorkspaces(params?: ListWorkspacesParams) {
+  async listWorkspaces(params?: ListWorkspacesParams): Promise<ToolCallResponse> {
     try {
       const response = await this.axiosInstance.get('/workspaces', { params });
       return {
@@ -80,19 +121,14 @@ export class WorkspaceTools implements ToolHandler {
         ],
       };
     } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error listing workspaces: ${error.response?.data?.message || error.message}`,
-          },
-        ],
-        isError: true,
-      };
+      if (error.response?.status === 401) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
+      }
+      throw new McpError(ErrorCode.InternalError, 'Server error occurred');
     }
   }
 
-  async getWorkspace(workspace_id: string, include?: string) {
+  async getWorkspace(workspace_id: string, include?: string): Promise<ToolCallResponse> {
     try {
       const response = await this.axiosInstance.get(`/workspaces/${workspace_id}`, {
         params: { include },
@@ -106,19 +142,17 @@ export class WorkspaceTools implements ToolHandler {
         ],
       };
     } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error getting workspace: ${error.response?.data?.message || error.message}`,
-          },
-        ],
-        isError: true,
-      };
+      if (error.response?.status === 401) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
+      }
+      if (error.response?.status === 404) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Workspace not found');
+      }
+      throw new McpError(ErrorCode.InternalError, 'Server error occurred');
     }
   }
 
-  async createWorkspace(data: CreateWorkspaceRequest) {
+  async createWorkspace(data: CreateWorkspaceRequest): Promise<ToolCallResponse> {
     try {
       const response = await this.axiosInstance.post('/workspaces', data);
       return {
@@ -130,19 +164,17 @@ export class WorkspaceTools implements ToolHandler {
         ],
       };
     } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error creating workspace: ${error.response?.data?.message || error.message}`,
-          },
-        ],
-        isError: true,
-      };
+      if (error.response?.status === 401) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
+      }
+      if (error.response?.status === 400) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Invalid workspace data');
+      }
+      throw new McpError(ErrorCode.InternalError, 'Server error occurred');
     }
   }
 
-  async updateWorkspace(workspace_id: string, data: UpdateWorkspaceRequest) {
+  async updateWorkspace(workspace_id: string, data: UpdateWorkspaceRequest): Promise<ToolCallResponse> {
     try {
       const response = await this.axiosInstance.put(`/workspaces/${workspace_id}`, data);
       return {
@@ -154,19 +186,20 @@ export class WorkspaceTools implements ToolHandler {
         ],
       };
     } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error updating workspace: ${error.response?.data?.message || error.message}`,
-          },
-        ],
-        isError: true,
-      };
+      if (error.response?.status === 401) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
+      }
+      if (error.response?.status === 404) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Workspace not found');
+      }
+      if (error.response?.status === 400) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Invalid workspace data');
+      }
+      throw new McpError(ErrorCode.InternalError, 'Server error occurred');
     }
   }
 
-  async deleteWorkspace(workspace_id: string) {
+  async deleteWorkspace(workspace_id: string): Promise<ToolCallResponse> {
     try {
       const response = await this.axiosInstance.delete(`/workspaces/${workspace_id}`);
       return {
@@ -178,19 +211,17 @@ export class WorkspaceTools implements ToolHandler {
         ],
       };
     } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error deleting workspace: ${error.response?.data?.message || error.message}`,
-          },
-        ],
-        isError: true,
-      };
+      if (error.response?.status === 401) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
+      }
+      if (error.response?.status === 404) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Workspace not found');
+      }
+      throw new McpError(ErrorCode.InternalError, 'Server error occurred');
     }
   }
 
-  async getGlobalVariables(workspace_id: string) {
+  async getGlobalVariables(workspace_id: string): Promise<ToolCallResponse> {
     try {
       const response = await this.axiosInstance.get(`/workspaces/${workspace_id}/global-variables`);
       return {
@@ -202,19 +233,17 @@ export class WorkspaceTools implements ToolHandler {
         ],
       };
     } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error getting global variables: ${error.response?.data?.message || error.message}`,
-          },
-        ],
-        isError: true,
-      };
+      if (error.response?.status === 401) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
+      }
+      if (error.response?.status === 404) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Workspace not found');
+      }
+      throw new McpError(ErrorCode.InternalError, 'Server error occurred');
     }
   }
 
-  async updateGlobalVariables(workspace_id: string, variables: GlobalVariable[]) {
+  async updateGlobalVariables(workspace_id: string, variables: GlobalVariable[]): Promise<ToolCallResponse> {
     try {
       const response = await this.axiosInstance.put(
         `/workspaces/${workspace_id}/global-variables`,
@@ -229,19 +258,20 @@ export class WorkspaceTools implements ToolHandler {
         ],
       };
     } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error updating global variables: ${error.response?.data?.message || error.message}`,
-          },
-        ],
-        isError: true,
-      };
+      if (error.response?.status === 401) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
+      }
+      if (error.response?.status === 404) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Workspace not found');
+      }
+      if (error.response?.status === 400) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Invalid variables data');
+      }
+      throw new McpError(ErrorCode.InternalError, 'Server error occurred');
     }
   }
 
-  async getWorkspaceRoles(workspace_id: string, includeScimQuery?: boolean) {
+  async getWorkspaceRoles(workspace_id: string, includeScimQuery?: boolean): Promise<ToolCallResponse> {
     try {
       const response = await this.axiosInstance.get(`/workspaces/${workspace_id}/roles`, {
         params: { includeScimQuery },
@@ -255,15 +285,13 @@ export class WorkspaceTools implements ToolHandler {
         ],
       };
     } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error getting workspace roles: ${error.response?.data?.message || error.message}`,
-          },
-        ],
-        isError: true,
-      };
+      if (error.response?.status === 401) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
+      }
+      if (error.response?.status === 404) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Workspace not found');
+      }
+      throw new McpError(ErrorCode.InternalError, 'Server error occurred');
     }
   }
 
@@ -271,10 +299,10 @@ export class WorkspaceTools implements ToolHandler {
     workspace_id: string,
     operations: RoleUpdate[],
     identifierType?: string
-  ) {
+  ): Promise<ToolCallResponse> {
     try {
       if (operations.length > 50) {
-        throw new Error('Maximum 50 role operations allowed per request');
+        throw new McpError(ErrorCode.InvalidRequest, 'Maximum 50 role operations allowed per request');
       }
 
       const response = await this.axiosInstance.patch(
@@ -291,19 +319,20 @@ export class WorkspaceTools implements ToolHandler {
         ],
       };
     } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error updating workspace roles: ${error.response?.data?.message || error.message}`,
-          },
-        ],
-        isError: true,
-      };
+      if (error.response?.status === 401) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
+      }
+      if (error.response?.status === 404) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Workspace not found');
+      }
+      if (error.response?.status === 400) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Invalid role update data');
+      }
+      throw new McpError(ErrorCode.InternalError, 'Server error occurred');
     }
   }
 
-  async getAllWorkspaceRoles() {
+  async getAllWorkspaceRoles(): Promise<ToolCallResponse> {
     try {
       const response = await this.axiosInstance.get('/workspaces-roles');
       return {
@@ -315,15 +344,10 @@ export class WorkspaceTools implements ToolHandler {
         ],
       };
     } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error getting all workspace roles: ${error.response?.data?.message || error.message}`,
-          },
-        ],
-        isError: true,
-      };
+      if (error.response?.status === 401) {
+        throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
+      }
+      throw new McpError(ErrorCode.InternalError, 'Server error occurred');
     }
   }
 }
