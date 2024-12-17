@@ -21,6 +21,10 @@ import {
   constructEnvironmentUid
 } from '../types.js';
 
+/**
+ * Handles Postman environment-related operations
+ * @see https://www.postman.com/postman/workspace/postman-public-workspace/documentation/12959542-c8142d51-e97c-46b6-bd77-52bb66712c9a
+ */
 export class EnvironmentTools implements ToolHandler {
   constructor(public axiosInstance: AxiosInstance) {}
 
@@ -88,7 +92,7 @@ export class EnvironmentTools implements ToolHandler {
       },
       {
         name: 'update_environment',
-        description: 'Update an existing environment',
+        description: 'Update an existing environment. Only include variables that need to be modified.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -98,11 +102,11 @@ export class EnvironmentTools implements ToolHandler {
             },
             name: {
               type: 'string',
-              description: 'Environment name',
+              description: 'Environment name (optional)',
             },
             values: {
               type: 'array',
-              description: 'Environment variables',
+              description: 'Environment variables to update (optional). Only include variables that need to be modified.',
               items: {
                 type: 'object',
                 properties: {
@@ -115,7 +119,7 @@ export class EnvironmentTools implements ToolHandler {
               },
             },
           },
-          required: ['environmentId', 'name', 'values'],
+          required: ['environmentId'],
         },
       },
       {
@@ -135,6 +139,11 @@ export class EnvironmentTools implements ToolHandler {
     ];
   }
 
+  /**
+   * Lists all environments in a workspace
+   * @param workspace Optional workspace ID to filter environments
+   * @returns List of environments with their details
+   */
   async listEnvironments(workspace?: string) {
     try {
       const response = await this.axiosInstance.get('/environments', {
@@ -166,6 +175,11 @@ export class EnvironmentTools implements ToolHandler {
     }
   }
 
+  /**
+   * Gets details of a specific environment
+   * @param environmentId Environment ID in format: {ownerId}-{environmentId}
+   * @returns Environment details
+   */
   async getEnvironment(environmentId: string) {
     if (!isValidUid(environmentId)) {
       throw new McpError(ErrorCode.InvalidRequest, 'Invalid environment ID format. Expected format: {ownerId}-{environmentId}');
@@ -199,6 +213,11 @@ export class EnvironmentTools implements ToolHandler {
     }
   }
 
+  /**
+   * Creates a new environment in a workspace
+   * @param args CreateEnvironmentArgs containing workspace, name, and values
+   * @returns Created environment details
+   */
   async createEnvironment(args: CreateEnvironmentArgs) {
     try {
       validateArgs(args, isCreateEnvironmentArgs, 'Invalid create environment arguments');
@@ -208,7 +227,8 @@ export class EnvironmentTools implements ToolHandler {
         environment: {
           name,
           values: values.map((v: EnvironmentValue) => ({
-            ...v,
+            key: v.key,
+            value: v.value,
             type: v.type || 'default',
             enabled: v.enabled !== false
           }))
@@ -247,6 +267,26 @@ export class EnvironmentTools implements ToolHandler {
     }
   }
 
+  /**
+   * Updates an existing environment. Only modified variables should be included in the request.
+   * @param args UpdateEnvironmentArgs containing environmentId and optional name and values
+   * @returns Updated environment details
+   * @example
+   * // Example request body:
+   * {
+   *   "environment": {
+   *     "name": "Test A Environment",
+   *     "values": [
+   *       {
+   *         "key": "variable_a",
+   *         "value": "The variable_a value.",
+   *         "enabled": false,
+   *         "type": "default"
+   *       }
+   *     ]
+   *   }
+   * }
+   */
   async updateEnvironment(args: UpdateEnvironmentArgs) {
     try {
       validateArgs(args, isUpdateEnvironmentArgs, 'Invalid update environment arguments');
@@ -256,16 +296,26 @@ export class EnvironmentTools implements ToolHandler {
         throw new McpError(ErrorCode.InvalidRequest, 'Invalid environment ID format. Expected format: {ownerId}-{environmentId}');
       }
 
-      const response = await this.axiosInstance.put(`/environments/${environmentId}`, {
-        environment: {
-          name,
-          values: values.map((v: EnvironmentValue) => ({
-            ...v,
-            type: v.type || 'default',
-            enabled: v.enabled !== false
-          }))
-        }
-      });
+      // Construct request body according to Postman API spec
+      const requestBody = {
+        environment: {} as any
+      };
+
+      // Only include optional fields if they are provided
+      if (name !== undefined) {
+        requestBody.environment.name = name;
+      }
+
+      if (values !== undefined) {
+        requestBody.environment.values = values.map((v: EnvironmentValue) => ({
+          key: v.key,
+          value: v.value,
+          type: v.type || 'default',
+          enabled: v.enabled !== false
+        }));
+      }
+
+      const response = await this.axiosInstance.put(`/environments/${environmentId}`, requestBody);
 
       // Include uid in response
       const environment = {
@@ -292,6 +342,11 @@ export class EnvironmentTools implements ToolHandler {
     }
   }
 
+  /**
+   * Deletes an environment
+   * @param environmentId Environment ID in format: {ownerId}-{environmentId}
+   * @returns Deletion confirmation
+   */
   async deleteEnvironment(environmentId: string) {
     if (!isValidUid(environmentId)) {
       throw new McpError(ErrorCode.InvalidRequest, 'Invalid environment ID format. Expected format: {ownerId}-{environmentId}');
@@ -318,6 +373,11 @@ export class EnvironmentTools implements ToolHandler {
     }
   }
 
+  /**
+   * Creates a fork of an environment
+   * @param args ForkEnvironmentArgs containing environmentId and workspace
+   * @returns Forked environment details
+   */
   async createEnvironmentFork(args: ForkEnvironmentArgs) {
     try {
       validateArgs(args, isForkEnvironmentArgs, 'Invalid fork environment arguments');
@@ -359,6 +419,11 @@ export class EnvironmentTools implements ToolHandler {
     }
   }
 
+  /**
+   * Gets a list of environment forks
+   * @param args GetEnvironmentForksArgs containing environmentId and optional pagination params
+   * @returns List of environment forks
+   */
   async getEnvironmentForks(args: GetEnvironmentForksArgs) {
     try {
       validateArgs(args, isGetEnvironmentForksArgs, 'Invalid get environment forks arguments');
@@ -413,6 +478,11 @@ export class EnvironmentTools implements ToolHandler {
     }
   }
 
+  /**
+   * Merges a forked environment back into its parent
+   * @param args MergeEnvironmentForkArgs containing environmentId
+   * @returns Merge result
+   */
   async mergeEnvironmentFork(args: MergeEnvironmentForkArgs) {
     try {
       validateArgs(args, isMergeEnvironmentForkArgs, 'Invalid merge environment fork arguments');
@@ -452,6 +522,11 @@ export class EnvironmentTools implements ToolHandler {
     }
   }
 
+  /**
+   * Pulls changes from parent environment into forked environment
+   * @param args PullEnvironmentArgs containing environmentId
+   * @returns Pull result
+   */
   async pullEnvironment(args: PullEnvironmentArgs) {
     try {
       validateArgs(args, isPullEnvironmentArgs, 'Invalid pull environment arguments');
