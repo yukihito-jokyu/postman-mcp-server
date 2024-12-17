@@ -44,10 +44,24 @@ Review the postman MCP tools workspace API access against the Postman API summar
 ```
 
 #### Specific Improvements
+
+##### Workspaces
 ```bash
 @/docs/api-docs/environments.md
 
 Review the postman MCP tools workspace API access against the Postman API summary. Make corrections in our implementation, paying particular attention to the request parameter naming and values.
+```
+
+##### Environments
+```bash
+@/docs/api-docs/wokspaces.md
+@/docs/api-docs/environments.md
+
+Review the postman workspaces and environment docs. Understand the details and nuance around contstructuing environment identifier and using it appropriately when querying. Modify out MCP tools implementation accordingly.
+
+@src/index.js
+@src/api/workspaces.js
+@src/api/environments.js
 ```
 
 ### Expanding Postman API Summaries

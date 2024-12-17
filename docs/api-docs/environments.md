@@ -1,5 +1,22 @@
 ## Environments
 
+**Note:** Environment endpoints require the full `uid` format: `{ownerId}-{environmentId}`. Using only the `environmentId` will result in "Invalid environment ID format" errors.
+
+Example `uid` construction from environment response:
+```json
+{
+  "owner": "31912785",
+  "id": "b8cdb26a-0c58-4f35-9775-4945c39d7ee2",
+  "uid": "31912785-b8cdb26a-0c58-4f35-9775-4945c39d7ee2"
+}
+```
+Use the full `uid` as follows:
+```bash
+environmentId: 31912785-b8cdb26a-0c58-4f35-9775-4945c39d7ee2
+```
+*Reason:* The Postman API requires the complete `uid` to ensure that users can only access environments they own, enhancing security.
+
+
 ### Implemented Operations
 - Get all environments (`GET /environments`)
   - Query Parameters:

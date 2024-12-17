@@ -1,5 +1,19 @@
 ## Workspaces
 
+**Important:**
+When working with workspaces, keep track of the `createdBy` (owner ID) from the workspace response. This ID is essential for constructing valid resource identifiers when accessing related workspace resources.
+
+For example, a workspace response includes:
+```json
+{
+  "id": "5ead536b-e095-403c-89f9-f9f03872537a",
+  "name": "My Workspace",
+  "type": "personal",
+  "visibility": "personal",
+  "createdBy": "31912785"
+}
+```
+
 ### Implemented Operations
 - Get all workspaces (`GET /workspaces`)
   - Parameters:
@@ -11,7 +25,6 @@
     - 200: `#/components/responses/getWorkspaces`
     - 401: `#/components/responses/common401Error`
     - 500: `#/components/responses/common500ErrorServerError`
-
 - Get a specific workspace (`GET /workspaces/{workspaceId}`)
   - Parameters:
     - workspaceId (`#/components/parameters/workspaceId`)

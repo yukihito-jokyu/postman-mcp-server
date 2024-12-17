@@ -123,7 +123,7 @@ class PostmanAPIServer {
             properties: {
               environmentId: {
                 type: 'string',
-                description: 'Environment ID',
+                description: 'Environment ID in format: {ownerId}-{environmentId} (e.g., "31912785-b8cdb26a-0c58-4f35-9775-4945c39d7ee2")',
               },
             },
             required: ['environmentId'],
@@ -169,7 +169,7 @@ class PostmanAPIServer {
             properties: {
               environmentId: {
                 type: 'string',
-                description: 'Environment ID',
+                description: 'Environment ID in format: {ownerId}-{environmentId} (e.g., "31912785-b8cdb26a-0c58-4f35-9775-4945c39d7ee2")',
               },
               name: {
                 type: 'string',
@@ -201,7 +201,7 @@ class PostmanAPIServer {
             properties: {
               environmentId: {
                 type: 'string',
-                description: 'Environment ID',
+                description: 'Environment ID in format: {ownerId}-{environmentId} (e.g., "31912785-b8cdb26a-0c58-4f35-9775-4945c39d7ee2")',
               },
             },
             required: ['environmentId'],

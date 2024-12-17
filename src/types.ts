@@ -96,8 +96,23 @@ export function isEnvironmentValue(obj: unknown): obj is EnvironmentValue {
   );
 }
 
+export function constructEnvironmentUid(owner: string, id: string): string {
+  return `${owner}-${id}`;
+}
+
 export function isValidUid(id: string): boolean {
-  return /^\d+-[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/.test(id);
+  // Format: ownerId-environmentId, e.g., "31912785-b8cdb26a-0c58-4f35-9775-4945c39d7ee2"
+  const parts = id.split('-');
+  if (parts.length < 2) return false;
+
+  const ownerId = parts[0];
+  const environmentId = parts.slice(1).join('-');
+
+  // Owner ID should be numeric
+  if (!/^\d+$/.test(ownerId)) return false;
+
+  // Environment ID should be a UUID
+  return /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/.test(environmentId);
 }
 
 export function isCreateEnvironmentArgs(obj: unknown): obj is CreateEnvironmentArgs {
