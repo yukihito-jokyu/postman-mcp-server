@@ -60,34 +60,54 @@ export class EnvironmentTools implements ToolHandler {
       },
       {
         name: 'create_environment',
-        description: 'Create a new environment in a workspace',
+        description: 'Create a new environment in a workspace. Creates in "My Workspace" if workspace not specified.',
         inputSchema: {
           type: 'object',
           properties: {
+            environment: {
+              type: 'object',
+              description: 'Environment details',
+              properties: {
+                name: {
+                  type: 'string',
+                  description: 'Environment name',
+                },
+                values: {
+                  type: 'array',
+                  description: 'Environment variables',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      key: {
+                        type: 'string',
+                        description: 'Variable name'
+                      },
+                      value: {
+                        type: 'string',
+                        description: 'Variable value'
+                      },
+                      type: {
+                        type: 'string',
+                        enum: ['default', 'secret'],
+                        description: 'Variable type'
+                      },
+                      enabled: {
+                        type: 'boolean',
+                        description: 'Variable enabled status'
+                      },
+                    },
+                    required: ['key', 'value'],
+                  },
+                },
+              },
+              required: ['name', 'values'],
+            },
             workspace: {
               type: 'string',
-              description: 'Workspace ID',
-            },
-            name: {
-              type: 'string',
-              description: 'Environment name',
-            },
-            values: {
-              type: 'array',
-              description: 'Environment variables',
-              items: {
-                type: 'object',
-                properties: {
-                  key: { type: 'string' },
-                  value: { type: 'string' },
-                  type: { type: 'string', enum: ['default', 'secret'] },
-                  enabled: { type: 'boolean' },
-                },
-                required: ['key', 'value'],
-              },
+              description: 'Workspace ID (optional)',
             },
           },
-          required: ['workspace', 'name', 'values'],
+          required: ['environment'],
         },
       },
       {
@@ -100,26 +120,45 @@ export class EnvironmentTools implements ToolHandler {
               type: 'string',
               description: 'Environment ID in format: {ownerId}-{environmentId} (e.g., "31912785-b8cdb26a-0c58-4f35-9775-4945c39d7ee2")',
             },
-            name: {
-              type: 'string',
-              description: 'Environment name (optional)',
-            },
-            values: {
-              type: 'array',
-              description: 'Environment variables to update (optional). Only include variables that need to be modified.',
-              items: {
-                type: 'object',
-                properties: {
-                  key: { type: 'string' },
-                  value: { type: 'string' },
-                  type: { type: 'string', enum: ['default', 'secret'] },
-                  enabled: { type: 'boolean' },
+            environment: {
+              type: 'object',
+              description: 'Environment details to update',
+              properties: {
+                name: {
+                  type: 'string',
+                  description: 'New environment name (optional)',
                 },
-                required: ['key', 'value'],
+                values: {
+                  type: 'array',
+                  description: 'Environment variables to update (optional). Only include variables that need to be modified.',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      key: {
+                        type: 'string',
+                        description: 'Variable name'
+                      },
+                      value: {
+                        type: 'string',
+                        description: 'Variable value'
+                      },
+                      type: {
+                        type: 'string',
+                        enum: ['default', 'secret'],
+                        description: 'Variable type (optional)'
+                      },
+                      enabled: {
+                        type: 'boolean',
+                        description: 'Variable enabled status (optional)'
+                      },
+                    },
+                    required: ['key', 'value'],
+                  },
+                },
               },
             },
           },
-          required: ['environmentId'],
+          required: ['environmentId', 'environment'],
         },
       },
       {
@@ -134,6 +173,114 @@ export class EnvironmentTools implements ToolHandler {
             },
           },
           required: ['environmentId'],
+        },
+      },
+      {
+        name: 'fork_environment',
+        description: 'Create a fork of an environment in a workspace',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            environmentId: {
+              type: 'string',
+              description: 'Environment ID in format: {ownerId}-{environmentId}',
+            },
+            label: {
+              type: 'string',
+              description: 'Label/name for the forked environment',
+            },
+            workspace: {
+              type: 'string',
+              description: 'Target workspace ID',
+            },
+          },
+          required: ['environmentId', 'label', 'workspace'],
+        },
+      },
+      {
+        name: 'get_environment_forks',
+        description: 'Get a list of environment forks',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            environmentId: {
+              type: 'string',
+              description: 'Environment ID in format: {ownerId}-{environmentId}',
+            },
+            cursor: {
+              type: 'string',
+              description: 'Pagination cursor',
+            },
+            direction: {
+              type: 'string',
+              enum: ['asc', 'desc'],
+              description: 'Sort direction',
+            },
+            limit: {
+              type: 'number',
+              description: 'Number of results per page',
+            },
+            sort: {
+              type: 'string',
+              enum: ['createdAt'],
+              description: 'Sort field',
+            },
+          },
+          required: ['environmentId'],
+        },
+      },
+      {
+        name: 'merge_environment_fork',
+        description: 'Merge a forked environment back into its parent',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            environmentId: {
+              type: 'string',
+              description: 'Environment ID in format: {ownerId}-{environmentId}',
+            },
+            source: {
+              type: 'string',
+              description: 'Source environment ID',
+            },
+            destination: {
+              type: 'string',
+              description: 'Destination environment ID',
+            },
+            strategy: {
+              type: 'object',
+              description: 'Merge strategy options',
+              properties: {
+                deleteSource: {
+                  type: 'boolean',
+                  description: 'Whether to delete the source environment after merging',
+                },
+              },
+            },
+          },
+          required: ['environmentId', 'source', 'destination'],
+        },
+      },
+      {
+        name: 'pull_environment',
+        description: 'Pull changes from parent environment into forked environment',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            environmentId: {
+              type: 'string',
+              description: 'Environment ID in format: {ownerId}-{environmentId}',
+            },
+            source: {
+              type: 'string',
+              description: 'Source (parent) environment ID',
+            },
+            destination: {
+              type: 'string',
+              description: 'Destination (fork) environment ID',
+            },
+          },
+          required: ['environmentId', 'source', 'destination'],
         },
       },
     ];
@@ -221,12 +368,12 @@ export class EnvironmentTools implements ToolHandler {
   async createEnvironment(args: CreateEnvironmentArgs) {
     try {
       validateArgs(args, isCreateEnvironmentArgs, 'Invalid create environment arguments');
-      const { workspace, name, values } = args;
+      const { workspace, environment } = args;
 
       const response = await this.axiosInstance.post('/environments', {
         environment: {
-          name,
-          values: values.map((v: EnvironmentValue) => ({
+          name: environment.name,
+          values: environment.values.map((v: EnvironmentValue) => ({
             key: v.key,
             value: v.value,
             type: v.type || 'default',
@@ -240,7 +387,7 @@ export class EnvironmentTools implements ToolHandler {
       });
 
       // Include uid in response
-      const environment = {
+      const result = {
         ...response.data,
         uid: constructEnvironmentUid(response.data.owner, response.data.id)
       };
@@ -249,7 +396,7 @@ export class EnvironmentTools implements ToolHandler {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(environment, null, 2),
+            text: JSON.stringify(result, null, 2),
           },
         ],
       };
@@ -271,26 +418,11 @@ export class EnvironmentTools implements ToolHandler {
    * Updates an existing environment. Only modified variables should be included in the request.
    * @param args UpdateEnvironmentArgs containing environmentId and optional name and values
    * @returns Updated environment details
-   * @example
-   * // Example request body:
-   * {
-   *   "environment": {
-   *     "name": "Test A Environment",
-   *     "values": [
-   *       {
-   *         "key": "variable_a",
-   *         "value": "The variable_a value.",
-   *         "enabled": false,
-   *         "type": "default"
-   *       }
-   *     ]
-   *   }
-   * }
    */
   async updateEnvironment(args: UpdateEnvironmentArgs) {
     try {
       validateArgs(args, isUpdateEnvironmentArgs, 'Invalid update environment arguments');
-      const { environmentId, name, values } = args;
+      const { environmentId, environment } = args;
 
       if (!isValidUid(environmentId)) {
         throw new McpError(ErrorCode.InvalidRequest, 'Invalid environment ID format. Expected format: {ownerId}-{environmentId}');
@@ -302,12 +434,12 @@ export class EnvironmentTools implements ToolHandler {
       };
 
       // Only include optional fields if they are provided
-      if (name !== undefined) {
-        requestBody.environment.name = name;
+      if (environment.name !== undefined) {
+        requestBody.environment.name = environment.name;
       }
 
-      if (values !== undefined) {
-        requestBody.environment.values = values.map((v: EnvironmentValue) => ({
+      if (environment.values !== undefined) {
+        requestBody.environment.values = environment.values.map((v: EnvironmentValue) => ({
           key: v.key,
           value: v.value,
           type: v.type || 'default',
@@ -318,7 +450,7 @@ export class EnvironmentTools implements ToolHandler {
       const response = await this.axiosInstance.put(`/environments/${environmentId}`, requestBody);
 
       // Include uid in response
-      const environment = {
+      const result = {
         ...response.data,
         uid: constructEnvironmentUid(response.data.owner, response.data.id)
       };
@@ -327,7 +459,7 @@ export class EnvironmentTools implements ToolHandler {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(environment, null, 2),
+            text: JSON.stringify(result, null, 2),
           },
         ],
       };
@@ -375,19 +507,20 @@ export class EnvironmentTools implements ToolHandler {
 
   /**
    * Creates a fork of an environment
-   * @param args ForkEnvironmentArgs containing environmentId and workspace
+   * @param args ForkEnvironmentArgs containing environmentId, label, and workspace
    * @returns Forked environment details
    */
   async createEnvironmentFork(args: ForkEnvironmentArgs) {
     try {
       validateArgs(args, isForkEnvironmentArgs, 'Invalid fork environment arguments');
-      const { environmentId, workspace } = args;
+      const { environmentId, label, workspace } = args;
 
       if (!isValidUid(environmentId)) {
         throw new McpError(ErrorCode.InvalidRequest, 'Invalid environment ID format. Expected format: {ownerId}-{environmentId}');
       }
 
       const response = await this.axiosInstance.post(`/environments/${environmentId}/forks`, {
+        forkName: label,
         workspace: {
           id: workspace,
           type: 'workspace'
@@ -480,19 +613,23 @@ export class EnvironmentTools implements ToolHandler {
 
   /**
    * Merges a forked environment back into its parent
-   * @param args MergeEnvironmentForkArgs containing environmentId
+   * @param args MergeEnvironmentForkArgs containing environmentId, source, destination, and strategy
    * @returns Merge result
    */
   async mergeEnvironmentFork(args: MergeEnvironmentForkArgs) {
     try {
       validateArgs(args, isMergeEnvironmentForkArgs, 'Invalid merge environment fork arguments');
-      const { environmentId } = args;
+      const { environmentId, source, destination, strategy } = args;
 
       if (!isValidUid(environmentId)) {
         throw new McpError(ErrorCode.InvalidRequest, 'Invalid environment ID format. Expected format: {ownerId}-{environmentId}');
       }
 
-      const response = await this.axiosInstance.post(`/environments/${environmentId}/merges`);
+      const response = await this.axiosInstance.post(`/environments/${environmentId}/merges`, {
+        source,
+        destination,
+        deleteSource: strategy?.deleteSource
+      });
 
       // Include uid in response
       const result = {
@@ -524,19 +661,22 @@ export class EnvironmentTools implements ToolHandler {
 
   /**
    * Pulls changes from parent environment into forked environment
-   * @param args PullEnvironmentArgs containing environmentId
+   * @param args PullEnvironmentArgs containing environmentId, source, and destination
    * @returns Pull result
    */
   async pullEnvironment(args: PullEnvironmentArgs) {
     try {
       validateArgs(args, isPullEnvironmentArgs, 'Invalid pull environment arguments');
-      const { environmentId } = args;
+      const { environmentId, source, destination } = args;
 
       if (!isValidUid(environmentId)) {
         throw new McpError(ErrorCode.InvalidRequest, 'Invalid environment ID format. Expected format: {ownerId}-{environmentId}');
       }
 
-      const response = await this.axiosInstance.post(`/environments/${environmentId}/pulls`);
+      const response = await this.axiosInstance.post(`/environments/${environmentId}/pulls`, {
+        source,
+        destination
+      });
 
       // Include uid in response
       const result = {

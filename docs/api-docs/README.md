@@ -72,6 +72,8 @@ Review the postman environment md docs and yaml definitions. Understand the deta
 
 
 @src/api/environments.ts
+@src/types.ts
+
 
 We may also need to update the MCP protocol endpoints to reflect the changes. IOW, updating our code that communicates with the Postman API is one part but we also may need to update the MCP protocol code that communicates with the MCP clients.
 

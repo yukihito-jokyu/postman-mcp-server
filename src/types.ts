@@ -31,18 +31,24 @@ export interface EnvironmentValue {
 }
 
 export interface CreateEnvironmentArgs {
+  environment: {
+    name: string;
+    values: EnvironmentValue[];
+  };
   workspace?: string;
-  name: string;
-  values: EnvironmentValue[];
 }
 
-export interface UpdateEnvironmentArgs extends EnvironmentIdArg {
-  name: string;
-  values: EnvironmentValue[];
+export interface UpdateEnvironmentArgs {
+  environmentId: string;
+  environment: {
+    name?: string;
+    values?: EnvironmentValue[];
+  };
 }
 
 export interface ForkEnvironmentArgs {
   environmentId: string;
+  label: string;
   workspace: string;
 }
 
@@ -56,10 +62,17 @@ export interface GetEnvironmentForksArgs {
 
 export interface MergeEnvironmentForkArgs {
   environmentId: string;
+  source: string;
+  destination: string;
+  strategy?: {
+    deleteSource?: boolean;
+  };
 }
 
 export interface PullEnvironmentArgs {
   environmentId: string;
+  source: string;
+  destination: string;
 }
 
 export interface CreateCollectionArgs extends WorkspaceArg {
@@ -130,21 +143,25 @@ export function isCreateEnvironmentArgs(obj: unknown): obj is CreateEnvironmentA
   if (typeof obj !== 'object' || obj === null) return false;
   const args = obj as CreateEnvironmentArgs;
   return (
-    (args.workspace === undefined || typeof args.workspace === 'string') &&
-    typeof args.name === 'string' &&
-    Array.isArray(args.values) &&
-    args.values.every(isEnvironmentValue)
+    typeof args.environment === 'object' &&
+    args.environment !== null &&
+    typeof args.environment.name === 'string' &&
+    Array.isArray(args.environment.values) &&
+    args.environment.values.every(isEnvironmentValue) &&
+    (args.workspace === undefined || typeof args.workspace === 'string')
   );
 }
 
 export function isUpdateEnvironmentArgs(obj: unknown): obj is UpdateEnvironmentArgs {
-  if (!isEnvironmentIdArg(obj)) return false;
+  if (typeof obj !== 'object' || obj === null) return false;
   const args = obj as UpdateEnvironmentArgs;
   return (
-    typeof args.name === 'string' &&
-    Array.isArray(args.values) &&
-    args.values.every(isEnvironmentValue) &&
-    isValidUid(args.environmentId)
+    typeof args.environmentId === 'string' &&
+    isValidUid(args.environmentId) &&
+    typeof args.environment === 'object' &&
+    args.environment !== null &&
+    (args.environment.name === undefined || typeof args.environment.name === 'string') &&
+    (args.environment.values === undefined || (Array.isArray(args.environment.values) && args.environment.values.every(isEnvironmentValue)))
   );
 }
 
@@ -153,6 +170,7 @@ export function isForkEnvironmentArgs(obj: unknown): obj is ForkEnvironmentArgs 
   const args = obj as ForkEnvironmentArgs;
   return (
     typeof args.environmentId === 'string' &&
+    typeof args.label === 'string' &&
     typeof args.workspace === 'string' &&
     isValidUid(args.environmentId)
   );
@@ -174,13 +192,32 @@ export function isGetEnvironmentForksArgs(obj: unknown): obj is GetEnvironmentFo
 export function isMergeEnvironmentForkArgs(obj: unknown): obj is MergeEnvironmentForkArgs {
   if (typeof obj !== 'object' || obj === null) return false;
   const args = obj as MergeEnvironmentForkArgs;
-  return typeof args.environmentId === 'string' && isValidUid(args.environmentId);
+  return (
+    typeof args.environmentId === 'string' &&
+    typeof args.source === 'string' &&
+    typeof args.destination === 'string' &&
+    isValidUid(args.environmentId) &&
+    isValidUid(args.source) &&
+    isValidUid(args.destination) &&
+    (args.strategy === undefined || (
+      typeof args.strategy === 'object' &&
+      args.strategy !== null &&
+      (args.strategy.deleteSource === undefined || typeof args.strategy.deleteSource === 'boolean')
+    ))
+  );
 }
 
 export function isPullEnvironmentArgs(obj: unknown): obj is PullEnvironmentArgs {
   if (typeof obj !== 'object' || obj === null) return false;
   const args = obj as PullEnvironmentArgs;
-  return typeof args.environmentId === 'string' && isValidUid(args.environmentId);
+  return (
+    typeof args.environmentId === 'string' &&
+    typeof args.source === 'string' &&
+    typeof args.destination === 'string' &&
+    isValidUid(args.environmentId) &&
+    isValidUid(args.source) &&
+    isValidUid(args.destination)
+  );
 }
 
 export function isCreateCollectionArgs(obj: unknown): obj is CreateCollectionArgs {
