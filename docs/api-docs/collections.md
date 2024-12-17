@@ -458,6 +458,20 @@
     - 404: `#/components/responses/collection404ErrorInstanceNotFound`
     - 500: `#/components/responses/common500ErrorInternalServer`
 
+#### Collection Transformations
+- Transform collection to OpenAPI (`GET /collections/{collectionId}/transformations`)
+  - Parameters:
+    - `#/components/parameters/collectionId` (required)
+    - `#/components/parameters/collectionTransformFormat`
+  - Note: Does not create an API
+  - Responses:
+    - 200: `#/components/responses/transformCollectionToOpenAPI`
+    - 401: `#/components/responses/collectionToApi401Error`
+    - 404: `#/components/responses/collectionToApi404Error`
+    - 500: `#/components/responses/collectionToApi500Error`
+
+
+
 ### Key Features
 - Collection CRUD operations
 - Support for Postman Collection Format v2.1.0

@@ -361,6 +361,103 @@
     - 404: `#/components/responses/tag404Error`
     - 500: `#/components/responses/tag500Error`
 
+#### API Versions
+- Get all versions (`GET /apis/{apiId}/versions`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/v10Accept`
+    - `#/components/parameters/cursor`
+    - `#/components/parameters/limit`
+  - Description: Gets all the published versions of an API
+  - Responses:
+    - 200: `#/components/responses/getApiVersions`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: `#/components/responses/featureUnavailable403Error`
+    - 404: `#/components/responses/apiVersions404Response`
+    - 422: `#/components/responses/v9Unsupported`
+    - 500: `#/components/responses/common500Error`
+
+- Create version (`POST /apis/{apiId}/versions`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/v10Accept`
+  - Description: Creates new API version asynchronously
+  - Note: Returns 202 Accepted with task status polling link
+  - Note: Equivalent to publishing a version in Postman app
+  - Request Body: `#/components/requestBodies/createApiVersion`
+  - Responses:
+    - 202: `#/components/responses/createApiVersion`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: Multiple possible responses:
+      - `#/components/schemas/apiSchema403ErrorForbidden`
+      - `#/components/schemas/featureUnavailable403Error`
+    - 404: `#/components/responses/apiVersions404Response`
+    - 422: `#/components/responses/apiVersion422ErrorStateInconsistent`
+    - 500: `#/components/responses/common500Error`
+
+- Get version (`GET /apis/{apiId}/versions/{versionId}`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/apiVersionId` (required)
+    - `#/components/parameters/v10Accept`
+  - Note: Returns 302 Found with task status for pending versions (API editors)
+  - Note: Returns 404 Not Found for pending versions (API viewers)
+  - Responses:
+    - 200: `#/components/responses/getApiVersion`
+    - 302: Found (with Location header)
+    - 400: `#/components/responses/v10HeaderMissing`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: `#/components/responses/featureUnavailable403Error`
+    - 404: `#/components/responses/apiVersion404ErrorNotFound`
+    - 500: `#/components/responses/common500Error`
+
+- Update version (`PUT /apis/{apiId}/versions/{versionId}`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/apiVersionId` (required)
+    - `#/components/parameters/v10Accept`
+  - Note: Returns 404 Not Found for pending versions
+  - Request Body: `#/components/requestBodies/updateApiVersion`
+  - Responses:
+    - 200: `#/components/responses/updateApiVersion`
+    - 400: `#/components/responses/v10HeaderMissing`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: `#/components/responses/api403ErrorAndFeatureUnavailable`
+    - 404: `#/components/responses/apiVersion404ErrorNotFound`
+    - 500: `#/components/responses/common500Error`
+
+- Delete version (`DELETE /apis/{apiId}/versions/{versionId}`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/apiVersionId` (required)
+    - `#/components/parameters/v10Accept`
+  - Note: Returns 404 Not Found for pending versions
+  - Responses:
+    - 204: No Content
+    - 400: Multiple possible responses:
+      - `#/components/schemas/apiVersion400ErrorInstanceNotFound`
+      - `#/components/schemas/v10HeaderMissing`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: `#/components/responses/api403ErrorAndFeatureUnavailable`
+    - 404: `#/components/responses/apiVersion404ErrorNotFound`
+    - 500: `#/components/responses/common500Error`
+
+#### API Tasks
+- Get status of an asynchronous task (`GET /apis/{apiId}/tasks/{taskId}`)
+  - Parameters:
+    - `#/components/parameters/apiId` (required)
+    - `#/components/parameters/apiTaskId` (required)
+    - `#/components/parameters/v10Accept`
+  - Description: Gets the status of an asynchronous task
+  - Responses:
+    - 200: `#/components/responses/getStatusOfAnAsyncTask`
+    - 400: Multiple possible responses:
+      - `#/components/schemas/apiVersion400ErrorInvalidParam`
+      - `#/components/schemas/v10HeaderMissing`
+    - 401: `#/components/responses/api401ErrorUnauthorized`
+    - 403: `#/components/responses/api403ErrorAndFeatureUnavailable`
+    - 404: `#/components/responses/taskNotFound`
+
 ### Key Features
 - API definition management
 - Schema version control
@@ -370,3 +467,4 @@
 - API versioning
 - Git repository integration
 - Tag management
+- Asynchronous task tracking

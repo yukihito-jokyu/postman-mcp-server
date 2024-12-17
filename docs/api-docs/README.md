@@ -249,6 +249,15 @@ Workthrough the markdown summary document, operating one endpoint at a time, upd
 Also continue to add missing endpoints that you come across. The goal is to be "additive" and "augmentative" so that we continually add and correct details each time we review. Do not remove details or re-summarize existing content.
 
 When completed this file, request the next summary document to continue with. Keep doing this until I say stop or you get bored.
+```
+
+##### Review for missing endpoints
+
+```bash
+@/docs/reference/postman-api-pathsonly.yaml
+
+Peruse the postman OpenAPI 3 paths definition (note this is a very abrridged version of the full document, containing just the paths objects). Compare to @/docs/api-docs/ .md files for missing endpoints. Add missing endpoints to the summary markdown files.
+```
 
 ##### Add Request Bodies
 ```bash

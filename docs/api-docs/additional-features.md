@@ -1,5 +1,38 @@
 ## Additional Features
 
+### Billing
+- Get accounts (`GET /accounts`)
+  - Description: Gets Postman billing account details for the given team
+  - Responses:
+    - 200: `#/components/responses/getAccounts`
+    - 400: `#/components/responses/invoicesNoTeam400Error`
+    - 401: `#/components/responses/unauthorizedError`
+    - 500: `#/components/responses/common500ErrorServerError`
+
+- List account invoices (`GET /accounts/{accountId}/invoices`)
+  - Parameters:
+    - `#/components/parameters/billingAccountId`
+    - `#/components/parameters/billingAccountStatus`
+  - Description: Gets all invoices for a Postman billing account filtered by status
+  - Responses:
+    - 200: `#/components/responses/getAccountInvoices`
+    - 400: `#/components/responses/invoiceMissingStatus400Error`
+    - 401: `#/components/responses/unauthorizedError`
+    - 403: `#/components/responses/invoicesForbidden403Error`
+    - 500: `#/components/responses/common500ErrorServerError`
+
+### Comment Resolution
+- Resolve comment thread (`POST /comments-resolutions/{threadId}`)
+  - Parameters:
+    - `#/components/parameters/threadId` (required)
+  - Description: Resolves a comment and any associated replies
+  - Note: Thread IDs return in GET comments response for APIs, collections, and collection items
+  - Responses:
+    - 204: No Content (Successful Response)
+    - 401: `#/components/responses/comment401Error`
+    - 404: `#/components/responses/comment404Error`
+    - 500: `#/components/responses/comment500Error`
+
 ### Private API Network (Enterprise)
 - Get all elements and folders (`GET /network/private`)
   - Parameters:
@@ -239,3 +272,13 @@
   - Tag-based search
   - Consistent tag operations
   - Workspace/API/Collection support
+
+- Billing
+  - Team billing details
+  - Invoice management
+  - Status filtering
+
+- Comment Resolution
+  - Thread-based resolution
+  - Bulk thread management
+  - API/Collection/Item support
