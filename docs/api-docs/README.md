@@ -64,6 +64,16 @@ Review the postman workspaces and environment docs. Understand the details and n
 @src/api/environments.js
 ```
 
+##### MCP Protocol
+
+```bash
+
+Revise the MCP protocol implementation to ensure the "List Resources", "List Prompts" endpoints are functionality fully and correctly.
+
+@src/index.js
+
+```
+
 ### Expanding Postman API Summaries
 
 #### Working on Individual Files

@@ -5,6 +5,9 @@ import {
   CallToolRequestSchema,
   ErrorCode,
   ListToolsRequestSchema,
+  ListResourcesRequestSchema,
+  ListResourceTemplatesRequestSchema,
+  ListPromptsRequestSchema,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 import axios from 'axios';
@@ -47,6 +50,8 @@ class PostmanAPIServer {
       {
         capabilities: {
           tools: {},
+          resources: {},
+          prompts: {},
         },
       }
     );
@@ -64,13 +69,106 @@ class PostmanAPIServer {
     this.collectionTools = new CollectionTools(this.axiosInstance);
     this.userTools = new UserTools(this.axiosInstance);
 
-    this.setupToolHandlers();
+    this.setupHandlers();
 
     this.server.onerror = (error) => console.error('[MCP Error]', error);
     process.on('SIGINT', async () => {
       await this.server.close();
       process.exit(0);
     });
+  }
+
+  private setupHandlers() {
+    // List Resources handler
+    this.server.setRequestHandler(ListResourcesRequestSchema, async () => ({
+      resources: [
+        {
+          uri: 'postman://workspaces',
+          name: 'Postman Workspaces',
+          description: 'List of all available Postman workspaces',
+          mimeType: 'application/json',
+        },
+        {
+          uri: 'postman://user',
+          name: 'Current User',
+          description: 'Information about the currently authenticated user',
+          mimeType: 'application/json',
+        },
+      ],
+    }));
+
+    // List Resource Templates handler
+    this.server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => ({
+      resourceTemplates: [
+        {
+          uriTemplate: 'postman://workspaces/{workspaceId}/collections',
+          name: 'Workspace Collections',
+          description: 'List of collections in a specific workspace',
+          mimeType: 'application/json',
+        },
+        {
+          uriTemplate: 'postman://workspaces/{workspaceId}/environments',
+          name: 'Workspace Environments',
+          description: 'List of environments in a specific workspace',
+          mimeType: 'application/json',
+        },
+      ],
+    }));
+
+    // List Prompts handler
+    this.server.setRequestHandler(ListPromptsRequestSchema, async () => ({
+      prompts: [
+        {
+          id: 'create_collection',
+          name: 'Create Collection',
+          description: 'Create a new Postman collection with specified endpoints',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              description: { type: 'string' },
+              endpoints: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    path: { type: 'string' },
+                    method: { type: 'string' },
+                    description: { type: 'string' },
+                  },
+                },
+              },
+            },
+            required: ['name', 'endpoints'],
+          },
+        },
+        {
+          id: 'create_environment',
+          name: 'Create Environment',
+          description: 'Create a new Postman environment with variables',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              variables: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    key: { type: 'string' },
+                    value: { type: 'string' },
+                    type: { type: 'string', enum: ['default', 'secret'] },
+                  },
+                },
+              },
+            },
+            required: ['name', 'variables'],
+          },
+        },
+      ],
+    }));
+
+    this.setupToolHandlers();
   }
 
   private setupToolHandlers() {
