@@ -32,7 +32,7 @@
     - 204: No Content (successful deletion)
     - 401: `#/components/responses/common401Error`
     - 403: `#/components/responses/common403ErrorForbidden`
-    - 404: `#/components/responses/cakNotFound404Error`
+    - 404: `#/components/responses/collectionAccessKeyNotFound404Error`
     - 500: `#/components/responses/common500ErrorSomethingWrong`
 
 #### Roles & Permissions
