@@ -21,6 +21,10 @@
     - `#/components/parameters/workspaceIdQueryTrue`
     - `#/components/parameters/v10Accept`
   - Request Body: `#/components/requestBodies/createApi`
+    - Required fields:
+      - name: API name
+      - summary: Brief description
+      - workspaceId: Target workspace ID
   - Responses:
     - 200: `#/components/responses/createApi`
     - 400: `#/components/responses/workspace400ErrorParamMissing`
@@ -53,6 +57,10 @@
     - `#/components/parameters/apiId` (required)
     - `#/components/parameters/v10Accept`
   - Request Body: `#/components/requestBodies/updateApi`
+    - Optional fields:
+      - name: New API name
+      - summary: Updated description
+      - versionTag: Version identifier
   - Responses:
     - 200: `#/components/responses/updateApi`
     - 400: `#/components/responses/v10HeaderMissing`
@@ -85,6 +93,10 @@
     - CREATE_NEW - Create with provided content
     - GENERATE_FROM_SCHEMA - Generate from API schema
   - Request Body: `#/components/requestBodies/addApiCollection`
+    - Required fields:
+      - operationType: COPY_COLLECTION | CREATE_NEW | GENERATE_FROM_SCHEMA
+      - collection: Collection details based on operation type
+      - options: Advanced creation options (for GENERATE_FROM_SCHEMA)
   - Responses:
     - 200: `#/components/responses/addApiCollection`
     - 400: `#/components/responses/v10HeaderMissing`
@@ -140,6 +152,9 @@
     - `#/components/parameters/apiId` (required)
     - `#/components/parameters/v10Accept`
   - Request Body: `#/components/requestBodies/createApiSchema`
+    - Required fields:
+      - type: Schema type (e.g., openapi3)
+      - files: Array of schema files with content
   - Responses:
     - 200: `#/components/responses/createApiSchema`
     - 400: Multiple possible responses:
@@ -221,6 +236,8 @@
   - Note: Creates folders for paths containing forward slashes
   - Note: Only root tag updates allowed for protobuf specs
   - Request Body: `#/components/requestBodies/createUpdateApiSchemaFile`
+    - Required fields:
+      - content: Schema file content
   - Responses:
     - 200: `#/components/responses/createUpdateApiSchemaFile`
     - 400: Multiple possible responses:
@@ -270,6 +287,9 @@
     - `#/components/parameters/apiId` (required)
   - Note: Maximum 10,000 characters
   - Request Body: `#/components/requestBodies/commentCreate`
+    - Required fields:
+      - content: Comment text
+      - threadId: Optional, for replying to existing comments
   - Responses:
     - 201: `#/components/responses/commentCreated`
     - 400: `#/components/responses/v10HeaderMissing`
@@ -284,6 +304,8 @@
     - `#/components/parameters/commentId` (required)
   - Note: Maximum 10,000 characters
   - Request Body: `#/components/requestBodies/commentUpdate`
+    - Required fields:
+      - content: Updated comment text
   - Responses:
     - 200: `#/components/responses/commentUpdated`
     - 400: `#/components/responses/v10HeaderMissing`
@@ -325,6 +347,8 @@
     - `#/components/parameters/apiId` (required)
     - `#/components/parameters/v10Accept`
   - Request Body: `#/components/requestBodies/tagUpdateTags`
+    - Required fields:
+      - tags: Array of tag objects with slug and name
   - Responses:
     - 200: `#/components/responses/tagGetPut`
     - 400: Multiple possible responses:

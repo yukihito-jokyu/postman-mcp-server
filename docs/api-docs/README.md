@@ -126,7 +126,7 @@ When completed this file, request the next summary document to continue with. Ke
 ```bash
 @/docs/postman-api-pathsonly.yaml
 
-Peruse the postman OpenAPI 3 definition (note this is a very abrridged version of the full document, containing just the paths objects), this time to augment the POST/PUT requests with body content add parameter details by matching the parameter name (e.g. The workspaceQuery in '#/components/requestBodies/updateEnvironment').
+Peruse the postman OpenAPI 3 definition (note this is a very abrridged version of the full document, containing just the paths objects), this time to augment the POST/PUT requests with body content add parameter details by matching the parameter name (e.g. The updateEnvironment in '#/components/requestBodies/updateEnvironment').
 
 Continue updating the individual summary markdown document that we can use later on to cross-check against our tool implementations:
 @/docs/api-docs/environments.md

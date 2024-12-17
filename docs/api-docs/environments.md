@@ -24,6 +24,14 @@
   - Parameters:
     - workspaceQuery (`#/components/parameters/workspaceQuery`)
   - Request Body: `#/components/requestBodies/createEnvironment`
+    - Required fields:
+      - name: Environment name
+    - Optional fields:
+      - values: Array of environment variables
+        - key: Variable name
+        - value: Variable value
+        - type: Variable type (default/secret)
+        - enabled: Variable enabled status
   - Responses:
     - 200: `#/components/responses/createEnvironment`
     - 400: `#/components/responses/environments400ErrorMalformedRequest`
@@ -35,6 +43,13 @@
   - Parameters:
     - environmentId (`#/components/parameters/environmentId`)
   - Request Body: `#/components/requestBodies/updateEnvironment`
+    - Optional fields:
+      - name: New environment name
+      - values: Updated array of environment variables
+        - key: Variable name
+        - value: Variable value
+        - type: Variable type (default/secret)
+        - enabled: Variable enabled status
   - Responses:
     - 200: `#/components/responses/updateEnvironment`
     - 400: `#/components/responses/environments400ErrorMalformedRequest`
@@ -56,6 +71,9 @@
     - environmentUid (`#/components/parameters/environmentUid`)
     - workspaceIdQueryTrue (`#/components/parameters/workspaceIdQueryTrue`)
   - Request Body: `#/components/requestBodies/forkEnvironment`
+    - Required fields:
+      - label: Fork label/name
+      - workspace: Target workspace ID
   - Responses:
     - 200: `#/components/responses/forkEnvironment`
     - 401: `#/components/responses/common401Error`
@@ -81,6 +99,10 @@
   - Parameters:
     - environmentUid (`#/components/parameters/environmentUid`)
   - Request Body: `#/components/requestBodies/mergeEnvironmentFork`
+    - Required fields:
+      - source: Source environment ID
+      - destination: Destination environment ID
+      - strategy: Merge strategy details
   - Responses:
     - 200: `#/components/responses/mergeEnvironmentFork`
     - 400: `#/components/responses/environmentForks400Error`
@@ -93,6 +115,10 @@
   - Parameters:
     - environmentUid (`#/components/parameters/environmentUid`)
   - Request Body: `#/components/requestBodies/pullEnvironment`
+    - Required fields:
+      - source: Source environment ID
+      - destination: Destination environment ID
+      - strategy: Pull strategy details
   - Responses:
     - 200: `#/components/responses/pullEnvironment`
     - 400: `#/components/responses/environmentForks400Error`

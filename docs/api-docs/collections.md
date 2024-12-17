@@ -318,6 +318,47 @@
     - 403: `#/components/responses/pullRequest403ErrorForbidden`
     - 500: `#/components/responses/common500Error`
 
+#### Pull Requests
+- Get pull request (`GET /pull-requests/{pullRequestId}`)
+  - Parameters:
+    - pullRequestId (`#/components/parameters/pullRequestId`) (required)
+  - Responses:
+    - 200: `#/components/responses/getPullRequest`
+    - 403: `#/components/responses/pullRequest403ErrorForbidden`
+    - 500: `#/components/responses/common500ErrorServerError`
+
+- Update pull request (`PUT /pull-requests/{pullRequestId}`)
+  - Parameters:
+    - pullRequestId (`#/components/parameters/pullRequestId`) (required)
+  - Request Body: `#/components/requestBodies/pullRequestUpdate`
+    - Required fields:
+      - name: Updated pull request name
+      - description: Updated description
+    - Optional fields:
+      - destination: Updated destination details
+      - source: Updated source details
+  - Responses:
+    - 200: `#/components/responses/pullRequestUpdate`
+    - 403: `#/components/responses/pullRequest403ErrorForbidden`
+    - 409: `#/components/responses/pullRequest409ErrorConflict`
+    - 500: `#/components/responses/common500ErrorServerError`
+
+- Review pull request (`POST /pull-requests/{pullRequestId}/tasks`)
+  - Parameters:
+    - pullRequestId (`#/components/parameters/pullRequestId`) (required)
+  - Description: Updates the review status of a pull request
+  - Request Body: `#/components/requestBodies/pullRequestReview`
+    - Required fields:
+      - action: Review action (approve/reject)
+      - comment: Review comment
+  - Responses:
+    - 200: `#/components/responses/pullRequestReview200OK`
+    - 400: Multiple possible responses:
+      - `#/components/schemas/pullRequestReview400ErrorActionNotAllowed`
+      - `#/components/schemas/pullRequestReview400ErrorInvalidAction`
+    - 403: `#/components/responses/pullRequest403ErrorForbidden`
+    - 500: `#/components/responses/common500ErrorServerError`
+
 #### Collection Comments
 - Get collection comments (`GET /collections/{collectionId}/comments`)
   - Parameters:

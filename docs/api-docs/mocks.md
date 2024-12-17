@@ -17,6 +17,14 @@
   - Note: Creates in Personal workspace if workspace not specified
   - Note: Cannot create mocks for collections added to an API definition
   - Request Body: `#/components/requestBodies/createMock`
+    - Required fields:
+      - collection: Collection ID to mock
+      - name: Mock server name
+    - Optional fields:
+      - description: Mock server description
+      - environment: Environment ID to use
+      - private: Access control setting
+      - versionTag: Collection version tag
   - Responses:
     - 200: `#/components/responses/mockCreateUpdate`
     - 400: `#/components/responses/paramMissing400Error`
@@ -36,6 +44,12 @@
   - Parameters:
     - `#/components/parameters/mockId` (required)
   - Request Body: `#/components/requestBodies/updateMock`
+    - Optional fields:
+      - name: New mock server name
+      - description: Updated description
+      - environment: New environment ID
+      - private: Updated access control setting
+      - versionTag: Updated collection version tag
   - Responses:
     - 200: `#/components/responses/mockCreateUpdate`
     - 401: `#/components/responses/common401Error`
@@ -113,6 +127,14 @@
   - Note: Server responses are agnostic to application-level logic
   - Note: Only one server response can be active at a time
   - Request Body: `#/components/requestBodies/createMockServerResponse`
+    - Required fields:
+      - name: Response name
+      - code: HTTP status code
+      - headers: Response headers
+      - body: Response body content
+    - Optional fields:
+      - active: Set as active response
+      - delay: Response delay in milliseconds
   - Responses:
     - 200: `#/components/responses/mockServerResponse`
     - 400: `#/components/responses/paramMissing400Error`
@@ -135,6 +157,13 @@
     - `#/components/parameters/mockId` (required)
     - `#/components/parameters/serverResponseId` (required)
   - Request Body: `#/components/requestBodies/updateMockServerResponse`
+    - Optional fields:
+      - name: Updated response name
+      - code: Updated HTTP status code
+      - headers: Updated response headers
+      - body: Updated response body
+      - active: Change active status
+      - delay: Updated response delay
   - Responses:
     - 200: `#/components/responses/mockServerResponse`
     - 400: `#/components/responses/paramMissing400Error`

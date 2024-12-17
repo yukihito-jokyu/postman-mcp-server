@@ -6,6 +6,10 @@
   - Note: Maximum definition size: 10 MB
   - Note: Requires imported and enabled OWASP security rules
   - Request Body: `#/components/requestBodies/schemaSecurityValidation`
+    - Required fields:
+      - type: Schema type (e.g., "openapi3")
+      - definition: API definition content
+      - rulesets: Array of ruleset IDs to validate against
   - Responses:
     - 200: `#/components/responses/schemaSecurityValidation`
     - 400: `#/components/responses/schemaSecurityValidation400Error`
@@ -32,6 +36,11 @@
     - `#/components/parameters/until`
   - Note: Empty request body returns all results
   - Request Body: `#/components/requestBodies/detectedSecretsQueries`
+    - Optional fields:
+      - workspaces: Array of workspace IDs to search
+      - secretTypes: Array of secret type IDs
+      - resolutions: Array of resolution statuses
+      - resources: Array of resource types
   - Responses:
     - 200: `#/components/responses/detectedSecretsQueries`
     - 400: `#/components/responses/detectedSecretsQuery400Errors`
@@ -43,6 +52,9 @@
   - Parameters:
     - `#/components/parameters/secretId` (required)
   - Request Body: `#/components/requestBodies/updateSecretResolutions`
+    - Required fields:
+      - resolution: New resolution status
+      - comment: Optional resolution comment
   - Responses:
     - 200: `#/components/responses/updateSecretResolutions`
     - 400: `#/components/responses/secretScanner400InvalidResolutionError`

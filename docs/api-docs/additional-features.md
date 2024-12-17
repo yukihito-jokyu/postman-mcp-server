@@ -26,6 +26,14 @@
 - Add element or folder (`POST /network/private`)
   - Note: Only one element object type per call
   - Request Body: `#/components/requestBodies/postPanElementOrFolder`
+    - Required fields:
+      - type: Element type (api/collection/workspace/folder)
+      - name: Element/folder name
+    - Optional fields (based on type):
+      - description: Element/folder description
+      - summary: Element summary
+      - parentFolderId: Parent folder ID
+      - elementId: ID of API/collection/workspace to add
   - Responses:
     - 201: `#/components/responses/postPanElementOrFolder`
     - 401: `#/components/responses/common401Error`
@@ -39,6 +47,11 @@
     - `#/components/parameters/elementType` (required)
   - Note: Only one element object type per call
   - Request Body: `#/components/requestBodies/updatePanElementOrFolder`
+    - Optional fields:
+      - name: Updated name
+      - description: Updated description
+      - summary: Updated summary
+      - parentFolderId: New parent folder ID
   - Responses:
     - 200: `#/components/responses/updatePanElementOrFolder`
     - 401: `#/components/responses/common401Error`
@@ -82,6 +95,9 @@
   - Parameters:
     - `#/components/parameters/panRequestId` (required)
   - Request Body: `#/components/requestBodies/respondPanElementAddRequest`
+    - Required fields:
+      - status: New request status (approved/rejected)
+      - comment: Optional response comment
   - Responses:
     - 200: `#/components/responses/respondPanElementAddRequest`
     - 400: `#/components/responses/pan400ErrorInvalidParams`
@@ -96,6 +112,12 @@
   - Description: Creates webhook that triggers collection with custom payload
   - Note: Webhook URL returned in webhookUrl response property
   - Request Body: `#/components/requestBodies/createWebhook`
+    - Required fields:
+      - name: Webhook name
+      - collection: Collection ID to trigger
+    - Optional fields:
+      - description: Webhook description
+      - events: Array of events to trigger on
   - Responses:
     - 200: `#/components/responses/createWebhook`
     - 400: `#/components/responses/createWebhookParamMissing400Error`
@@ -133,6 +155,8 @@
   - Parameters:
     - `#/components/parameters/workspaceId` (required)
   - Request Body: `#/components/requestBodies/tagUpdateTags`
+    - Required fields:
+      - tags: Array of tag objects with slug and name
   - Responses:
     - 200: `#/components/responses/tagGetPut`
     - 400: `#/components/responses/tag400Error`
@@ -154,6 +178,8 @@
   - Parameters:
     - `#/components/parameters/collectionUid` (required)
   - Request Body: `#/components/requestBodies/tagUpdateTags`
+    - Required fields:
+      - tags: Array of tag objects with slug and name
   - Responses:
     - 200: `#/components/responses/tagGetPut`
     - 400: `#/components/responses/tag400Error`
@@ -181,6 +207,8 @@
     - `#/components/parameters/apiId` (required)
     - `#/components/parameters/v10Accept`
   - Request Body: `#/components/requestBodies/tagUpdateTags`
+    - Required fields:
+      - tags: Array of tag objects with slug and name
   - Responses:
     - 200: `#/components/responses/tagGetPut`
     - 400: Multiple possible responses:
