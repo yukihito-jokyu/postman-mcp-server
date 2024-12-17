@@ -64,6 +64,19 @@ Review the postman workspaces and environment docs. Understand the details and n
 @src/api/environments.ts
 ```
 
+```bash
+@/docs/api-docs/environments.md
+@/docs/postman-api-requestBodies.yaml
+
+Review the postman environment md docs and yaml definitions. Understand the details and nuance of request bodies for POST/PUT requests. Modify out MCP tools implementation accordingly, including inline jsdocs.
+
+
+@src/api/environments.ts
+
+We may also need to update the MCP protocol endpoints to reflect the changes. IOW, updating our code that communicates with the Postman API is one part but we also may need to update the MCP protocol code that communicates with the MCP clients.
+
+```
+
 ##### MCP Protocol
 
 ```bash
