@@ -1,5 +1,5 @@
 import { AxiosInstance } from 'axios';
-import { ToolHandler } from '../types.js';
+import { ToolHandler, ToolDefinition } from '../types.js';
 
 interface ListWorkspacesParams {
   type?: 'personal' | 'team' | 'private' | 'public' | 'partner';
@@ -39,6 +39,34 @@ interface RoleUpdate {
 
 export class WorkspaceTools implements ToolHandler {
   constructor(public axiosInstance: AxiosInstance) {}
+
+  getToolDefinitions(): ToolDefinition[] {
+    return [
+      {
+        name: 'list_workspaces',
+        description: 'List all workspaces',
+        inputSchema: {
+          type: 'object',
+          properties: {},
+          required: [],
+        },
+      },
+      {
+        name: 'get_workspace',
+        description: 'Get details of a specific workspace',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            workspace: {
+              type: 'string',
+              description: 'Workspace ID',
+            },
+          },
+          required: ['workspace'],
+        },
+      },
+    ];
+  }
 
   async listWorkspaces(params?: ListWorkspacesParams) {
     try {

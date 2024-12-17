@@ -59,9 +59,9 @@ Review the postman MCP tools workspace API access against the Postman API summar
 
 Review the postman workspaces and environment docs. Understand the details and nuance around contstructuing environment identifier and using it appropriately when querying. Modify out MCP tools implementation accordingly.
 
-@src/index.js
-@src/api/workspaces.js
-@src/api/environments.js
+@src/index.ts
+@src/api/workspaces.ts
+@src/api/environments.ts
 ```
 
 ##### MCP Protocol
@@ -70,9 +70,33 @@ Review the postman workspaces and environment docs. Understand the details and n
 
 Revise the MCP protocol implementation to ensure the "List Resources", "List Prompts" endpoints are functionality fully and correctly.
 
-@src/index.js
+@src/index.ts
 
 ```
+
+### Improving codebase
+
+#### Reduce duplication and emphasize concise files
+
+More concise and focused files are easier to work with the models.
+```bash
+@/src/index.ts
+
+Review the main code entrypoint src/index.ts to devise a strategy to reduce duplication and manage complexity as functionality is added.
+
+
+For example:
+1)  `setupToolHandlers` currently defines the superset of all tool handlers which means it's length is unmitigated. Each tool should be responsible for defining its own handlers.
+
+2) PostmanAPIServer should be defined in its own file and imported into the main index.ts file.
+
+3) setupHandlers should be refactored similarly to setupToolHandlers.
+
+4) Repetative function definitions should be refactored into at most one additional layer of abstraction.
+
+```
+
+
 
 ### Expanding Postman API Summaries
 

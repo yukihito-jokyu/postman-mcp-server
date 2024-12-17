@@ -2,6 +2,7 @@ import { AxiosInstance } from 'axios';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import {
   ToolHandler,
+  ToolDefinition,
   CreateEnvironmentArgs,
   UpdateEnvironmentArgs,
   EnvironmentValue,
@@ -22,6 +23,117 @@ import {
 
 export class EnvironmentTools implements ToolHandler {
   constructor(public axiosInstance: AxiosInstance) {}
+
+  getToolDefinitions(): ToolDefinition[] {
+    return [
+      {
+        name: 'list_environments',
+        description: 'List all environments in a workspace',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            workspace: {
+              type: 'string',
+              description: 'Workspace ID',
+            },
+          },
+          required: ['workspace'],
+        },
+      },
+      {
+        name: 'get_environment',
+        description: 'Get details of a specific environment',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            environmentId: {
+              type: 'string',
+              description: 'Environment ID in format: {ownerId}-{environmentId} (e.g., "31912785-b8cdb26a-0c58-4f35-9775-4945c39d7ee2")',
+            },
+          },
+          required: ['environmentId'],
+        },
+      },
+      {
+        name: 'create_environment',
+        description: 'Create a new environment in a workspace',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            workspace: {
+              type: 'string',
+              description: 'Workspace ID',
+            },
+            name: {
+              type: 'string',
+              description: 'Environment name',
+            },
+            values: {
+              type: 'array',
+              description: 'Environment variables',
+              items: {
+                type: 'object',
+                properties: {
+                  key: { type: 'string' },
+                  value: { type: 'string' },
+                  type: { type: 'string', enum: ['default', 'secret'] },
+                  enabled: { type: 'boolean' },
+                },
+                required: ['key', 'value'],
+              },
+            },
+          },
+          required: ['workspace', 'name', 'values'],
+        },
+      },
+      {
+        name: 'update_environment',
+        description: 'Update an existing environment',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            environmentId: {
+              type: 'string',
+              description: 'Environment ID in format: {ownerId}-{environmentId} (e.g., "31912785-b8cdb26a-0c58-4f35-9775-4945c39d7ee2")',
+            },
+            name: {
+              type: 'string',
+              description: 'Environment name',
+            },
+            values: {
+              type: 'array',
+              description: 'Environment variables',
+              items: {
+                type: 'object',
+                properties: {
+                  key: { type: 'string' },
+                  value: { type: 'string' },
+                  type: { type: 'string', enum: ['default', 'secret'] },
+                  enabled: { type: 'boolean' },
+                },
+                required: ['key', 'value'],
+              },
+            },
+          },
+          required: ['environmentId', 'name', 'values'],
+        },
+      },
+      {
+        name: 'delete_environment',
+        description: 'Delete an environment',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            environmentId: {
+              type: 'string',
+              description: 'Environment ID in format: {ownerId}-{environmentId} (e.g., "31912785-b8cdb26a-0c58-4f35-9775-4945c39d7ee2")',
+            },
+          },
+          required: ['environmentId'],
+        },
+      },
+    ];
+  }
 
   async listEnvironments(workspace?: string) {
     try {

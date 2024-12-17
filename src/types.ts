@@ -1,6 +1,16 @@
 import { AxiosInstance } from 'axios';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 
+export interface ToolDefinition {
+  name: string;
+  description: string;
+  inputSchema: {
+    type: 'object';
+    properties: Record<string, any>;
+    required: string[];
+  };
+}
+
 export interface WorkspaceArg {
   workspace: string;
 }
@@ -70,6 +80,7 @@ export interface ForkCollectionArgs extends CollectionIdArg, WorkspaceArg {
 
 export interface ToolHandler {
   axiosInstance: AxiosInstance;
+  getToolDefinitions(): ToolDefinition[];
 }
 
 // Type guards

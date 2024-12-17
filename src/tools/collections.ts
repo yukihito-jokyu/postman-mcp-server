@@ -3,11 +3,133 @@ import {
   ToolHandler,
   CreateCollectionArgs,
   UpdateCollectionArgs,
-  ForkCollectionArgs
+  ForkCollectionArgs,
+  ToolDefinition
 } from '../types.js';
 
 export class CollectionTools implements ToolHandler {
   constructor(public axiosInstance: AxiosInstance) {}
+
+  getToolDefinitions(): ToolDefinition[] {
+    return [
+      {
+        name: 'list_collections',
+        description: 'List all collections in a workspace',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            workspace: {
+              type: 'string',
+              description: 'Workspace ID',
+            },
+          },
+          required: ['workspace'],
+        },
+      },
+      {
+        name: 'get_collection',
+        description: 'Get details of a specific collection',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            collection_id: {
+              type: 'string',
+              description: 'Collection ID',
+            },
+          },
+          required: ['collection_id'],
+        },
+      },
+      {
+        name: 'create_collection',
+        description: 'Create a new collection in a workspace',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            workspace: {
+              type: 'string',
+              description: 'Workspace ID',
+            },
+            name: {
+              type: 'string',
+              description: 'Collection name',
+            },
+            description: {
+              type: 'string',
+              description: 'Collection description',
+            },
+            schema: {
+              type: 'object',
+              description: 'Collection schema in Postman Collection format v2.1',
+            },
+          },
+          required: ['workspace', 'name', 'schema'],
+        },
+      },
+      {
+        name: 'update_collection',
+        description: 'Update an existing collection',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            collection_id: {
+              type: 'string',
+              description: 'Collection ID',
+            },
+            name: {
+              type: 'string',
+              description: 'Collection name',
+            },
+            description: {
+              type: 'string',
+              description: 'Collection description',
+            },
+            schema: {
+              type: 'object',
+              description: 'Collection schema in Postman Collection format v2.1',
+            },
+          },
+          required: ['collection_id', 'name', 'schema'],
+        },
+      },
+      {
+        name: 'delete_collection',
+        description: 'Delete a collection',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            collection_id: {
+              type: 'string',
+              description: 'Collection ID',
+            },
+          },
+          required: ['collection_id'],
+        },
+      },
+      {
+        name: 'fork_collection',
+        description: 'Fork a collection to a workspace',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            collection_id: {
+              type: 'string',
+              description: 'Collection ID to fork',
+            },
+            workspace: {
+              type: 'string',
+              description: 'Destination workspace ID',
+            },
+            label: {
+              type: 'string',
+              description: 'Label for the forked collection',
+            },
+          },
+          required: ['collection_id', 'workspace', 'label'],
+        },
+      },
+    ];
+  }
 
   async listCollections(workspace: string) {
     const response = await this.axiosInstance.get(`/workspaces/${workspace}/collections`);
