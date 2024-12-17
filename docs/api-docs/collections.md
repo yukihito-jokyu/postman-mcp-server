@@ -1,7 +1,7 @@
 ## Collections
 
 ### Implemented Operations
-- Get all collections (`GET /collections`)
+- Get all collections (`GET /collections`) ✓
   - Parameters:
     - workspaceQuery (`#/components/parameters/workspaceQuery`)
     - collectionNameQuery (`#/components/parameters/collectionNameQuery`)
@@ -9,41 +9,45 @@
     - offsetNoDefault (`#/components/parameters/offsetNoDefault`)
   - Note: Filtering with name parameter is not supported when using limit/offset
   - Note: Invalid workspace ID returns empty array with 200 status
+  - Implementation: Fully implemented with query parameter support
   - Responses:
     - 200: `#/components/responses/getCollections`
     - 401: `#/components/responses/common401Error`
     - 500: `#/components/responses/common500ErrorServerError`
 
-- Get a specific collection (`GET /collections/{collectionId}`)
+- Get a specific collection (`GET /collections/{collectionId}`) ✓
   - Parameters:
     - collectionId (`#/components/parameters/collectionId`)
     - collectionAccessKeyQuery (`#/components/parameters/collectionAccessKeyQuery`)
     - collectionModelQuery (`#/components/parameters/collectionModelQuery`)
+  - Implementation: Fully implemented with access key and model query support
   - Responses:
     - 200: `#/components/responses/getCollection`
     - 400: `#/components/responses/collection400ErrorCollectionNotFound`
     - 401: `#/components/responses/common401Error`
     - 500: `#/components/responses/common500ErrorServerError`
 
-- Create collection (`POST /collections`)
+- Create collection (`POST /collections`) ✓
   - Supports Postman Collection v2.1.0 format
   - Note: Creates in "My Workspace" if workspace not specified
   - Parameters:
     - workspaceQuery (`#/components/parameters/workspaceQuery`)
   - Request Body: `#/components/requestBodies/createCollection`
+  - Implementation: Fully implemented with workspace support
   - Responses:
     - 200: `#/components/responses/createCollection`
     - 400: `#/components/responses/collection400ErrorInstanceFound`
     - 401: `#/components/responses/common401Error`
     - 500: `#/components/responses/common500ErrorServerError`
 
-- Update collection (`PUT /collections/{collectionId}`)
+- Update collection (`PUT /collections/{collectionId}`) ✓
   - Full collection replacement
   - Note: Maximum collection size: 20 MB
   - Important: Include collection item IDs to prevent recreation
   - Parameters:
     - collectionId (`#/components/parameters/collectionId`)
   - Request Body: `#/components/requestBodies/putCollection`
+  - Implementation: Fully implemented with size limit validation
   - Responses:
     - 200: `#/components/responses/putCollection`
     - 400: `#/components/responses/collection400ErrorMalformedRequest`
@@ -52,9 +56,10 @@
     - 404: `#/components/responses/instanceNotFoundCollection`
     - 500: `#/components/responses/common500ErrorServerError`
 
-- Patch collection (`PATCH /collections/{collectionId}`)
+- Patch collection (`PATCH /collections/{collectionId}`)  ✓
   - Parameters:
     - collectionId (`#/components/parameters/collectionId`)
+  - Implementation: Fully implemented with proper error handling
   - Request Body: `#/components/requestBodies/patchCollection`
   - Responses:
     - 200: `#/components/responses/patchCollection`
@@ -67,6 +72,7 @@
 - Delete collection (`DELETE /collections/{collectionId}`)
   - Parameters:
     - collectionId (`#/components/parameters/collectionId`)
+
   - Responses:
     - 200: `#/components/responses/deleteCollection`
     - 401: `#/components/responses/common401Error`
@@ -92,6 +98,7 @@
     - collectionItemsIdQuery (`#/components/parameters/collectionItemsIdQuery`)
     - collectionItemsUidFormatQuery (`#/components/parameters/collectionItemsUidFormatQuery`)
     - collectionItemsPopulateQuery (`#/components/parameters/collectionItemsPopulateQuery`)
+  - Implementation: Fully implemented with all query parameter support
   - Responses:
     - 200: `#/components/responses/getCollectionFolder`
     - 401: `#/components/responses/collectionFolder401Error`
@@ -111,10 +118,11 @@
     - 404: `#/components/responses/collectionFolder404Error`
     - 500: `#/components/responses/common500Error`
 
-- Delete folder (`DELETE /collections/{collectionId}/folders/{folderId}`)
+- Delete folder (`DELETE /collections/{collectionId}/folders/{folderId}`) ✓
   - Parameters:
     - collectionId (`#/components/parameters/collectionId`)
     - collectionFolderId (`#/components/parameters/collectionFolderId`)
+  - Implementation: Fully implemented with proper error handling
   - Responses:
     - 200: `#/components/responses/deleteCollectionFolder`
     - 401: `#/components/responses/collectionFolder401Error`
@@ -141,6 +149,7 @@
     - collectionItemsIdQuery (`#/components/parameters/collectionItemsIdQuery`)
     - collectionItemsUidFormatQuery (`#/components/parameters/collectionItemsUidFormatQuery`)
     - collectionItemsPopulateQuery (`#/components/parameters/collectionItemsPopulateQuery`)
+  - Implementation: Fully implemented with all query parameter support
   - Responses:
     - 200: `#/components/responses/getCollectionRequest`
     - 401: `#/components/responses/collectionRequest401Error`
@@ -160,10 +169,11 @@
     - 404: `#/components/responses/collectionRequest404Error`
     - 500: `#/components/responses/common500Error`
 
-- Delete request (`DELETE /collections/{collectionId}/requests/{requestId}`)
+- Delete request (`DELETE /collections/{collectionId}/requests/{requestId}`) ✓
   - Parameters:
     - collectionId (`#/components/parameters/collectionId`)
     - collectionRequestId (`#/components/parameters/collectionRequestId`)
+  - Implementation: Fully implemented with proper error handling
   - Responses:
     - 200: `#/components/responses/deleteCollectionRequest`
     - 401: `#/components/responses/collectionRequest401Error`
@@ -189,6 +199,7 @@
     - collectionItemsIdQuery (`#/components/parameters/collectionItemsIdQuery`)
     - collectionItemsUidFormatQuery (`#/components/parameters/collectionItemsUidFormatQuery`)
     - collectionItemsPopulateQuery (`#/components/parameters/collectionItemsPopulateQuery`)
+  - Implementation: Fully implemented with all query parameter support
   - Responses:
     - 200: `#/components/responses/getCollectionResponse`
     - 401: `#/components/responses/collectionResponse401Error`
@@ -208,10 +219,11 @@
     - 404: `#/components/responses/collectionResponse404Error`
     - 500: `#/components/responses/common500Error`
 
-- Delete response (`DELETE /collections/{collectionId}/responses/{responseId}`)
+- Delete response (`DELETE /collections/{collectionId}/responses/{responseId}`) ✓
   - Parameters:
     - collectionId (`#/components/parameters/collectionId`)
     - collectionResponseId (`#/components/parameters/collectionResponseId`)
+  - Implementation: Fully implemented with proper error handling
   - Responses:
     - 200: `#/components/responses/deleteCollectionResponse`
     - 401: `#/components/responses/collectionResponse401Error`

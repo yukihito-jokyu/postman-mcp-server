@@ -30,6 +30,54 @@ export interface EnvironmentValue {
   enabled?: boolean;
 }
 
+/**
+ * Collection query parameter interfaces
+ */
+
+export interface GetCollectionsArgs extends Partial<WorkspaceArg> {
+  name?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface GetCollectionArgs extends CollectionIdArg {
+  access_key?: string;
+  model?: 'minimal';
+}
+
+export interface GetCollectionFolderArgs extends CollectionIdArg {
+  folder_id: string;
+  ids?: boolean;
+  uid?: boolean;
+  populate?: boolean;
+}
+
+export interface DeleteCollectionFolderArgs extends CollectionIdArg {
+  folder_id: string;
+}
+
+export interface GetCollectionRequestArgs extends CollectionIdArg {
+  request_id: string;
+  ids?: boolean;
+  uid?: boolean;
+  populate?: boolean;
+}
+
+export interface DeleteCollectionRequestArgs extends CollectionIdArg {
+  request_id: string;
+}
+
+export interface GetCollectionResponseArgs extends CollectionIdArg {
+  response_id: string;
+  ids?: boolean;
+  uid?: boolean;
+  populate?: boolean;
+}
+
+export interface DeleteCollectionResponseArgs extends CollectionIdArg {
+  response_id: string;
+}
+
 export interface CreateEnvironmentArgs {
   environment: {
     name: string;
@@ -192,6 +240,77 @@ export function isEnvironmentIdArg(obj: unknown): obj is EnvironmentIdArg {
 
 export function isCollectionIdArg(obj: unknown): obj is CollectionIdArg {
   return typeof obj === 'object' && obj !== null && typeof (obj as CollectionIdArg).collection_id === 'string';
+}
+
+export function isGetCollectionsArgs(obj: unknown): obj is GetCollectionsArgs {
+  if (typeof obj !== 'object' || obj === null) return false;
+  const args = obj as GetCollectionsArgs;
+  return (
+    (args.workspace === undefined || typeof args.workspace === 'string') &&
+    (args.name === undefined || typeof args.name === 'string') &&
+    (args.limit === undefined || typeof args.limit === 'number') &&
+    (args.offset === undefined || typeof args.offset === 'number')
+  );
+}
+
+export function isGetCollectionArgs(obj: unknown): obj is GetCollectionArgs {
+  if (!isCollectionIdArg(obj)) return false;
+  const args = obj as GetCollectionArgs;
+  return (
+    (args.access_key === undefined || typeof args.access_key === 'string') &&
+    (args.model === undefined || args.model === 'minimal')
+  );
+}
+
+export function isGetCollectionFolderArgs(obj: unknown): obj is GetCollectionFolderArgs {
+  if (!isCollectionIdArg(obj)) return false;
+  const args = obj as GetCollectionFolderArgs;
+  return (
+    typeof args.folder_id === 'string' &&
+    (args.ids === undefined || typeof args.ids === 'boolean') &&
+    (args.uid === undefined || typeof args.uid === 'boolean') &&
+    (args.populate === undefined || typeof args.populate === 'boolean')
+  );
+}
+
+export function isDeleteCollectionFolderArgs(obj: unknown): obj is DeleteCollectionFolderArgs {
+  if (!isCollectionIdArg(obj)) return false;
+  const args = obj as DeleteCollectionFolderArgs;
+  return typeof args.folder_id === 'string';
+}
+
+export function isGetCollectionRequestArgs(obj: unknown): obj is GetCollectionRequestArgs {
+  if (!isCollectionIdArg(obj)) return false;
+  const args = obj as GetCollectionRequestArgs;
+  return (
+    typeof args.request_id === 'string' &&
+    (args.ids === undefined || typeof args.ids === 'boolean') &&
+    (args.uid === undefined || typeof args.uid === 'boolean') &&
+    (args.populate === undefined || typeof args.populate === 'boolean')
+  );
+}
+
+export function isDeleteCollectionRequestArgs(obj: unknown): obj is DeleteCollectionRequestArgs {
+  if (!isCollectionIdArg(obj)) return false;
+  const args = obj as DeleteCollectionRequestArgs;
+  return typeof args.request_id === 'string';
+}
+
+export function isGetCollectionResponseArgs(obj: unknown): obj is GetCollectionResponseArgs {
+  if (!isCollectionIdArg(obj)) return false;
+  const args = obj as GetCollectionResponseArgs;
+  return (
+    typeof args.response_id === 'string' &&
+    (args.ids === undefined || typeof args.ids === 'boolean') &&
+    (args.uid === undefined || typeof args.uid === 'boolean') &&
+    (args.populate === undefined || typeof args.populate === 'boolean')
+  );
+}
+
+export function isDeleteCollectionResponseArgs(obj: unknown): obj is DeleteCollectionResponseArgs {
+  if (!isCollectionIdArg(obj)) return false;
+  const args = obj as DeleteCollectionResponseArgs;
+  return typeof args.response_id === 'string';
 }
 
 export function isEnvironmentValue(obj: unknown): obj is EnvironmentValue {

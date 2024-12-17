@@ -26,6 +26,14 @@ import {
   isCreateCollectionArgs,
   isUpdateCollectionArgs,
   isForkCollectionArgs,
+  isGetCollectionsArgs,
+  isGetCollectionArgs,
+  isGetCollectionFolderArgs,
+  isDeleteCollectionFolderArgs,
+  isGetCollectionRequestArgs,
+  isDeleteCollectionRequestArgs,
+  isGetCollectionResponseArgs,
+  isDeleteCollectionResponseArgs,
 } from './types.js';
 
 const API_KEY = process.env.POSTMAN_API_KEY;
@@ -225,11 +233,11 @@ export class PostmanAPIServer {
           // Collection handlers
           case 'list_collections':
             return await this.collectionTools.listCollections(
-              validateArgs(args, isWorkspaceArg, 'Invalid workspace ID argument').workspace
+              validateArgs(args, isGetCollectionsArgs, 'Invalid list collections arguments')
             );
           case 'get_collection':
             return await this.collectionTools.getCollection(
-              validateArgs(args, isCollectionIdArg, 'Invalid collection ID argument').collection_id
+              validateArgs(args, isGetCollectionArgs, 'Invalid get collection arguments')
             );
           case 'create_collection':
             return await this.collectionTools.createCollection(
@@ -242,6 +250,30 @@ export class PostmanAPIServer {
           case 'delete_collection':
             return await this.collectionTools.deleteCollection(
               validateArgs(args, isCollectionIdArg, 'Invalid collection ID argument').collection_id
+            );
+          case 'get_collection_folder':
+            return await this.collectionTools.getCollectionFolder(
+              validateArgs(args, isGetCollectionFolderArgs, 'Invalid get collection folder arguments')
+            );
+          case 'delete_collection_folder':
+            return await this.collectionTools.deleteCollectionFolder(
+              validateArgs(args, isDeleteCollectionFolderArgs, 'Invalid delete collection folder arguments')
+            );
+          case 'get_collection_request':
+            return await this.collectionTools.getCollectionRequest(
+              validateArgs(args, isGetCollectionRequestArgs, 'Invalid get collection request arguments')
+            );
+          case 'delete_collection_request':
+            return await this.collectionTools.deleteCollectionRequest(
+              validateArgs(args, isDeleteCollectionRequestArgs, 'Invalid delete collection request arguments')
+            );
+          case 'get_collection_response':
+            return await this.collectionTools.getCollectionResponse(
+              validateArgs(args, isGetCollectionResponseArgs, 'Invalid get collection response arguments')
+            );
+          case 'delete_collection_response':
+            return await this.collectionTools.deleteCollectionResponse(
+              validateArgs(args, isDeleteCollectionResponseArgs, 'Invalid delete collection response arguments')
             );
           case 'fork_collection':
             return await this.collectionTools.forkCollection(

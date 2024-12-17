@@ -83,7 +83,7 @@ We may also need to update the MCP protocol endpoints to reflect the changes. IO
 @/docs/api-docs/collections.md
 @/docs/reference/postman-api-requestBodies.yaml
 
-Review the postman collection md docs and yaml definitions. Understand the details and nuance of request bodies for POST/PUT requests. Modify out MCP tools implementation accordingly, including inline jsdocs.
+Review the postman collection md docs and yaml definitions. Understand the details and nuance of request bodies for POST/PUT/PATCH requests. Modify out MCP tools implementation accordingly, including inline jsdocs.
 
 
 @src/api/collections.ts
@@ -91,10 +91,23 @@ Review the postman collection md docs and yaml definitions. Understand the detai
 
 
 Refer to @/docs/dev/updating-request-bodies.md for what areas of the code need to be updated.
-
 ```
 
+```bash
+@/docs/api-docs/collections.md
+@/docs/reference/postman-api-parameters.yaml
+@/docs/reference/postman-api-responsesonly.yaml
+@/docs/reference/postman-api-requestBodies.yaml
 
+Review the postman collection md docs and yaml definitions. Understand the details and nuance of requests and responses for GET/HEAD/OPTION/DELETE requests. Modify out MCP tools implementation accordingly, including inline jsdocs.
+
+
+@src/api/collections.ts
+@src/types.ts
+
+
+Refer to @/docs/dev/updating-request-bodies.md for what areas of the code need to be updated.
+```
 
 
 ##### MCP Protocol

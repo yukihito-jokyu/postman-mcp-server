@@ -4,6 +4,14 @@ import {
   CreateCollectionArgs,
   UpdateCollectionArgs,
   ForkCollectionArgs,
+  GetCollectionsArgs,
+  GetCollectionArgs,
+  GetCollectionFolderArgs,
+  DeleteCollectionFolderArgs,
+  GetCollectionRequestArgs,
+  DeleteCollectionRequestArgs,
+  GetCollectionResponseArgs,
+  DeleteCollectionResponseArgs,
   ToolDefinition
 } from '../types.js';
 
@@ -18,7 +26,7 @@ export class CollectionTools implements ToolHandler {
     return [
       {
         name: 'list_collections',
-        description: 'List all collections in a workspace',
+        description: 'List all collections in a workspace. Supports filtering and pagination.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -26,8 +34,20 @@ export class CollectionTools implements ToolHandler {
               type: 'string',
               description: 'Workspace ID',
             },
+            name: {
+              type: 'string',
+              description: 'Filter results by collections that match the given name',
+            },
+            limit: {
+              type: 'number',
+              description: 'Maximum number of results to return',
+            },
+            offset: {
+              type: 'number',
+              description: 'Number of results to skip',
+            },
           },
-          required: ['workspace'],
+          required: [],
         },
       },
       {
@@ -39,6 +59,15 @@ export class CollectionTools implements ToolHandler {
             collection_id: {
               type: 'string',
               description: 'Collection ID',
+            },
+            access_key: {
+              type: 'string',
+              description: "Collection's read-only access key. Using this query parameter does not require an API key.",
+            },
+            model: {
+              type: 'string',
+              enum: ['minimal'],
+              description: 'Return minimal collection data (only root-level request and folder IDs)',
             },
           },
           required: ['collection_id'],
@@ -151,6 +180,150 @@ export class CollectionTools implements ToolHandler {
         },
       },
       {
+        name: 'get_collection_folder',
+        description: 'Get details of a specific folder in a collection',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            collection_id: {
+              type: 'string',
+              description: 'Collection ID',
+            },
+            folder_id: {
+              type: 'string',
+              description: 'Folder ID',
+            },
+            ids: {
+              type: 'boolean',
+              description: 'Return only properties that contain ID values',
+            },
+            uid: {
+              type: 'boolean',
+              description: 'Return all IDs in UID format (userId-id)',
+            },
+            populate: {
+              type: 'boolean',
+              description: 'Return all folder contents',
+            },
+          },
+          required: ['collection_id', 'folder_id'],
+        },
+      },
+      {
+        name: 'delete_collection_folder',
+        description: 'Delete a folder from a collection',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            collection_id: {
+              type: 'string',
+              description: 'Collection ID',
+            },
+            folder_id: {
+              type: 'string',
+              description: 'Folder ID',
+            },
+          },
+          required: ['collection_id', 'folder_id'],
+        },
+      },
+      {
+        name: 'get_collection_request',
+        description: 'Get details of a specific request in a collection',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            collection_id: {
+              type: 'string',
+              description: 'Collection ID',
+            },
+            request_id: {
+              type: 'string',
+              description: 'Request ID',
+            },
+            ids: {
+              type: 'boolean',
+              description: 'Return only properties that contain ID values',
+            },
+            uid: {
+              type: 'boolean',
+              description: 'Return all IDs in UID format (userId-id)',
+            },
+            populate: {
+              type: 'boolean',
+              description: 'Return all request contents',
+            },
+          },
+          required: ['collection_id', 'request_id'],
+        },
+      },
+      {
+        name: 'delete_collection_request',
+        description: 'Delete a request from a collection',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            collection_id: {
+              type: 'string',
+              description: 'Collection ID',
+            },
+            request_id: {
+              type: 'string',
+              description: 'Request ID',
+            },
+          },
+          required: ['collection_id', 'request_id'],
+        },
+      },
+      {
+        name: 'get_collection_response',
+        description: 'Get details of a specific response in a collection',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            collection_id: {
+              type: 'string',
+              description: 'Collection ID',
+            },
+            response_id: {
+              type: 'string',
+              description: 'Response ID',
+            },
+            ids: {
+              type: 'boolean',
+              description: 'Return only properties that contain ID values',
+            },
+            uid: {
+              type: 'boolean',
+              description: 'Return all IDs in UID format (userId-id)',
+            },
+            populate: {
+              type: 'boolean',
+              description: 'Return all response contents',
+            },
+          },
+          required: ['collection_id', 'response_id'],
+        },
+      },
+      {
+        name: 'delete_collection_response',
+        description: 'Delete a response from a collection',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            collection_id: {
+              type: 'string',
+              description: 'Collection ID',
+            },
+            response_id: {
+              type: 'string',
+              description: 'Response ID',
+            },
+          },
+          required: ['collection_id', 'response_id'],
+        },
+      },
+      {
         name: 'fork_collection',
         description: 'Fork a collection to a workspace',
         inputSchema: {
@@ -177,11 +350,17 @@ export class CollectionTools implements ToolHandler {
 
   /**
    * List all collections in a workspace
-   * @param workspace Workspace ID
+   * @param args GetCollectionsArgs containing optional workspace ID, name filter, and pagination
    * @returns List of collections
    */
-  async listCollections(workspace: string) {
-    const response = await this.axiosInstance.get(`/workspaces/${workspace}/collections`);
+  async listCollections(args: GetCollectionsArgs) {
+    const params: Record<string, any> = {};
+    if (args.workspace) params.workspace = args.workspace;
+    if (args.name) params.name = args.name;
+    if (args.limit) params.limit = args.limit;
+    if (args.offset) params.offset = args.offset;
+
+    const response = await this.axiosInstance.get('/collections', { params });
     return {
       content: [
         {
@@ -194,11 +373,15 @@ export class CollectionTools implements ToolHandler {
 
   /**
    * Get details of a specific collection
-   * @param collection_id Collection ID
+   * @param args GetCollectionArgs containing collection ID and optional parameters
    * @returns Collection details
    */
-  async getCollection(collection_id: string) {
-    const response = await this.axiosInstance.get(`/collections/${collection_id}`);
+  async getCollection(args: GetCollectionArgs) {
+    const params: Record<string, any> = {};
+    if (args.access_key) params.access_key = args.access_key;
+    if (args.model) params.model = args.model;
+
+    const response = await this.axiosInstance.get(`/collections/${args.collection_id}`, { params });
     return {
       content: [
         {
@@ -258,6 +441,138 @@ export class CollectionTools implements ToolHandler {
    */
   async deleteCollection(collection_id: string) {
     const response = await this.axiosInstance.delete(`/collections/${collection_id}`);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(response.data, null, 2),
+        },
+      ],
+    };
+  }
+
+  /**
+   * Get details of a specific folder in a collection
+   * @param args GetCollectionFolderArgs containing collection ID, folder ID, and optional parameters
+   * @returns Folder details
+   */
+  async getCollectionFolder(args: GetCollectionFolderArgs) {
+    const params: Record<string, any> = {};
+    if (args.ids) params.ids = args.ids;
+    if (args.uid) params.uid = args.uid;
+    if (args.populate) params.populate = args.populate;
+
+    const response = await this.axiosInstance.get(
+      `/collections/${args.collection_id}/folders/${args.folder_id}`,
+      { params }
+    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(response.data, null, 2),
+        },
+      ],
+    };
+  }
+
+  /**
+   * Delete a folder from a collection
+   * @param args DeleteCollectionFolderArgs containing collection ID and folder ID
+   * @returns Deletion confirmation
+   */
+  async deleteCollectionFolder(args: DeleteCollectionFolderArgs) {
+    const response = await this.axiosInstance.delete(
+      `/collections/${args.collection_id}/folders/${args.folder_id}`
+    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(response.data, null, 2),
+        },
+      ],
+    };
+  }
+
+  /**
+   * Get details of a specific request in a collection
+   * @param args GetCollectionRequestArgs containing collection ID, request ID, and optional parameters
+   * @returns Request details
+   */
+  async getCollectionRequest(args: GetCollectionRequestArgs) {
+    const params: Record<string, any> = {};
+    if (args.ids) params.ids = args.ids;
+    if (args.uid) params.uid = args.uid;
+    if (args.populate) params.populate = args.populate;
+
+    const response = await this.axiosInstance.get(
+      `/collections/${args.collection_id}/requests/${args.request_id}`,
+      { params }
+    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(response.data, null, 2),
+        },
+      ],
+    };
+  }
+
+  /**
+   * Delete a request from a collection
+   * @param args DeleteCollectionRequestArgs containing collection ID and request ID
+   * @returns Deletion confirmation
+   */
+  async deleteCollectionRequest(args: DeleteCollectionRequestArgs) {
+    const response = await this.axiosInstance.delete(
+      `/collections/${args.collection_id}/requests/${args.request_id}`
+    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(response.data, null, 2),
+        },
+      ],
+    };
+  }
+
+  /**
+   * Get details of a specific response in a collection
+   * @param args GetCollectionResponseArgs containing collection ID, response ID, and optional parameters
+   * @returns Response details
+   */
+  async getCollectionResponse(args: GetCollectionResponseArgs) {
+    const params: Record<string, any> = {};
+    if (args.ids) params.ids = args.ids;
+    if (args.uid) params.uid = args.uid;
+    if (args.populate) params.populate = args.populate;
+
+    const response = await this.axiosInstance.get(
+      `/collections/${args.collection_id}/responses/${args.response_id}`,
+      { params }
+    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(response.data, null, 2),
+        },
+      ],
+    };
+  }
+
+  /**
+   * Delete a response from a collection
+   * @param args DeleteCollectionResponseArgs containing collection ID and response ID
+   * @returns Deletion confirmation
+   */
+  async deleteCollectionResponse(args: DeleteCollectionResponseArgs) {
+    const response = await this.axiosInstance.delete(
+      `/collections/${args.collection_id}/responses/${args.response_id}`
+    );
     return {
       content: [
         {
