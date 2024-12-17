@@ -1,5 +1,7 @@
 # Request Body Update Locations
 
+When updating the request body JSON schemas that are sent to the Postman API, the following files need to be updated:
+
 ## Files to Update
 1. types.ts
 

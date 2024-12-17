@@ -82,6 +82,14 @@ To use with Claude Desktop, add the server config:
 - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows:** `%APPDATA%/Claude/claude_desktop_config.json`
 
+> [!IMPORTANT]
+> If you're updating this provider, Claude must be restarted to pick up API changes from the input schema (i.e. When the MCP server's ToolDefinition elements have changed). This is because Claude caches the tool definitions when it starts up.
+>
+> To restart Claude:
+> 1. Close the Claude application completely
+> 2. Relaunch Claude
+> 3. Claude will reload with the updated tool definitions from the MCP server
+
 Example configuration:
 ```json
 {
