@@ -1,7 +1,17 @@
 # Postman MCP Server
-**Version:** v0.1.0
+**Version:** v0.2.0
 
-An MCP server that provides seamless access to [Postman](https://www.postman.com/).
+An MCP server that provides seamless access to [Postman](https://www.postman.com/). Functionality is based on the OpenAPI specification. For more information, see the [Postman API documentation](https://www.postman.com/postman-public-workspace/).
+
+This project is part of the Model Context Protocol (MCP) initiative. For more information, visit the [MCP GitHub repository]([https://github.com/mcp-project/mcp](https://github.com/modelcontextprotocol)).
+
+
+
+> [!WARNING]
+> This project is currently under active development. Please use with caution and expect breaking changes.
+
+> [!NOTE]
+> AI Generated Code. I used Cline v2.2.2 with Claude 3.5 Sonnet (2024-10-22). See docs/README.md for prompts and details about how this code was generated.
 
 ## Overview
 
