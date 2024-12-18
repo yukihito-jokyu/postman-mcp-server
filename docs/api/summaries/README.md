@@ -209,6 +209,31 @@ NOTE2: The best code is code that doesn't need to be written. If we analyse the 
 
 ```
 
+#### Reviewing MCP Server details
+
+```prompt
+@https://modelcontextprotocol.io/docs/concepts/resources
+
+@https://modelcontextprotocol.io/docs/concepts/tools
+
+Peruse the Model Context Protocol documentation. In order to expose data to models automatically, server authors should use a model-controlled primitive such as Tools.
+
+Review the MCP server details to ensure the "List Resources"  endpoint is functionality fully and correctly. It should return a list of all resources that are available for the user to interact with.
+
+```
+
+
+```prompt
+@https://modelcontextprotocol.io/docs/concepts/prompts
+
+@https://modelcontextprotocol.io/docs/concepts/tools
+
+Peruse the Model Context Protocol documentation. In order to expose data to models automatically, server authors should use a model-controlled primitive such as Tools.
+
+Review the MCP server details to ensure the "List Prompts"  endpoint is functionality fully and correctly. It should return a list of all resources that are available for the user to interact with.
+
+```
+
 
 ### Improving Documentation
 
