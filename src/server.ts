@@ -90,34 +90,17 @@ export class PostmanAPIServer {
       ...this.additionalFeatureTools.getToolDefinitions(),
     ];
 
-    // Map all tool handlers
+    // Get tool mappings from each tool class
     const toolMapping = {
-      // Existing tools
-      'list_workspaces': this.workspaceTools,
-      'get_workspace': this.workspaceTools,
-      'list_environments': this.environmentTools,
-      'get_environment': this.environmentTools,
-      'create_environment': this.environmentTools,
-      'update_environment': this.environmentTools,
-      'delete_environment': this.environmentTools,
-      'list_collections': this.collectionTools,
-      'get_collection': this.collectionTools,
-      'create_collection': this.collectionTools,
-      'update_collection': this.collectionTools,
-      'delete_collection': this.collectionTools,
-      'get_user': this.userTools,
-      'list_users': this.userTools,
-
-      // API tools
-
-      // Auth tools
-
-      // Mock tools
-
-      // Monitor tools
-
-      // Additional feature tools
-
+      ...this.workspaceTools.getToolMappings(),
+      ...this.environmentTools.getToolMappings(),
+      ...this.collectionTools.getToolMappings(),
+      ...this.userTools.getToolMappings(),
+      ...this.apiTools.getToolMappings(),
+      ...this.authTools.getToolMappings(),
+      ...this.mockTools.getToolMappings(),
+      ...this.monitorTools.getToolMappings(),
+      ...this.additionalFeatureTools.getToolMappings(),
     };
 
     this.toolHandlers = new Map(Object.entries(toolMapping));

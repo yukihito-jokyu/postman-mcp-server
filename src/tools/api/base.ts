@@ -1,10 +1,13 @@
 import axios, { AxiosInstance } from 'axios';
 import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
+import { ToolDefinition } from '../../types/index.js';
 
 interface PostmanToolOptions {
   baseURL?: string;
   acceptHeader?: string;
 }
+
+type ToolMapping = { [key: string]: any };
 
 /**
  * Base class for Postman API tools
@@ -105,5 +108,29 @@ export class BasePostmanTool {
         }
       }
     );
+  }
+
+  /**
+   * Generate tool mappings from tool definitions
+   * Each derived class should implement getToolDefinitions() to provide its specific tools
+   * @returns Object mapping tool names to the tool handler instance
+   */
+  public getToolMappings(): ToolMapping {
+    const toolDefinitions = this.getToolDefinitions();
+    const mappings: ToolMapping = {};
+
+    toolDefinitions.forEach(tool => {
+      mappings[tool.name] = this;
+    });
+
+    return mappings;
+  }
+
+  /**
+   * Get tool definitions for this tool class
+   * Must be implemented by derived classes
+   */
+  public getToolDefinitions(): ToolDefinition[] {
+    throw new Error('getToolDefinitions() must be implemented by derived class');
   }
 }
