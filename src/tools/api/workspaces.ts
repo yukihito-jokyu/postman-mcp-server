@@ -1,48 +1,18 @@
+import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
 import { AxiosInstance } from 'axios';
-import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import {
-  ToolHandler,
-  ToolDefinition,
+  CreateWorkspaceRequest,
+  GlobalVariable,
+  isWorkspaceArg,
+  ListWorkspacesParams,
+  RoleUpdate,
   ToolCallResponse,
-  validateArgs,
-  isWorkspaceArg
-} from '../../types.js';
+  ToolDefinition,
+  ToolHandler,
+  UpdateWorkspaceRequest,
+  validateArgs
+} from '../../types/index.js';
 
-interface ListWorkspacesParams {
-  type?: 'personal' | 'team' | 'private' | 'public' | 'partner';
-  createdBy?: string;
-  include?: string;
-}
-
-interface WorkspaceBase {
-  name: string;
-  description?: string;
-  type: 'personal' | 'team' | 'private' | 'public' | 'partner';
-  visibility?: 'personal' | 'team' | 'private' | 'public' | 'partner';
-}
-
-interface CreateWorkspaceRequest extends WorkspaceBase {
-  // Additional fields specific to creation
-}
-
-interface UpdateWorkspaceRequest extends Partial<WorkspaceBase> {
-  // Partial allows all fields to be optional for updates
-}
-
-interface GlobalVariable {
-  key: string;
-  value: string;
-  type?: 'default' | 'secret';
-  enabled?: boolean;
-}
-
-type WorkspaceRole = 'Viewer' | 'Editor' | 'Admin';
-
-interface RoleUpdate {
-  op: 'add' | 'remove';
-  path: string;
-  value: WorkspaceRole;
-}
 
 export class WorkspaceTools implements ToolHandler {
   constructor(public axiosInstance: AxiosInstance) {}

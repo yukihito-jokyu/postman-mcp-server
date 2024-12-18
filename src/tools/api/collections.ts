@@ -27,7 +27,7 @@ import {
   isGetCollectionResponseArgs,
   isDeleteCollectionResponseArgs,
   isForkCollectionArgs,
-} from '../../types.js';
+} from '../../types/index.js';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 
 /**

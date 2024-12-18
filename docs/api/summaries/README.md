@@ -39,7 +39,7 @@ Use postman tools to list environments in a workspace: 0ddc8458-12e6-48bf-8ff0-4
 
 #### General Improvements
 ```prompt
-@/docs/api-docs/workspaces.md
+@/docs/api/summaries/workspaces.md
 
 Review the postman MCP tools workspace API access against the Postman API summary. Make corrections in our implementation.
 
@@ -49,31 +49,31 @@ Review the postman MCP tools workspace API access against the Postman API summar
 
 ##### Workspaces
 ```prompt
-@/docs/api-docs/environments.md
+@/docs/api/summaries/environments.md
 
 Review the postman MCP tools workspace API access against the Postman API summary. Make corrections in our implementation, paying particular attention to the request parameter naming and values.
 ```
 
 ##### Environments
 ```prompt
-@/docs/api-docs/wokspaces.md
-@/docs/api-docs/environments.md
+@/docs/api/summaries/wokspaces.md
+@/docs/api/summaries/environments.md
 
 Review the postman workspaces and environment docs. Understand the details and nuance around contstructuing environment identifier and using it appropriately when querying. Modify out MCP tools implementation accordingly.
 
 @src/index.ts
-@src/api/workspaces.ts
-@src/api/environments.ts
+@src/tools/api/workspaces.ts
+@src/tools/api/environments.ts
 ```
 
 ```prompt
-@/docs/api-docs/environments.md
-@/docs/reference/postman-api-requestBodies.yaml
+@/docs/api/summaries/environments.md
+@/docs/api/references/postman-api-requestBodies.yaml
 
 Review the postman environment md docs and yaml definitions. Understand the details and nuance of request bodies for POST/PUT requests. Modify out MCP tools implementation accordingly, including inline jsdocs.
 
 
-@src/api/environments.ts
+@src/tools/api/environments.ts
 @src/types.ts
 
 
@@ -82,15 +82,15 @@ We may also need to update the MCP protocol endpoints to reflect the changes. IO
 ```
 
 ```prompt
-@/docs/api-docs/collections.md
-@/docs/reference/postman-api-parameters.yaml
-@/docs/reference/postman-api-responsesonly.yaml
-@/docs/reference/postman-api-requestBodies.yaml
+@/docs/api/summaries/collections.md
+@/docs/api/references/postman-api-parameters.yaml
+@/docs/api/references/postman-api-responsesonly.yaml
+@/docs/api/references/postman-api-requestBodies.yaml
 
 Review the postman collection md docs and yaml definitions. Understand the details and nuance of request bodies for POST/PUT/PATCH requests. Modify out MCP tools implementation accordingly, including inline jsdocs.
 
 
-@src/api/collections.ts
+@src/tools/api/collections.ts
 @src/types.ts
 
 
@@ -98,21 +98,34 @@ Refer to @/docs/dev/updating-request-bodies.md for what areas of the code need t
 ```
 
 ```prompt
-@/docs/api-docs/collections.md
-@/docs/reference/postman-api-parameters.yaml
-@/docs/reference/postman-api-responsesonly.yaml
-@/docs/reference/postman-api-requestBodies.yaml
+@/docs/api/summaries/collections.md
+@/docs/api/references/postman-api-parameters.yaml
+@/docs/api/references/postman-api-responsesonly.yaml
+@/docs/api/references/postman-api-requestBodies.yaml
 
 Review the postman collection md docs and yaml definitions. Understand the details and nuance of requests and responses for GET/HEAD/OPTION/DELETE requests. Modify out MCP tools implementation accordingly, including inline jsdocs.
 
 
-@src/api/collections.ts
+@src/tools/api/collections.ts
 @src/types.ts
 
 
 Refer to @/docs/dev/updating-request-bodies.md for what areas of the code need to be updated.
 ```
+##### APIs
 
+```prompt
+@/docs/api/summaries/apis.md
+@/docs/api/references/postman-api-parameters.yaml
+@/docs/api/references/postman-api-requestBodies.yaml
+
+Review the postman apis md docs and yaml definitions to implement `src/tools/api/apis.ts`. Understand the details and nuance of parameters and request bodies for POST/PUT/PATCH/GET/HEAD/OPTION/DELETE  requests. Modify out MCP tools implementation accordingly, including inline jsdocs.
+
+@src/types/index.ts
+
+
+We may also need to update the MCP protocol endpoints to reflect the changes. IOW, updating our code that communicates with the Postman API is one part but we also may need to update the MCP protocol code that communicates with the MCP clients.
+```
 
 ##### MCP Protocol
 
@@ -201,12 +214,12 @@ Proofread and tidy this markdown readme to a professional standard. Do not make 
 
 ##### Add Responses
 ```prompt
-@/docs/reference/postman-api-pathsonly.yaml
+@/docs/api/references/postman-api-pathsonly.yaml
 
 Peruse the postman OpenAPI 3 paths definition (note this is a very abrridged version of the full document, containing just the paths objects), this time to add the expected response references and associated http status (e.g. 200 '#/components/responses/getAccounts').
 
 Continue updating the individual summary markdown document that we can use later on to cross-check against our tool implementations:
-@/docs/api-docs/collections.md
+@/docs/api/summaries/collections.md
 
 Workthrough the markdown summary document, operating one endpoint at a time, updating its documentation based on the contents of the pathsonly file. Each request endpoint in the pathsonly OpenAPI 3 definition document should have a list of `responses:`. Those are the details we want to add to the summary markdown doc.
 
@@ -217,22 +230,22 @@ When completed this file, request the next summary document to continue with. Ke
 
 ##### Add Parameters
 ```prompt
-@/docs/reference/postman-api-pathsonly.yaml
+@/docs/api/references/postman-api-pathsonly.yaml
 
 Peruse the postman OpenAPI 3 paths definition (note this is a very abrridged version of the full document, containing just the paths objects), this time to add the expected parameters references and associated http status (e.g. '#/components/parameters/workspaceQuery').
 
 Continue updating the individual summary markdown document that we can use later on to cross-check against our tool implementations:
-@/docs/api-docs/environments.md
-@/docs/api-docs/workspaces.md
-@/docs/api-docs/collections.md
-@/docs/api-docs/apis.md
-@/docs/api-docs/mocks.md
-@/docs/api-docs/monitors.md
-@/docs/api-docs/security-features.md
-@/docs/api-docs/additional-features.md
-@/docs/api-docs/auth.md
-@/docs/api-docs/common-features.md
-@/docs/api-docs/notes.md
+@/docs/api/summaries/environments.md
+@/docs/api/summaries/workspaces.md
+@/docs/api/summaries/collections.md
+@/docs/api/summaries/apis.md
+@/docs/api/summaries/mocks.md
+@/docs/api/summaries/monitors.md
+@/docs/api/summaries/security-features.md
+@/docs/api/summaries/additional-features.md
+@/docs/api/summaries/auth.md
+@/docs/api/summaries/common-features.md
+@/docs/api/summaries/notes.md
 
 Workthrough the markdown summary document, operating one endpoint at a time, updating its documentation based on the contents of the definition file. Each request endpoint in the pathsonly OpenAPI 3 definition document should have a list of `parameters:`. Those are the details we want to add to the summary markdown doc.
 
@@ -243,22 +256,22 @@ When completed this file, request the next summary document to continue with. Ke
 
 ##### Add Parameter Details
 ```prompt
-@/docs/reference/postman-api-parameters.yaml
+@/docs/api/references/postman-api-parameters.yaml
 
 Peruse the postman OpenAPI 3 definition (note this is a very abrridged version of the full document, containing just the parameters objects), this time to add parameter details by matching the parameter name (e.g. The workspaceQuery in '#/components/parameters/workspaceQuery').
 
 Continue updating the individual summary markdown document that we can use later on to cross-check against our tool implementations:
-@/docs/api-docs/environments.md
-@/docs/api-docs/workspaces.md
-@/docs/api-docs/collections.md
-@/docs/api-docs/apis.md
-@/docs/api-docs/mocks.md
-@/docs/api-docs/monitors.md
-@/docs/api-docs/security-features.md
-@/docs/api-docs/additional-features.md
-@/docs/api-docs/auth.md
-@/docs/api-docs/common-features.md
-@/docs/api-docs/notes.md
+@/docs/api/summaries/environments.md
+@/docs/api/summaries/workspaces.md
+@/docs/api/summaries/collections.md
+@/docs/api/summaries/apis.md
+@/docs/api/summaries/mocks.md
+@/docs/api/summaries/monitors.md
+@/docs/api/summaries/security-features.md
+@/docs/api/summaries/additional-features.md
+@/docs/api/summaries/auth.md
+@/docs/api/summaries/common-features.md
+@/docs/api/summaries/notes.md
 
 Workthrough the markdown summary document, operating one endpoint at a time, updating its documentation based on the contents of the definition file.
 
@@ -269,22 +282,22 @@ When completed this file, request the next summary document to continue with. Ke
 
 ##### Add Request Bodies (Paths Only)
 ```prompt
-@/docs/reference/postman-api-pathsonly.yaml
+@/docs/api/references/postman-api-pathsonly.yaml
 
 Peruse the postman OpenAPI 3 definition (note this is a very abrridged version of the full document, containing just the paths objects), this time to augment the POST/PUT requests with body content add parameter details by matching the parameter name (e.g. The updateEnvironment in '#/components/requestBodies/updateEnvironment').
 
 Continue updating the individual summary markdown document that we can use later on to cross-check against our tool implementations:
-@/docs/api-docs/environments.md
-@/docs/api-docs/workspaces.md
-@/docs/api-docs/collections.md
-@/docs/api-docs/apis.md
-@/docs/api-docs/mocks.md
-@/docs/api-docs/monitors.md
-@/docs/api-docs/security-features.md
-@/docs/api-docs/additional-features.md
-@/docs/api-docs/auth.md
-@/docs/api-docs/common-features.md
-@/docs/api-docs/notes.md
+@/docs/api/summaries/environments.md
+@/docs/api/summaries/workspaces.md
+@/docs/api/summaries/collections.md
+@/docs/api/summaries/apis.md
+@/docs/api/summaries/mocks.md
+@/docs/api/summaries/monitors.md
+@/docs/api/summaries/security-features.md
+@/docs/api/summaries/additional-features.md
+@/docs/api/summaries/auth.md
+@/docs/api/summaries/common-features.md
+@/docs/api/summaries/notes.md
 
 Workthrough the markdown summary document, operating one endpoint at a time, updating its documentation based on the contents of the definition file. Each POST/PUT/etc request endpoint in the pathsonly OpenAPI 3 definition document should have at least one `requestBody:`. Those are the details we want to add to the summary markdown doc.
 
@@ -296,29 +309,29 @@ When completed this file, request the next summary document to continue with. Ke
 ##### Review for missing endpoints
 
 ```prompt
-@/docs/reference/postman-api-pathsonly.yaml
+@/docs/api/references/postman-api-pathsonly.yaml
 
-Peruse the postman OpenAPI 3 paths definition (note this is a very abrridged version of the full document, containing just the paths objects). Compare to @/docs/api-docs/ .md files for missing endpoints. Add missing endpoints to the summary markdown files.
+Peruse the postman OpenAPI 3 paths definition (note this is a very abrridged version of the full document, containing just the paths objects). Compare to @/docs/api/summaries/ .md files for missing endpoints. Add missing endpoints to the summary markdown files.
 ```
 
 ##### Add Request Bodies
 ```prompt
-@/docs/reference/postman-api-requestbodies.yaml
+@/docs/api/references/postman-api-requestbodies.yaml
 
 Review the abridged Postman OpenAPI 3 definition (containing only the requestBody objects) to augment POST/PUT requests with body content by matching request body names (e.g., `updateEnvironment` in '#/components/requestBodies/updateEnvironment').
 
 Update the corresponding summary markdown documents:
-- @/docs/api-docs/environments.md
-- @/docs/api-docs/workspaces.md
-- @/docs/api-docs/collections.md
-- @/docs/api-docs/apis.md
-- @/docs/api-docs/mocks.md
-- @/docs/api-docs/monitors.md
-- @/docs/api-docs/security-features.md
-- @/docs/api-docs/additional-features.md
-- @/docs/api-docs/auth.md
-- @/docs/api-docs/common-features.md
-- @/docs/api-docs/notes.md
+- @/docs/api/summaries/environments.md
+- @/docs/api/summaries/workspaces.md
+- @/docs/api/summaries/collections.md
+- @/docs/api/summaries/apis.md
+- @/docs/api/summaries/mocks.md
+- @/docs/api/summaries/monitors.md
+- @/docs/api/summaries/security-features.md
+- @/docs/api/summaries/additional-features.md
+- @/docs/api/summaries/auth.md
+- @/docs/api/summaries/common-features.md
+- @/docs/api/summaries/notes.md
 
 For each POST/PUT request endpoint, add `requestBody:` details to the summary markdown based on the definition file.
 
@@ -336,7 +349,7 @@ Let's split the single summary doc into multiple docs to help keep the size mana
 
 ### Creating a Summary Document
 ```prompt
-@/docs/reference/postman-api-index.yaml
+@/docs/api/references/postman-api-index.yaml
 
 Review the postman environment, collection API from the OpenAPI 3 definition. Make a summary document that we can use to cross-check against our tool implementations (This implementation covers the basic Postman API functionality in MCP)
 ```

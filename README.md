@@ -162,6 +162,8 @@ Since MCP servers communicate over stdio, debugging can be challenging. We recom
 pnpm run inspector
 ```
 
+[Docs](https://modelcontextprotocol.io/docs/tools/inspector)
+
 The Inspector will provide a URL to access debugging tools in your browser: http://localhost:5173. You will need to add the POSTMAN_API_KEY before connecting. Navigate to "Tools" to get started.
 
 ## Other MCP Servers
