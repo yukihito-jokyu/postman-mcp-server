@@ -1,104 +1,81 @@
-
+// Basic API types
 export interface ApiBase {
   name: string;
   summary?: string;
   description?: string;
 }
 
-export interface CreateApiRequest extends ApiBase {
+// Essential request types
+export interface CreateApiRequest {
+  name: string;
   workspaceId: string;
+  summary?: string;
+  description?: string;
 }
 
-export interface UpdateApiRequest extends Partial<ApiBase> {
+export interface UpdateApiRequest {
+  name?: string;
+  summary?: string;
+  description?: string;
   versionTag?: string;
 }
 
+// Parameters for list/query operations
 export interface ListApisParams {
   workspaceId: string;
-  createdBy?: number;
   cursor?: string;
-  description?: string;
   limit?: number;
+  createdBy?: number;
+  description?: string;
 }
 
-export interface AddApiCollectionRequest {
-  operationType: 'COPY_COLLECTION' | 'CREATE_NEW' | 'GENERATE_FROM_SCHEMA';
-  data?: {
-    collectionId?: string;
-    info?: {
-      name: string;
-      schema: string;
-    };
-    item?: any[];
-  };
-  name?: string;
-  options?: Record<string, any>;
-}
-
+// Schema and version related types
 export interface CreateApiSchemaRequest {
-  type: 'proto:2' | 'proto:3' | 'graphql' | 'openapi:3_1' | 'openapi:3' | 'openapi:2' | 'openapi:1' | 'raml:1' | 'raml:0_8' | 'wsdl:2' | 'wsdl:1' | 'asyncapi:2';
+  type: string;
   files: Array<{
     path: string;
-    root?: {
-      enabled: boolean;
-    };
     content: string;
+    root?: { enabled: boolean }
   }>;
 }
 
 export interface CreateApiVersionRequest {
   name: string;
-  schemas: Array<{
-    id?: string;
-    filePath?: string;
-    directoryPath?: string;
-  }>;
-  collections: Array<{
-    id?: string;
-    filePath?: string;
-  }>;
+  schemas: Array<{ id?: string; filePath?: string; directoryPath?: string }>;
+  collections: Array<{ id?: string; filePath?: string }>;
   branch?: string;
   releaseNotes?: string;
 }
 
-export interface UpdateApiVersionRequest {
-  name: string;
-  releaseNotes?: string;
+// Collection and comment types
+export interface AddApiCollectionRequest {
+  operationType: 'COPY_COLLECTION' | 'CREATE_NEW' | 'GENERATE_FROM_SCHEMA';
+  name?: string;
+  data?: {
+    collectionId?: string;
+    info?: { name: string; schema: string };
+    item?: any[];
+  };
+  options?: Record<string, any>;
 }
 
-export interface CreateCommentRequest {
+export interface CommentRequest {
   content: string;
   threadId?: number;
 }
 
-export interface UpdateCommentRequest {
-  content: string;
-}
-
-export interface UpdateTagsRequest {
-  tags: Array<{
-    slug: string;
-    name?: string;
-  }>;
-}
-
-export interface GetSchemaFilesParams {
-  apiId: string;
-  schemaId: string;
+// Query parameters
+export interface QueryParams {
   cursor?: string;
   limit?: number;
+}
+
+export interface GetSchemaFilesParams extends QueryParams {
+  apiId: string;
+  schemaId: string;
   versionId?: string;
 }
 
-export interface CreateUpdateSchemaFileRequest {
-  content: string;
-  root?: {
-    enabled: boolean;
-  };
-}
-
-export interface GetCommentsParams {
+export interface GetCommentsParams extends QueryParams {
   apiId: string;
-  cursor?: string;
-  limit?: number;
 }
