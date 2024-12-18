@@ -7,6 +7,10 @@ import {
 } from '../../../types/index.js';
 import { TOOL_DEFINITIONS } from './definitions.js';
 
+/**
+ * Handles API-related operations in the Postman API
+ * Implements endpoints for managing APIs, schemas, versions, comments, and tags
+ */
 export class ApiTools implements ToolHandler {
   constructor(public axiosInstance: AxiosInstance) {}
 
@@ -20,6 +24,10 @@ export class ApiTools implements ToolHandler {
     };
   }
 
+  /**
+   * Handles tool calls for API-related operations
+   * @throws {McpError} With appropriate error code and message
+   */
   async handleToolCall(name: string, args: any): Promise<ToolCallResponse> {
     try {
       switch (name) {
@@ -73,14 +81,39 @@ export class ApiTools implements ToolHandler {
           throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
     } catch (error: any) {
-      if (error.response?.status === 401) {
-        throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
+      // Map Postman API errors to appropriate MCP errors
+      if (error.response) {
+        switch (error.response.status) {
+          case 400:
+            throw new McpError(ErrorCode.InvalidRequest, error.response.data?.message || 'Invalid request parameters');
+          case 401:
+            throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
+          case 403:
+            throw new McpError(ErrorCode.InvalidRequest, 'Forbidden: Insufficient permissions or feature unavailable');
+          case 404:
+            throw new McpError(ErrorCode.InvalidRequest, 'Resource not found');
+          case 422:
+            throw new McpError(ErrorCode.InvalidRequest, error.response.data?.message || 'Invalid request parameters');
+          case 429:
+            throw new McpError(ErrorCode.InvalidRequest, 'Rate limit exceeded');
+          case 500:
+            throw new McpError(ErrorCode.InternalError, 'Internal server error');
+          default:
+            throw new McpError(ErrorCode.InternalError, error.response.data?.message || 'Unknown error occurred');
+        }
       }
       throw error;
     }
   }
 
+  /**
+   * List all APIs in a workspace
+   * @param params Query parameters including workspaceId (required), createdBy, cursor, description, limit
+   */
   async listApis(params: any): Promise<ToolCallResponse> {
+    if (!params.workspaceId) {
+      throw new McpError(ErrorCode.InvalidParams, 'workspaceId is required');
+    }
     const response = await this.axiosInstance.get('/apis', {
       params,
       headers: { 'Accept': 'application/vnd.api.v10+json' }
@@ -88,7 +121,14 @@ export class ApiTools implements ToolHandler {
     return this.createResponse(response.data);
   }
 
+  /**
+   * Get details of a specific API
+   * @param params Parameters including apiId (required) and optional include array
+   */
   async getApi(params: any): Promise<ToolCallResponse> {
+    if (!params.apiId) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId is required');
+    }
     const response = await this.axiosInstance.get(`/apis/${params.apiId}`, {
       params: { include: params.include?.join(',') },
       headers: { 'Accept': 'application/vnd.api.v10+json' }
@@ -96,16 +136,28 @@ export class ApiTools implements ToolHandler {
     return this.createResponse(response.data);
   }
 
+  /**
+   * Create a new API
+   * @param data API data including name (required), summary, description, workspaceId (required)
+   */
   async createApi(data: any): Promise<ToolCallResponse> {
+    if (!data.name || !data.workspaceId) {
+      throw new McpError(ErrorCode.InvalidParams, 'name and workspaceId are required');
+    }
     const response = await this.axiosInstance.post('/apis', data, {
       headers: { 'Accept': 'application/vnd.api.v10+json' }
     });
     return this.createResponse(response.data);
   }
 
-  // ... previous code ...
-
+  /**
+   * Update an existing API
+   * @param args Parameters including apiId (required) and update data
+   */
   async updateApi(args: any): Promise<ToolCallResponse> {
+    if (!args.apiId) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId is required');
+    }
     const { apiId, ...data } = args;
     const response = await this.axiosInstance.put(`/apis/${apiId}`, data, {
       headers: { 'Accept': 'application/vnd.api.v10+json' }
@@ -113,14 +165,28 @@ export class ApiTools implements ToolHandler {
     return this.createResponse(response.data);
   }
 
+  /**
+   * Delete an API
+   * @param apiId The ID of the API to delete
+   */
   async deleteApi(apiId: string): Promise<ToolCallResponse> {
+    if (!apiId) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId is required');
+    }
     await this.axiosInstance.delete(`/apis/${apiId}`, {
       headers: { 'Accept': 'application/vnd.api.v10+json' }
     });
     return this.createResponse({ message: 'API deleted successfully' });
   }
 
+  /**
+   * Add a collection to an API
+   * @param args Parameters including apiId, operationType, and operation-specific data
+   */
   async addApiCollection(args: any): Promise<ToolCallResponse> {
+    if (!args.apiId || !args.operationType) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId and operationType are required');
+    }
     const { apiId, ...data } = args;
     const response = await this.axiosInstance.post(`/apis/${apiId}/collections`, data, {
       headers: { 'Accept': 'application/vnd.api.v10+json' }
@@ -128,7 +194,14 @@ export class ApiTools implements ToolHandler {
     return this.createResponse(response.data);
   }
 
+  /**
+   * Create a schema for an API
+   * @param args Parameters including apiId, type, and files array
+   */
   async createApiSchema(args: any): Promise<ToolCallResponse> {
+    if (!args.apiId || !args.type || !args.files) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId, type, and files are required');
+    }
     const { apiId, ...data } = args;
     const response = await this.axiosInstance.post(`/apis/${apiId}/schemas`, data, {
       headers: { 'Accept': 'application/vnd.api.v10+json' }
@@ -136,7 +209,14 @@ export class ApiTools implements ToolHandler {
     return this.createResponse(response.data);
   }
 
+  /**
+   * Create a new version of an API
+   * @param args Parameters including apiId, name, schemas, collections, and optional fields
+   */
   async createApiVersion(args: any): Promise<ToolCallResponse> {
+    if (!args.apiId || !args.name || !args.schemas || !args.collections) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId, name, schemas, and collections are required');
+    }
     const { apiId, ...data } = args;
     const response = await this.axiosInstance.post(`/apis/${apiId}/versions`, data, {
       headers: { 'Accept': 'application/vnd.api.v10+json' }
@@ -144,7 +224,14 @@ export class ApiTools implements ToolHandler {
     return this.createResponse(response.data);
   }
 
+  /**
+   * Get all versions of an API
+   * @param args Parameters including apiId and optional pagination
+   */
   async getApiVersions(args: any): Promise<ToolCallResponse> {
+    if (!args.apiId) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId is required');
+    }
     const { apiId, ...params } = args;
     const response = await this.axiosInstance.get(`/apis/${apiId}/versions`, {
       params,
@@ -153,15 +240,28 @@ export class ApiTools implements ToolHandler {
     return this.createResponse(response.data);
   }
 
+  /**
+   * Get a specific version of an API
+   * @param args Parameters including apiId and versionId
+   */
   async getApiVersion(args: any): Promise<ToolCallResponse> {
-    const { apiId, versionId } = args;
-    const response = await this.axiosInstance.get(`/apis/${apiId}/versions/${versionId}`, {
+    if (!args.apiId || !args.versionId) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId and versionId are required');
+    }
+    const response = await this.axiosInstance.get(`/apis/${args.apiId}/versions/${args.versionId}`, {
       headers: { 'Accept': 'application/vnd.api.v10+json' }
     });
     return this.createResponse(response.data);
   }
 
+  /**
+   * Update an API version
+   * @param args Parameters including apiId, versionId, and update data
+   */
   async updateApiVersion(args: any): Promise<ToolCallResponse> {
+    if (!args.apiId || !args.versionId || !args.name) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId, versionId, and name are required');
+    }
     const { apiId, versionId, ...data } = args;
     const response = await this.axiosInstance.put(`/apis/${apiId}/versions/${versionId}`, data, {
       headers: { 'Accept': 'application/vnd.api.v10+json' }
@@ -169,15 +269,28 @@ export class ApiTools implements ToolHandler {
     return this.createResponse(response.data);
   }
 
+  /**
+   * Delete an API version
+   * @param args Parameters including apiId and versionId
+   */
   async deleteApiVersion(args: any): Promise<ToolCallResponse> {
-    const { apiId, versionId } = args;
-    await this.axiosInstance.delete(`/apis/${apiId}/versions/${versionId}`, {
+    if (!args.apiId || !args.versionId) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId and versionId are required');
+    }
+    await this.axiosInstance.delete(`/apis/${args.apiId}/versions/${args.versionId}`, {
       headers: { 'Accept': 'application/vnd.api.v10+json' }
     });
     return this.createResponse({ message: 'API version deleted successfully' });
   }
 
+  /**
+   * Get comments for an API
+   * @param args Parameters including apiId and optional pagination
+   */
   async getApiComments(args: any): Promise<ToolCallResponse> {
+    if (!args.apiId) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId is required');
+    }
     const { apiId, ...params } = args;
     const response = await this.axiosInstance.get(`/apis/${apiId}/comments`, {
       params,
@@ -186,7 +299,14 @@ export class ApiTools implements ToolHandler {
     return this.createResponse(response.data);
   }
 
+  /**
+   * Create a new comment on an API
+   * @param args Parameters including apiId, content, and optional threadId
+   */
   async createApiComment(args: any): Promise<ToolCallResponse> {
+    if (!args.apiId || !args.content) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId and content are required');
+    }
     const { apiId, ...data } = args;
     const response = await this.axiosInstance.post(`/apis/${apiId}/comments`, data, {
       headers: { 'Accept': 'application/vnd.api.v10+json' }
@@ -194,38 +314,74 @@ export class ApiTools implements ToolHandler {
     return this.createResponse(response.data);
   }
 
+  /**
+   * Update an existing API comment
+   * @param args Parameters including apiId, commentId, and content
+   */
   async updateApiComment(args: any): Promise<ToolCallResponse> {
-    const { apiId, commentId, content } = args;
-    const response = await this.axiosInstance.put(`/apis/${apiId}/comments/${commentId}`, { content }, {
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
-    });
+    if (!args.apiId || !args.commentId || !args.content) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId, commentId, and content are required');
+    }
+    const response = await this.axiosInstance.put(
+      `/apis/${args.apiId}/comments/${args.commentId}`,
+      { content: args.content },
+      { headers: { 'Accept': 'application/vnd.api.v10+json' } }
+    );
     return this.createResponse(response.data);
   }
 
+  /**
+   * Delete an API comment
+   * @param args Parameters including apiId and commentId
+   */
   async deleteApiComment(args: any): Promise<ToolCallResponse> {
-    const { apiId, commentId } = args;
-    await this.axiosInstance.delete(`/apis/${apiId}/comments/${commentId}`, {
+    if (!args.apiId || !args.commentId) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId and commentId are required');
+    }
+    await this.axiosInstance.delete(`/apis/${args.apiId}/comments/${args.commentId}`, {
       headers: { 'Accept': 'application/vnd.api.v10+json' }
     });
     return this.createResponse({ message: 'Comment deleted successfully' });
   }
 
+  /**
+   * Get tags for an API
+   * @param apiId The ID of the API
+   */
   async getApiTags(apiId: string): Promise<ToolCallResponse> {
+    if (!apiId) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId is required');
+    }
     const response = await this.axiosInstance.get(`/apis/${apiId}/tags`, {
       headers: { 'Accept': 'application/vnd.api.v10+json' }
     });
     return this.createResponse(response.data);
   }
 
+  /**
+   * Update tags for an API
+   * @param args Parameters including apiId and tags array
+   */
   async updateApiTags(args: any): Promise<ToolCallResponse> {
-    const { apiId, tags } = args;
-    const response = await this.axiosInstance.put(`/apis/${apiId}/tags`, { tags }, {
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
-    });
+    if (!args.apiId || !args.tags) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId and tags are required');
+    }
+    const response = await this.axiosInstance.put(
+      `/apis/${args.apiId}/tags`,
+      { tags: args.tags },
+      { headers: { 'Accept': 'application/vnd.api.v10+json' } }
+    );
     return this.createResponse(response.data);
   }
 
+  /**
+   * Get files in an API schema
+   * @param args Parameters including apiId, schemaId, and optional pagination/version
+   */
   async getApiSchemaFiles(args: any): Promise<ToolCallResponse> {
+    if (!args.apiId || !args.schemaId) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId and schemaId are required');
+    }
     const { apiId, schemaId, ...params } = args;
     const response = await this.axiosInstance.get(`/apis/${apiId}/schemas/${schemaId}/files`, {
       params,
@@ -234,35 +390,67 @@ export class ApiTools implements ToolHandler {
     return this.createResponse(response.data);
   }
 
+  /**
+   * Get contents of a schema file
+   * @param args Parameters including apiId, schemaId, filePath, and optional versionId
+   */
   async getSchemaFileContents(args: any): Promise<ToolCallResponse> {
+    if (!args.apiId || !args.schemaId || !args.filePath) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId, schemaId, and filePath are required');
+    }
     const { apiId, schemaId, filePath, versionId } = args;
-    const response = await this.axiosInstance.get(`/apis/${apiId}/schemas/${schemaId}/files/${filePath}`, {
-      params: { versionId },
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
-    });
+    const response = await this.axiosInstance.get(
+      `/apis/${apiId}/schemas/${schemaId}/files/${filePath}`,
+      {
+        params: { versionId },
+        headers: { 'Accept': 'application/vnd.api.v10+json' }
+      }
+    );
     return this.createResponse(response.data);
   }
 
+  /**
+   * Create or update a schema file
+   * @param args Parameters including apiId, schemaId, filePath, content, and optional root settings
+   */
   async createUpdateSchemaFile(args: any): Promise<ToolCallResponse> {
+    if (!args.apiId || !args.schemaId || !args.filePath || !args.content) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId, schemaId, filePath, and content are required');
+    }
     const { apiId, schemaId, filePath, ...data } = args;
-    const response = await this.axiosInstance.put(`/apis/${apiId}/schemas/${schemaId}/files/${filePath}`, data, {
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
-    });
+    const response = await this.axiosInstance.put(
+      `/apis/${apiId}/schemas/${schemaId}/files/${filePath}`,
+      data,
+      { headers: { 'Accept': 'application/vnd.api.v10+json' } }
+    );
     return this.createResponse(response.data);
   }
 
+  /**
+   * Delete a schema file
+   * @param args Parameters including apiId, schemaId, and filePath
+   */
   async deleteSchemaFile(args: any): Promise<ToolCallResponse> {
-    const { apiId, schemaId, filePath } = args;
-    await this.axiosInstance.delete(`/apis/${apiId}/schemas/${schemaId}/files/${filePath}`, {
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
-    });
+    if (!args.apiId || !args.schemaId || !args.filePath) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId, schemaId, and filePath are required');
+    }
+    await this.axiosInstance.delete(
+      `/apis/${args.apiId}/schemas/${args.schemaId}/files/${args.filePath}`,
+      { headers: { 'Accept': 'application/vnd.api.v10+json' } }
+    );
     return this.createResponse({ message: 'Schema file deleted successfully' });
   }
 
+  /**
+   * Sync a collection with its schema
+   * @param args Parameters including apiId and collectionId
+   */
   async syncCollectionWithSchema(args: any): Promise<ToolCallResponse> {
-    const { apiId, collectionId } = args;
+    if (!args.apiId || !args.collectionId) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId and collectionId are required');
+    }
     const response = await this.axiosInstance.put(
-      `/apis/${apiId}/collections/${collectionId}/sync-with-schema-tasks`,
+      `/apis/${args.apiId}/collections/${args.collectionId}/sync-with-schema-tasks`,
       {},
       { headers: { 'Accept': 'application/vnd.api.v10+json' } }
     );

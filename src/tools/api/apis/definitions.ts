@@ -1,3 +1,4 @@
+import { ApiCollectionOperationType, ApiSchemaType } from '../../../types/apis.js';
 import { ToolDefinition } from '../../../types/index.js';
 
 export const TOOL_DEFINITIONS: ToolDefinition[] = [
@@ -131,7 +132,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         },
         operationType: {
           type: 'string',
-          enum: ['COPY_COLLECTION', 'CREATE_NEW', 'GENERATE_FROM_SCHEMA'],
+          enum: Object.values(ApiCollectionOperationType),
           description: 'Type of collection operation',
         },
         data: {
@@ -154,7 +155,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         },
         type: {
           type: 'string',
-          enum: ['proto:2', 'proto:3', 'graphql', 'openapi:3_1', 'openapi:3', 'openapi:2', 'openapi:1', 'raml:1', 'raml:0_8', 'wsdl:2', 'wsdl:1', 'asyncapi:2'],
+          enum: Object.values(ApiSchemaType),
           description: 'Schema type',
         },
         files: {
@@ -170,6 +171,15 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
               content: {
                 type: 'string',
                 description: 'File content',
+              },
+              root: {
+                type: 'object',
+                properties: {
+                  enabled: {
+                    type: 'boolean',
+                    description: 'Tag as root file (protobuf only)',
+                  },
+                },
               },
             },
             required: ['path', 'content'],
@@ -573,5 +583,4 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
       required: ['apiId', 'collectionId'],
     },
   },
-
 ];
