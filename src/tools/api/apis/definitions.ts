@@ -144,6 +144,28 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
+    name: 'get_api_collection',
+    description: 'Get a specific collection from an API',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        apiId: {
+          type: 'string',
+          description: 'API ID',
+        },
+        collectionId: {
+          type: 'string',
+          description: 'Collection ID',
+        },
+        versionId: {
+          type: 'string',
+          description: 'Version ID (required for API viewers)',
+        },
+      },
+      required: ['apiId', 'collectionId'],
+    },
+  },
+  {
     name: 'create_api_schema',
     description: 'Create a schema for an API',
     inputSchema: {
@@ -187,6 +209,32 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         },
       },
       required: ['apiId', 'type', 'files'],
+    },
+  },
+  {
+    name: 'get_api_schema',
+    description: 'Get a specific schema from an API',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        apiId: {
+          type: 'string',
+          description: 'API ID',
+        },
+        schemaId: {
+          type: 'string',
+          description: 'Schema ID',
+        },
+        versionId: {
+          type: 'string',
+          description: 'Version ID (required for API viewers)',
+        },
+        bundled: {
+          type: 'boolean',
+          description: 'Return schema in bundled format',
+        },
+      },
+      required: ['apiId', 'schemaId'],
     },
   },
   {
@@ -346,7 +394,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   },
   {
     name: 'create_api_comment',
-    description: 'Create a new comment on an API',
+    description: 'Create a new comment on an API (max 10,000 characters)',
     inputSchema: {
       type: 'object',
       properties: {
@@ -368,7 +416,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   },
   {
     name: 'update_api_comment',
-    description: 'Update an existing API comment',
+    description: 'Update an existing API comment (max 10,000 characters)',
     inputSchema: {
       type: 'object',
       properties: {
@@ -581,6 +629,24 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         },
       },
       required: ['apiId', 'collectionId'],
+    },
+  },
+  {
+    name: 'get_task_status',
+    description: 'Get status of an asynchronous task',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        apiId: {
+          type: 'string',
+          description: 'API ID',
+        },
+        taskId: {
+          type: 'string',
+          description: 'Task ID',
+        },
+      },
+      required: ['apiId', 'taskId'],
     },
   },
 ];

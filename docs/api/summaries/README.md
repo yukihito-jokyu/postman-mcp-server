@@ -168,6 +168,22 @@ Review the main server src/server.ts to continue reducing duplication and managi
 `this.server.setRequestHandler(CallToolRequestSchema, async (request) => {...` can be update to implement like `ListToolsRequestSchema`.
 ```
 
+#### Reviewing tool implementations
+
+```prompt
+@/docs/api/summaries/apis.md
+
+@/docs/api/references/postman-api-parameters.yaml
+
+@/docs/api/references/postman-api-requestBodies.yaml
+
+Review the postman apis md docs and yaml definitions to cross check our MCP tools implementation `src/tools/api/apis/index.ts`. Understand the details and nuance of parameters and request bodies for POST/PUT/PATCH/GET/HEAD/OPTION/DELETE  requests. Modify out MCP tools implementation accordingly, including inline jsdocs.
+
+NOTE: this MCP server is a wrapper around existing API functionality that will be doing the actual validation so simplify the validation to just required fields. Keep the basic types and enums for type safety and documentation.
+
+@src/types/index.ts
+```
+
 
 ### Improving Documentation
 

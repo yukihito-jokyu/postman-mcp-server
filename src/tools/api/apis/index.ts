@@ -7,6 +7,8 @@ import {
 } from '../../../types/index.js';
 import { TOOL_DEFINITIONS } from './definitions.js';
 
+const V10_ACCEPT_HEADER = 'application/vnd.api.v10+json';
+
 /**
  * Handles API-related operations in the Postman API
  * Implements endpoints for managing APIs, schemas, versions, comments, and tags
@@ -22,6 +24,12 @@ export class ApiTools implements ToolHandler {
     return {
       content: [{ type: 'text', text: JSON.stringify(data, null, 2) }]
     };
+  }
+
+  private validateCommentLength(content: string) {
+    if (content.length > 10000) {
+      throw new McpError(ErrorCode.InvalidParams, 'Comment content cannot exceed 10,000 characters');
+    }
   }
 
   /**
@@ -43,8 +51,12 @@ export class ApiTools implements ToolHandler {
           return await this.deleteApi(args.apiId);
         case 'add_api_collection':
           return await this.addApiCollection(args);
+        case 'get_api_collection':
+          return await this.getApiCollection(args);
         case 'create_api_schema':
           return await this.createApiSchema(args);
+        case 'get_api_schema':
+          return await this.getApiSchema(args);
         case 'create_api_version':
           return await this.createApiVersion(args);
         case 'get_api_versions':
@@ -77,6 +89,8 @@ export class ApiTools implements ToolHandler {
           return await this.deleteSchemaFile(args);
         case 'sync_collection_with_schema':
           return await this.syncCollectionWithSchema(args);
+        case 'get_task_status':
+          return await this.getTaskStatus(args);
         default:
           throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
@@ -116,7 +130,7 @@ export class ApiTools implements ToolHandler {
     }
     const response = await this.axiosInstance.get('/apis', {
       params,
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
+      headers: { 'Accept': V10_ACCEPT_HEADER }
     });
     return this.createResponse(response.data);
   }
@@ -131,7 +145,7 @@ export class ApiTools implements ToolHandler {
     }
     const response = await this.axiosInstance.get(`/apis/${params.apiId}`, {
       params: { include: params.include?.join(',') },
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
+      headers: { 'Accept': V10_ACCEPT_HEADER }
     });
     return this.createResponse(response.data);
   }
@@ -145,7 +159,7 @@ export class ApiTools implements ToolHandler {
       throw new McpError(ErrorCode.InvalidParams, 'name and workspaceId are required');
     }
     const response = await this.axiosInstance.post('/apis', data, {
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
+      headers: { 'Accept': V10_ACCEPT_HEADER }
     });
     return this.createResponse(response.data);
   }
@@ -160,7 +174,7 @@ export class ApiTools implements ToolHandler {
     }
     const { apiId, ...data } = args;
     const response = await this.axiosInstance.put(`/apis/${apiId}`, data, {
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
+      headers: { 'Accept': V10_ACCEPT_HEADER }
     });
     return this.createResponse(response.data);
   }
@@ -174,7 +188,7 @@ export class ApiTools implements ToolHandler {
       throw new McpError(ErrorCode.InvalidParams, 'apiId is required');
     }
     await this.axiosInstance.delete(`/apis/${apiId}`, {
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
+      headers: { 'Accept': V10_ACCEPT_HEADER }
     });
     return this.createResponse({ message: 'API deleted successfully' });
   }
@@ -189,7 +203,23 @@ export class ApiTools implements ToolHandler {
     }
     const { apiId, ...data } = args;
     const response = await this.axiosInstance.post(`/apis/${apiId}/collections`, data, {
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
+      headers: { 'Accept': V10_ACCEPT_HEADER }
+    });
+    return this.createResponse(response.data);
+  }
+
+  /**
+   * Get a specific collection from an API
+   * @param args Parameters including apiId, collectionId, and optional versionId
+   */
+  async getApiCollection(args: any): Promise<ToolCallResponse> {
+    if (!args.apiId || !args.collectionId) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId and collectionId are required');
+    }
+    const { apiId, collectionId, ...params } = args;
+    const response = await this.axiosInstance.get(`/apis/${apiId}/collections/${collectionId}`, {
+      params,
+      headers: { 'Accept': V10_ACCEPT_HEADER }
     });
     return this.createResponse(response.data);
   }
@@ -204,7 +234,23 @@ export class ApiTools implements ToolHandler {
     }
     const { apiId, ...data } = args;
     const response = await this.axiosInstance.post(`/apis/${apiId}/schemas`, data, {
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
+      headers: { 'Accept': V10_ACCEPT_HEADER }
+    });
+    return this.createResponse(response.data);
+  }
+
+  /**
+   * Get a specific schema from an API
+   * @param args Parameters including apiId, schemaId, and optional versionId and output format
+   */
+  async getApiSchema(args: any): Promise<ToolCallResponse> {
+    if (!args.apiId || !args.schemaId) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId and schemaId are required');
+    }
+    const { apiId, schemaId, ...params } = args;
+    const response = await this.axiosInstance.get(`/apis/${apiId}/schemas/${schemaId}`, {
+      params,
+      headers: { 'Accept': V10_ACCEPT_HEADER }
     });
     return this.createResponse(response.data);
   }
@@ -219,7 +265,7 @@ export class ApiTools implements ToolHandler {
     }
     const { apiId, ...data } = args;
     const response = await this.axiosInstance.post(`/apis/${apiId}/versions`, data, {
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
+      headers: { 'Accept': V10_ACCEPT_HEADER }
     });
     return this.createResponse(response.data);
   }
@@ -235,7 +281,7 @@ export class ApiTools implements ToolHandler {
     const { apiId, ...params } = args;
     const response = await this.axiosInstance.get(`/apis/${apiId}/versions`, {
       params,
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
+      headers: { 'Accept': V10_ACCEPT_HEADER }
     });
     return this.createResponse(response.data);
   }
@@ -249,7 +295,7 @@ export class ApiTools implements ToolHandler {
       throw new McpError(ErrorCode.InvalidParams, 'apiId and versionId are required');
     }
     const response = await this.axiosInstance.get(`/apis/${args.apiId}/versions/${args.versionId}`, {
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
+      headers: { 'Accept': V10_ACCEPT_HEADER }
     });
     return this.createResponse(response.data);
   }
@@ -264,7 +310,7 @@ export class ApiTools implements ToolHandler {
     }
     const { apiId, versionId, ...data } = args;
     const response = await this.axiosInstance.put(`/apis/${apiId}/versions/${versionId}`, data, {
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
+      headers: { 'Accept': V10_ACCEPT_HEADER }
     });
     return this.createResponse(response.data);
   }
@@ -278,7 +324,7 @@ export class ApiTools implements ToolHandler {
       throw new McpError(ErrorCode.InvalidParams, 'apiId and versionId are required');
     }
     await this.axiosInstance.delete(`/apis/${args.apiId}/versions/${args.versionId}`, {
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
+      headers: { 'Accept': V10_ACCEPT_HEADER }
     });
     return this.createResponse({ message: 'API version deleted successfully' });
   }
@@ -294,7 +340,7 @@ export class ApiTools implements ToolHandler {
     const { apiId, ...params } = args;
     const response = await this.axiosInstance.get(`/apis/${apiId}/comments`, {
       params,
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
+      headers: { 'Accept': V10_ACCEPT_HEADER }
     });
     return this.createResponse(response.data);
   }
@@ -307,9 +353,10 @@ export class ApiTools implements ToolHandler {
     if (!args.apiId || !args.content) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId and content are required');
     }
+    this.validateCommentLength(args.content);
     const { apiId, ...data } = args;
     const response = await this.axiosInstance.post(`/apis/${apiId}/comments`, data, {
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
+      headers: { 'Accept': V10_ACCEPT_HEADER }
     });
     return this.createResponse(response.data);
   }
@@ -322,10 +369,11 @@ export class ApiTools implements ToolHandler {
     if (!args.apiId || !args.commentId || !args.content) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId, commentId, and content are required');
     }
+    this.validateCommentLength(args.content);
     const response = await this.axiosInstance.put(
       `/apis/${args.apiId}/comments/${args.commentId}`,
       { content: args.content },
-      { headers: { 'Accept': 'application/vnd.api.v10+json' } }
+      { headers: { 'Accept': V10_ACCEPT_HEADER } }
     );
     return this.createResponse(response.data);
   }
@@ -339,7 +387,7 @@ export class ApiTools implements ToolHandler {
       throw new McpError(ErrorCode.InvalidParams, 'apiId and commentId are required');
     }
     await this.axiosInstance.delete(`/apis/${args.apiId}/comments/${args.commentId}`, {
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
+      headers: { 'Accept': V10_ACCEPT_HEADER }
     });
     return this.createResponse({ message: 'Comment deleted successfully' });
   }
@@ -353,7 +401,7 @@ export class ApiTools implements ToolHandler {
       throw new McpError(ErrorCode.InvalidParams, 'apiId is required');
     }
     const response = await this.axiosInstance.get(`/apis/${apiId}/tags`, {
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
+      headers: { 'Accept': V10_ACCEPT_HEADER }
     });
     return this.createResponse(response.data);
   }
@@ -369,7 +417,7 @@ export class ApiTools implements ToolHandler {
     const response = await this.axiosInstance.put(
       `/apis/${args.apiId}/tags`,
       { tags: args.tags },
-      { headers: { 'Accept': 'application/vnd.api.v10+json' } }
+      { headers: { 'Accept': V10_ACCEPT_HEADER } }
     );
     return this.createResponse(response.data);
   }
@@ -385,7 +433,7 @@ export class ApiTools implements ToolHandler {
     const { apiId, schemaId, ...params } = args;
     const response = await this.axiosInstance.get(`/apis/${apiId}/schemas/${schemaId}/files`, {
       params,
-      headers: { 'Accept': 'application/vnd.api.v10+json' }
+      headers: { 'Accept': V10_ACCEPT_HEADER }
     });
     return this.createResponse(response.data);
   }
@@ -403,7 +451,7 @@ export class ApiTools implements ToolHandler {
       `/apis/${apiId}/schemas/${schemaId}/files/${filePath}`,
       {
         params: { versionId },
-        headers: { 'Accept': 'application/vnd.api.v10+json' }
+        headers: { 'Accept': V10_ACCEPT_HEADER }
       }
     );
     return this.createResponse(response.data);
@@ -421,7 +469,7 @@ export class ApiTools implements ToolHandler {
     const response = await this.axiosInstance.put(
       `/apis/${apiId}/schemas/${schemaId}/files/${filePath}`,
       data,
-      { headers: { 'Accept': 'application/vnd.api.v10+json' } }
+      { headers: { 'Accept': V10_ACCEPT_HEADER } }
     );
     return this.createResponse(response.data);
   }
@@ -436,7 +484,7 @@ export class ApiTools implements ToolHandler {
     }
     await this.axiosInstance.delete(
       `/apis/${args.apiId}/schemas/${args.schemaId}/files/${args.filePath}`,
-      { headers: { 'Accept': 'application/vnd.api.v10+json' } }
+      { headers: { 'Accept': V10_ACCEPT_HEADER } }
     );
     return this.createResponse({ message: 'Schema file deleted successfully' });
   }
@@ -452,7 +500,22 @@ export class ApiTools implements ToolHandler {
     const response = await this.axiosInstance.put(
       `/apis/${args.apiId}/collections/${args.collectionId}/sync-with-schema-tasks`,
       {},
-      { headers: { 'Accept': 'application/vnd.api.v10+json' } }
+      { headers: { 'Accept': V10_ACCEPT_HEADER } }
+    );
+    return this.createResponse(response.data);
+  }
+
+  /**
+   * Get status of an asynchronous task
+   * @param args Parameters including apiId and taskId
+   */
+  async getTaskStatus(args: any): Promise<ToolCallResponse> {
+    if (!args.apiId || !args.taskId) {
+      throw new McpError(ErrorCode.InvalidParams, 'apiId and taskId are required');
+    }
+    const response = await this.axiosInstance.get(
+      `/apis/${args.apiId}/tasks/${args.taskId}`,
+      { headers: { 'Accept': V10_ACCEPT_HEADER } }
     );
     return this.createResponse(response.data);
   }
