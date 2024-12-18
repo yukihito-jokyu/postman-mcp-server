@@ -243,6 +243,20 @@ NOTE: We may need to add a new handler interface called ToolResourceHandler. The
 
 ```
 
+```prompt
+
+@https://modelcontextprotocol.io/docs/concepts/transports
+
+Peruse the Model Context Protocol transports documentation. Transports in the Model Context Protocol (MCP) provide the foundation for communication between clients and servers. A transport handles the underlying mechanics of how messages are sent and received.
+
+While the TypeScript MCP SDK handles all of the server <=> client communication including implementing the transport layer, the server still needs to implement the SDK correctly.
+
+Review @src/server.ts to ensure the MCP server is correctly implementing the TypeScript SDK following best practices and security recommendations.
+
+```
+
+
+
 ### Improving Documentation
 
 #### Linking to Postman API References

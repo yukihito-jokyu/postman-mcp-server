@@ -6,7 +6,7 @@ import { BaseResourceHandler, Resource, ResourceTemplate, ResourceContent } from
 /**
  * Handles resource requests for Postman API resources
  */
-export class PostmanResourceHandler extends BaseResourceHandler {
+export class McpResourceHandler extends BaseResourceHandler {
   // Set of valid direct resource types (no parameters)
   private static readonly DIRECT_RESOURCES = new Set([
     'workspaces',
@@ -333,7 +333,7 @@ export class PostmanResourceHandler extends BaseResourceHandler {
     }
 
     // For direct resources, validate against DIRECT_RESOURCES
-    if (Object.keys(params).length === 0 && !PostmanResourceHandler.DIRECT_RESOURCES.has(resourceType)) {
+    if (Object.keys(params).length === 0 && !McpResourceHandler.DIRECT_RESOURCES.has(resourceType)) {
       throw new McpError(
         ErrorCode.InvalidRequest,
         `Unknown direct resource type: ${resourceType}`
@@ -368,15 +368,15 @@ export class PostmanResourceHandler extends BaseResourceHandler {
 
   private async checkRateLimit() {
     const now = Date.now();
-    if (now - this.windowStart >= PostmanResourceHandler.RATE_LIMIT.windowMs) {
+    if (now - this.windowStart >= McpResourceHandler.RATE_LIMIT.windowMs) {
       this.requestCount = 0;
       this.windowStart = now;
     }
 
-    if (this.requestCount >= PostmanResourceHandler.RATE_LIMIT.maxRequests) {
+    if (this.requestCount >= McpResourceHandler.RATE_LIMIT.maxRequests) {
       throw new McpError(
         ErrorCode.InvalidRequest,
-        `Rate limit exceeded. Maximum ${PostmanResourceHandler.RATE_LIMIT.maxRequests} requests per ${PostmanResourceHandler.RATE_LIMIT.windowMs / 1000} seconds.`
+        `Rate limit exceeded. Maximum ${McpResourceHandler.RATE_LIMIT.maxRequests} requests per ${McpResourceHandler.RATE_LIMIT.windowMs / 1000} seconds.`
       );
     }
 

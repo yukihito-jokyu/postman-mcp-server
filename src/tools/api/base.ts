@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
-import { ToolDefinition } from '../../types/index.js';
+import { ToolDefinition, ToolResource } from '../../types/index.js';
 
 interface PostmanToolOptions {
   baseURL?: string;
@@ -132,5 +132,37 @@ export class BasePostmanTool {
    */
   public getToolDefinitions(): ToolDefinition[] {
     throw new Error('getToolDefinitions() must be implemented by derived class');
+  }
+
+  /**
+   * List resources that this tool can interact with
+   * Should be implemented by derived classes that handle resources
+   */
+  public async listToolResources(): Promise<ToolResource[]> {
+    return [];
+  }
+
+  /**
+   * Get details about how this tool can interact with a specific resource
+   * Should be implemented by derived classes that handle resources
+   * @throws {McpError} If the resource cannot be handled by this tool
+   */
+  public async getToolResourceDetails(resourceUri: string): Promise<ToolResource> {
+    throw new McpError(
+      ErrorCode.InvalidRequest,
+      `Resource ${resourceUri} cannot be handled by this tool`
+    );
+  }
+
+  /**
+   * Check if this tool can handle a specific resource
+   */
+  public async canHandleResource(resourceUri: string): Promise<boolean> {
+    try {
+      await this.getToolResourceDetails(resourceUri);
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }
