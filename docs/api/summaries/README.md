@@ -22,9 +22,22 @@ Each of the following documents contains a summary of the Postman API functional
 
 **Using Cline 2.2.2 and Continue 0.9.246**
 
+Building out the Postman API functionality within the MCP server tools follows this general order of operations:
+
+1. Split Postman API OpenAPI 3 definition into individual yaml files.
+2. Peruse the individual yaml files to produce summary markdown documents.
+3. Use the summary markdown documents to first implement the MCP server tools and later to cross-check against the implementation.
+4. Using MCP documentation, ensure the MCP server tools are correctly implemented.
+
+The OoO is not strictly linear and the processes involved are iterative. The goal is to continually add and correct details each time we review. The process is more additive and augmentative early on; later on it becomes more about cross-checking, correcting, and reducing. The goal is to keep files concise and focused.
+
+Some version of this process can be repeated to implement changes to the Postman API spec. The same can be done for the MCP server tools implementation.
+
+
 ### Utilizing MCP Server Tools
 
 #### List Workspaces
+
 ```prompt
 Use Postman tools to list our workspaces.
 ```
