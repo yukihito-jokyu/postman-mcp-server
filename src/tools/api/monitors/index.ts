@@ -5,10 +5,16 @@ import {
   ToolDefinition,
   ToolHandler,
 } from '../../../types/index.js';
+import { BasePostmanTool } from '../base.js';
 import { TOOL_DEFINITIONS } from './definitions.js';
 
-export class MonitorTools implements ToolHandler {
-  constructor(public axiosInstance: AxiosInstance) {}
+/**
+ * Implements Postman Monitor API endpoints
+ */
+export class MonitorTools extends BasePostmanTool implements ToolHandler {
+  constructor(existingClient: AxiosInstance) {
+    super(null, {}, existingClient);
+  }
 
   getToolDefinitions(): ToolDefinition[] {
     return TOOL_DEFINITIONS;
@@ -38,31 +44,26 @@ export class MonitorTools implements ToolHandler {
         default:
           throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
-    } catch (error: any) {
-      if (error.response?.status === 401) {
-        throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
-      }
-      if (error.response?.status === 403) {
-        throw new McpError(ErrorCode.InvalidRequest, 'Feature unavailable or insufficient permissions');
-      }
+    } catch (error) {
+      // Let base class interceptor handle API errors
       throw error;
     }
   }
 
   async listMonitors(workspace?: string): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.get('/monitors', {
+    const response = await this.client.get('/monitors', {
       params: workspace ? { workspace } : undefined
     });
     return this.createResponse(response.data);
   }
 
   async getMonitor(monitorId: string): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.get(`/monitors/${monitorId}`);
+    const response = await this.client.get(`/monitors/${monitorId}`);
     return this.createResponse(response.data);
   }
 
   async createMonitor(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.post('/monitors', {
+    const response = await this.client.post('/monitors', {
       monitor: args.monitor,
       workspace: args.workspace ? { id: args.workspace, type: 'workspace' } : undefined
     });
@@ -70,7 +71,7 @@ export class MonitorTools implements ToolHandler {
   }
 
   async updateMonitor(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.put(
+    const response = await this.client.put(
       `/monitors/${args.monitorId}`,
       { monitor: args.monitor }
     );
@@ -78,12 +79,12 @@ export class MonitorTools implements ToolHandler {
   }
 
   async deleteMonitor(monitorId: string): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.delete(`/monitors/${monitorId}`);
+    const response = await this.client.delete(`/monitors/${monitorId}`);
     return this.createResponse(response.data);
   }
 
   async runMonitor(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.post(
+    const response = await this.client.post(
       `/monitors/${args.monitorId}/run`,
       undefined,
       {

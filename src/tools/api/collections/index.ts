@@ -13,14 +13,8 @@ import { TOOL_DEFINITIONS } from './definitions.js';
  * @see https://www.postman.com/postman/workspace/postman-public-workspace/documentation/12959542-c8142d51-e97c-46b6-bd77-52bb66712c9a
  */
 export class CollectionTools extends BasePostmanTool implements ToolHandler {
-  public axiosInstance: AxiosInstance;
-
-  constructor(axiosInstance: AxiosInstance) {
-    // Pass empty string as apiKey since we're using an existing client
-    super('');
-    this.axiosInstance = axiosInstance;
-    // Override the client from base class with the provided instance
-    this.client = axiosInstance;
+  constructor(existingClient: AxiosInstance) {
+    super(null, {}, existingClient);
   }
 
   getToolDefinitions(): ToolDefinition[] {
@@ -85,7 +79,7 @@ export class CollectionTools extends BasePostmanTool implements ToolHandler {
         default:
           throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
-    } catch (error: any) {
+    } catch (error) {
       // Let base class interceptor handle API errors
       throw error;
     }
@@ -102,7 +96,6 @@ export class CollectionTools extends BasePostmanTool implements ToolHandler {
 
   /**
    * Get details of a specific collection
-   * @param args.collection_id Collection ID
    */
   async getCollection(args: any): Promise<ToolCallResponse> {
     const { collection_id, ...params } = args;

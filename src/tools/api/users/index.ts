@@ -1,45 +1,43 @@
 import { AxiosInstance } from 'axios';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { ToolHandler, ToolDefinition, ToolCallResponse } from '../../../types/index.js';
-
+import { BasePostmanTool } from '../base.js';
 import { TOOL_DEFINITIONS } from './definitions.js';
 
-
-export class UserTools implements ToolHandler {
-  constructor(public axiosInstance: AxiosInstance) {}
-
-  async handleToolCall(name: string, args: unknown): Promise<ToolCallResponse> {
-    switch (name) {
-      case 'get_user_info':
-        return await this.getUserInfo();
-      default:
-        throw new McpError(
-          ErrorCode.MethodNotFound,
-          `Unknown tool: ${name}`
-        );
-    }
+export class UserTools extends BasePostmanTool implements ToolHandler {
+  constructor(existingClient: AxiosInstance) {
+    super(null, {}, existingClient);
   }
 
   getToolDefinitions(): ToolDefinition[] {
     return TOOL_DEFINITIONS;
   }
 
-  async getUserInfo(): Promise<ToolCallResponse> {
+  private createResponse(data: any): ToolCallResponse {
+    return {
+      content: [{ type: 'text', text: JSON.stringify(data, null, 2) }]
+    };
+  }
+
+  async handleToolCall(name: string, args: unknown): Promise<ToolCallResponse> {
     try {
-      const response = await this.axiosInstance.get('/me');
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify(response.data, null, 2),
-          },
-        ],
-      };
-    } catch (error: any) {
-      if (error.response?.status === 401) {
-        throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
+      switch (name) {
+        case 'get_user_info':
+          return await this.getUserInfo();
+        default:
+          throw new McpError(
+            ErrorCode.MethodNotFound,
+            `Unknown tool: ${name}`
+          );
       }
-      throw new McpError(ErrorCode.InternalError, 'Server error occurred');
+    } catch (error) {
+      // Let base class interceptor handle API errors
+      throw error;
     }
+  }
+
+  async getUserInfo(): Promise<ToolCallResponse> {
+    const response = await this.client.get('/me');
+    return this.createResponse(response.data);
   }
 }

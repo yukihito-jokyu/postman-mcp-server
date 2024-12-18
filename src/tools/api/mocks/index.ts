@@ -5,13 +5,16 @@ import {
   ToolDefinition,
   ToolHandler,
 } from '../../../types/index.js';
+import { BasePostmanTool } from '../base.js';
 import { TOOL_DEFINITIONS } from './definitions.js';
 
 /**
  * Handles Postman Mock Server API operations
  */
-export class MockTools implements ToolHandler {
-  constructor(public axiosInstance: AxiosInstance) {}
+export class MockTools extends BasePostmanTool implements ToolHandler {
+  constructor(existingClient: AxiosInstance) {
+    super(null, {}, existingClient);
+  }
 
   getToolDefinitions(): ToolDefinition[] {
     return TOOL_DEFINITIONS;
@@ -55,10 +58,8 @@ export class MockTools implements ToolHandler {
         default:
           throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
-    } catch (error: any) {
-      if (error.response?.status === 401) {
-        throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
-      }
+    } catch (error) {
+      // Let base class interceptor handle API errors
       throw error;
     }
   }
@@ -72,7 +73,7 @@ export class MockTools implements ToolHandler {
     if (args.teamId) params.teamId = args.teamId;
     if (args.workspace) params.workspace = args.workspace;
 
-    const response = await this.axiosInstance.get('/mocks', { params });
+    const response = await this.client.get('/mocks', { params });
     return this.createResponse(response.data);
   }
 
@@ -85,7 +86,7 @@ export class MockTools implements ToolHandler {
     const params: any = {};
     if (args.workspace) params.workspaceId = args.workspace;
 
-    const response = await this.axiosInstance.post('/mocks', { mock: args.mock }, { params });
+    const response = await this.client.post('/mocks', { mock: args.mock }, { params });
     return this.createResponse(response.data);
   }
 
@@ -94,7 +95,7 @@ export class MockTools implements ToolHandler {
    * @param mockId Mock server ID
    */
   async getMock(mockId: string): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.get(`/mocks/${mockId}`);
+    const response = await this.client.get(`/mocks/${mockId}`);
     return this.createResponse(response.data);
   }
 
@@ -104,7 +105,7 @@ export class MockTools implements ToolHandler {
    * @param args.mock Updated mock server configuration
    */
   async updateMock(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.put(
+    const response = await this.client.put(
       `/mocks/${args.mockId}`,
       { mock: args.mock }
     );
@@ -116,7 +117,7 @@ export class MockTools implements ToolHandler {
    * @param mockId Mock server ID
    */
   async deleteMock(mockId: string): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.delete(`/mocks/${mockId}`);
+    const response = await this.client.delete(`/mocks/${mockId}`);
     return this.createResponse(response.data);
   }
 
@@ -137,7 +138,7 @@ export class MockTools implements ToolHandler {
       if (args[param] !== undefined) params[param] = args[param];
     });
 
-    const response = await this.axiosInstance.get(
+    const response = await this.client.get(
       `/mocks/${args.mockId}/call-logs`,
       { params }
     );
@@ -149,7 +150,7 @@ export class MockTools implements ToolHandler {
    * @param mockId Mock server ID
    */
   async publishMock(mockId: string): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.post(`/mocks/${mockId}/publish`);
+    const response = await this.client.post(`/mocks/${mockId}/publish`);
     return this.createResponse(response.data);
   }
 
@@ -158,7 +159,7 @@ export class MockTools implements ToolHandler {
    * @param mockId Mock server ID
    */
   async unpublishMock(mockId: string): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.delete(`/mocks/${mockId}/unpublish`);
+    const response = await this.client.delete(`/mocks/${mockId}/unpublish`);
     return this.createResponse(response.data);
   }
 
@@ -167,7 +168,7 @@ export class MockTools implements ToolHandler {
    * @param mockId Mock server ID
    */
   async listServerResponses(mockId: string): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.get(`/mocks/${mockId}/server-responses`);
+    const response = await this.client.get(`/mocks/${mockId}/server-responses`);
     return this.createResponse(response.data);
   }
 
@@ -177,7 +178,7 @@ export class MockTools implements ToolHandler {
    * @param args.serverResponse Server response configuration
    */
   async createServerResponse(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.post(
+    const response = await this.client.post(
       `/mocks/${args.mockId}/server-responses`,
       { serverResponse: args.serverResponse }
     );
@@ -190,7 +191,7 @@ export class MockTools implements ToolHandler {
    * @param args.serverResponseId Server response ID
    */
   async getServerResponse(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.get(
+    const response = await this.client.get(
       `/mocks/${args.mockId}/server-responses/${args.serverResponseId}`
     );
     return this.createResponse(response.data);
@@ -203,7 +204,7 @@ export class MockTools implements ToolHandler {
    * @param args.serverResponse Updated server response configuration
    */
   async updateServerResponse(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.put(
+    const response = await this.client.put(
       `/mocks/${args.mockId}/server-responses/${args.serverResponseId}`,
       { serverResponse: args.serverResponse }
     );
@@ -216,7 +217,7 @@ export class MockTools implements ToolHandler {
    * @param args.serverResponseId Server response ID
    */
   async deleteServerResponse(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.delete(
+    const response = await this.client.delete(
       `/mocks/${args.mockId}/server-responses/${args.serverResponseId}`
     );
     return this.createResponse(response.data);

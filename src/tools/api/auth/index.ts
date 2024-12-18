@@ -5,6 +5,7 @@ import {
   ToolDefinition,
   ToolHandler
 } from '../../../types/index.js';
+import { BasePostmanTool } from '../base.js';
 import { TOOL_DEFINITIONS } from './definitions.js';
 
 /**
@@ -13,8 +14,10 @@ import { TOOL_DEFINITIONS } from './definitions.js';
  * - Workspace and collection role management
  * - User authentication information
  */
-export class AuthTools implements ToolHandler {
-  constructor(public axiosInstance: AxiosInstance) {}
+export class AuthTools extends BasePostmanTool implements ToolHandler {
+  constructor(existingClient: AxiosInstance) {
+    super(null, {}, existingClient);
+  }
 
   getToolDefinitions(): ToolDefinition[] {
     return TOOL_DEFINITIONS;
@@ -48,13 +51,8 @@ export class AuthTools implements ToolHandler {
         default:
           throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
-    } catch (error: any) {
-      if (error.response?.status === 401) {
-        throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
-      }
-      if (error.response?.status === 403) {
-        throw new McpError(ErrorCode.InvalidRequest, 'Forbidden - insufficient permissions');
-      }
+    } catch (error) {
+      // Let base class interceptor handle API errors
       throw error;
     }
   }
@@ -74,7 +72,7 @@ export class AuthTools implements ToolHandler {
       params.append('cursor', args.cursor);
     }
 
-    const response = await this.axiosInstance.get('/collection-access-keys', {
+    const response = await this.client.get('/collection-access-keys', {
       params: params.toString() ? params : undefined
     });
     return this.createResponse(response.data);
@@ -84,7 +82,10 @@ export class AuthTools implements ToolHandler {
    * Delete a collection access key
    */
   async deleteCollectionAccessKey(keyId: string): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.delete(`/collection-access-keys/${keyId}`);
+    if (!keyId) {
+      throw new McpError(ErrorCode.InvalidParams, 'keyId is required');
+    }
+    const response = await this.client.delete(`/collection-access-keys/${keyId}`);
     return this.createResponse(response.data);
   }
 
@@ -92,7 +93,7 @@ export class AuthTools implements ToolHandler {
    * Get all available workspace roles based on team's plan
    */
   async listWorkspaceRoles(): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.get('/workspaces-roles');
+    const response = await this.client.get('/workspaces-roles');
     return this.createResponse(response.data);
   }
 
@@ -103,12 +104,16 @@ export class AuthTools implements ToolHandler {
     workspaceId: string;
     includeScim?: boolean;
   }): Promise<ToolCallResponse> {
+    if (!args.workspaceId) {
+      throw new McpError(ErrorCode.InvalidParams, 'workspaceId is required');
+    }
+
     const params = new URLSearchParams();
     if (args.includeScim) {
       params.append('include', 'scim');
     }
 
-    const response = await this.axiosInstance.get(
+    const response = await this.client.get(
       `/workspaces/${args.workspaceId}/roles`,
       { params: params.toString() ? params : undefined }
     );
@@ -131,12 +136,22 @@ export class AuthTools implements ToolHandler {
     }>;
     identifierType?: 'scim';
   }): Promise<ToolCallResponse> {
+    if (!args.workspaceId) {
+      throw new McpError(ErrorCode.InvalidParams, 'workspaceId is required');
+    }
+    if (!args.operations || !Array.isArray(args.operations)) {
+      throw new McpError(ErrorCode.InvalidParams, 'operations array is required');
+    }
+    if (args.operations.length > 50) {
+      throw new McpError(ErrorCode.InvalidParams, 'Maximum 50 role operations allowed per request');
+    }
+
     const headers: Record<string, string> = {};
     if (args.identifierType) {
       headers['identifierType'] = args.identifierType;
     }
 
-    const response = await this.axiosInstance.patch(
+    const response = await this.client.patch(
       `/workspaces/${args.workspaceId}/roles`,
       { roles: args.operations },
       { headers }
@@ -148,7 +163,10 @@ export class AuthTools implements ToolHandler {
    * Get roles for a collection
    */
   async getCollectionRoles(collectionId: string): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.get(`/collections/${collectionId}/roles`);
+    if (!collectionId) {
+      throw new McpError(ErrorCode.InvalidParams, 'collectionId is required');
+    }
+    const response = await this.client.get(`/collections/${collectionId}/roles`);
     return this.createResponse(response.data);
   }
 
@@ -168,7 +186,14 @@ export class AuthTools implements ToolHandler {
       }>;
     }>;
   }): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.patch(
+    if (!args.collectionId) {
+      throw new McpError(ErrorCode.InvalidParams, 'collectionId is required');
+    }
+    if (!args.operations || !Array.isArray(args.operations)) {
+      throw new McpError(ErrorCode.InvalidParams, 'operations array is required');
+    }
+
+    const response = await this.client.patch(
       `/collections/${args.collectionId}/roles`,
       { roles: args.operations }
     );
@@ -181,7 +206,7 @@ export class AuthTools implements ToolHandler {
    * Returns flow_count only for Free plan users
    */
   async getAuthenticatedUser(): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.get('/me');
+    const response = await this.client.get('/me');
     return this.createResponse(response.data);
   }
 }
