@@ -1,15 +1,7 @@
 #!/usr/bin/env node
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import {
-  CallToolRequestSchema,
-  ErrorCode,
-  ListToolsRequestSchema,
-  ListResourcesRequestSchema,
-  ListResourceTemplatesRequestSchema,
-  ListPromptsRequestSchema,
-  McpError,
-} from '@modelcontextprotocol/sdk/types.js';
+import { McpError } from '@modelcontextprotocol/sdk/types.js';
 import axios from 'axios';
 import {
   WorkspaceTools,
@@ -23,6 +15,12 @@ import {
   AdditionalFeatureTools
 } from './tools/index.js';
 import { ToolDefinition, ToolHandler } from './types/index.js';
+import {
+  ResourceHandler,
+  ResourceTemplateHandler,
+  PromptHandler,
+  ToolHandler as ToolRequestHandler
+} from './handlers/index.js';
 
 const API_KEY = process.env.POSTMAN_API_KEY;
 if (!API_KEY) {
@@ -48,7 +46,7 @@ export class PostmanAPIServer {
     this.server = new Server(
       {
         name: 'postman-api-server',
-        version: '0.1.0',
+        version: '0.2.0',
       },
       {
         capabilities: {
@@ -105,173 +103,16 @@ export class PostmanAPIServer {
 
     this.toolHandlers = new Map(Object.entries(toolMapping));
 
-    this.setupHandlers();
+    // Initialize request handlers
+    new ResourceHandler(this.server);
+    new ResourceTemplateHandler(this.server);
+    new PromptHandler(this.server);
+    new ToolRequestHandler(this.server, this.toolDefinitions, this.toolHandlers);
 
     this.server.onerror = (error) => console.error('[MCP Error]', error);
     process.on('SIGINT', async () => {
       await this.server.close();
       process.exit(0);
-    });
-  }
-
-  private setupHandlers() {
-    this.setupResourceHandlers();
-    this.setupResourceTemplateHandlers();
-    this.setupPromptHandlers();
-    this.setupToolHandlers();
-  }
-
-  private setupResourceHandlers() {
-    this.server.setRequestHandler(ListResourcesRequestSchema, async () => ({
-      resources: [
-        {
-          uri: 'postman://workspaces',
-          name: 'Postman Workspaces',
-          description: 'List of all available Postman workspaces',
-          mimeType: 'application/json',
-        },
-        {
-          uri: 'postman://user',
-          name: 'Current User',
-          description: 'Information about the currently authenticated user',
-          mimeType: 'application/json',
-        },
-      ],
-    }));
-  }
-
-  private setupResourceTemplateHandlers() {
-    this.server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => ({
-      resourceTemplates: [
-        {
-          uriTemplate: 'postman://workspaces/{workspaceId}/collections',
-          name: 'Workspace Collections',
-          description: 'List of collections in a specific workspace',
-          mimeType: 'application/json',
-        },
-        {
-          uriTemplate: 'postman://workspaces/{workspaceId}/environments',
-          name: 'Workspace Environments',
-          description: 'List of environments in a specific workspace',
-          mimeType: 'application/json',
-        },
-      ],
-    }));
-  }
-
-  private setupPromptHandlers() {
-    this.server.setRequestHandler(ListPromptsRequestSchema, async () => ({
-      prompts: [
-        {
-          id: 'create_collection',
-          name: 'Create Collection',
-          description: 'Create a new Postman collection with specified endpoints',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              name: { type: 'string' },
-              description: { type: 'string' },
-              endpoints: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    path: { type: 'string' },
-                    method: { type: 'string' },
-                    description: { type: 'string' },
-                  },
-                },
-              },
-            },
-            required: ['name', 'endpoints'],
-          },
-        },
-        {
-          id: 'create_environment',
-          name: 'Create Environment',
-          description: 'Create a new Postman environment with variables',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              name: { type: 'string' },
-              variables: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    key: { type: 'string' },
-                    value: { type: 'string' },
-                    type: { type: 'string', enum: ['default', 'secret'] },
-                  },
-                },
-              },
-            },
-            required: ['name', 'variables'],
-          },
-        },
-      ],
-    }));
-  }
-
-  private setupToolHandlers() {
-    this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
-      tools: this.toolDefinitions,
-    }));
-
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
-      try {
-        const { name, arguments: args = {} } = request.params;
-
-        // Find the tool definition
-        const toolDef = this.toolDefinitions.find(t => t.name === name);
-        if (!toolDef) {
-          throw new McpError(
-            ErrorCode.MethodNotFound,
-            `Unknown tool: ${name}`
-          );
-        }
-
-        // Get the appropriate handler
-        const handler = this.toolHandlers.get(name);
-        if (!handler) {
-          throw new McpError(
-            ErrorCode.MethodNotFound,
-            `No handler found for tool: ${name}`
-          );
-        }
-
-        // Execute the tool call
-        const response = await handler.handleToolCall(name, args);
-
-        // Transform the response to match the SDK's expected format
-        return {
-          _meta: {},
-          tools: [toolDef],
-          content: response.content,
-          isError: response.isError,
-        };
-      } catch (error) {
-        if (error instanceof McpError) {
-          throw error;
-        }
-        if (axios.isAxiosError(error)) {
-          return {
-            _meta: {},
-            tools: [],
-            content: [
-              {
-                type: 'text',
-                text: `Postman API error: ${error.response?.data?.error?.message || error.message}`,
-              },
-            ],
-            isError: true,
-          };
-        }
-        throw new McpError(
-          ErrorCode.InternalError,
-          error instanceof Error ? error.message : 'An unknown error occurred'
-        );
-      }
     });
   }
 
