@@ -1,5 +1,8 @@
 ## Collections
 
+NOTE: The `#/` references herein can be found in the relevant reference files of the same (or very similar) name. For example, `collectionId` can be found in docs/reference/postman-api-parameters. The `mergeEnvironmentFork` request and response objects can be found in docs/reference/postman-api-requestBodies.yaml and docs/reference/postman-api-responsesonly.yaml, respectively. Also docs/reference/postman-api-schemasonly.yaml contains the schemas for the request and response objects.
+
+
 ### Implemented Operations
 - Get all collections (`GET /collections`) ✓
   - Parameters:

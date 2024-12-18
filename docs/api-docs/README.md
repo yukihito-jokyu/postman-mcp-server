@@ -2,7 +2,9 @@
 
 This document outlines the prompts and processes used to implement the Postman API functionality within the MCP server tools.
 
-## Table of Contents
+## Summary documents
+
+Each of the following documents contains a summary of the Postman API functionality that is used to cross-check against the MCP server tools implementation.
 
 1. [Workspaces](workspaces.md)
 2. [Collections](collections.md)
@@ -23,7 +25,7 @@ This document outlines the prompts and processes used to implement the Postman A
 ### Utilizing MCP Server Tools
 
 #### List Workspaces
-```bash
+```prompt
 Use Postman tools to list our workspaces.
 ```
 
@@ -36,7 +38,7 @@ Use postman tools to list environments in a workspace: 0ddc8458-12e6-48bf-8ff0-4
 ### Improving MCP Server Tools
 
 #### General Improvements
-```bash
+```prompt
 @/docs/api-docs/workspaces.md
 
 Review the postman MCP tools workspace API access against the Postman API summary. Make corrections in our implementation.
@@ -46,14 +48,14 @@ Review the postman MCP tools workspace API access against the Postman API summar
 #### Specific Improvements
 
 ##### Workspaces
-```bash
+```prompt
 @/docs/api-docs/environments.md
 
 Review the postman MCP tools workspace API access against the Postman API summary. Make corrections in our implementation, paying particular attention to the request parameter naming and values.
 ```
 
 ##### Environments
-```bash
+```prompt
 @/docs/api-docs/wokspaces.md
 @/docs/api-docs/environments.md
 
@@ -64,7 +66,7 @@ Review the postman workspaces and environment docs. Understand the details and n
 @src/api/environments.ts
 ```
 
-```bash
+```prompt
 @/docs/api-docs/environments.md
 @/docs/reference/postman-api-requestBodies.yaml
 
@@ -79,7 +81,7 @@ We may also need to update the MCP protocol endpoints to reflect the changes. IO
 
 ```
 
-```bash
+```prompt
 @/docs/api-docs/collections.md
 @/docs/reference/postman-api-parameters.yaml
 @/docs/reference/postman-api-responsesonly.yaml
@@ -95,7 +97,7 @@ Review the postman collection md docs and yaml definitions. Understand the detai
 Refer to @/docs/dev/updating-request-bodies.md for what areas of the code need to be updated.
 ```
 
-```bash
+```prompt
 @/docs/api-docs/collections.md
 @/docs/reference/postman-api-parameters.yaml
 @/docs/reference/postman-api-responsesonly.yaml
@@ -114,7 +116,7 @@ Refer to @/docs/dev/updating-request-bodies.md for what areas of the code need t
 
 ##### MCP Protocol
 
-```bash
+```prompt
 
 Revise the MCP protocol implementation to ensure the "List Resources", "List Prompts" endpoints are functionality fully and correctly.
 
@@ -127,7 +129,8 @@ Revise the MCP protocol implementation to ensure the "List Resources", "List Pro
 #### Reduce duplication and emphasize concise files
 
 More concise and focused files are easier to work with the models.
-```bash
+
+```prompt
 @/src/index.ts
 
 Review the main code entrypoint src/index.ts to devise a strategy to reduce duplication and manage complexity as functionality is added.
@@ -144,7 +147,7 @@ For example:
 
 ```
 
-```bash
+```prompt
 @/src/server.ts
 
 Review the main server src/server.ts to continue reducing duplication and managing complexity as functionality is added.
@@ -153,12 +156,43 @@ Review the main server src/server.ts to continue reducing duplication and managi
 ```
 
 
+### Improving Documentation
+
+#### Linking to Postman API References
+```prompt
+
+Update this docs/references README.md file with a summary and links for each of:
+
+Workspaces
+Collections
+Environments and variables
+APIs
+Mock servers
+Monitors
+Comments
+Forks
+Pull requests
+User and usage data
+Users and user groups
+Roles
+Billing
+
+Add both the relevant `https://www.postman.com/postman/postman-public-workspace/` and  `https://learning.postman.com/docs` links to each of the above sections.
+```
+
+```prompt
+@URL:https://learning.postman.com/docs/developer/postman-api/authentication/
+
+Based on the content of the postman doc linked, add a new section with concise but complete details including relevant links (`learning.postman.com`, `go.postman.com`, `www.postman.com` pages) to this readme.md
+```
+
+
 ### Expanding Postman API Summaries
 
 #### Working on Individual Files
 
 ##### Add Responses
-```bash
+```prompt
 @/docs/reference/postman-api-pathsonly.yaml
 
 Peruse the postman OpenAPI 3 paths definition (note this is a very abrridged version of the full document, containing just the paths objects), this time to add the expected response references and associated http status (e.g. 200 '#/components/responses/getAccounts').
@@ -174,7 +208,7 @@ When completed this file, request the next summary document to continue with. Ke
 ```
 
 ##### Add Parameters
-```bash
+```prompt
 @/docs/reference/postman-api-pathsonly.yaml
 
 Peruse the postman OpenAPI 3 paths definition (note this is a very abrridged version of the full document, containing just the paths objects), this time to add the expected parameters references and associated http status (e.g. '#/components/parameters/workspaceQuery').
@@ -200,7 +234,7 @@ When completed this file, request the next summary document to continue with. Ke
 ```
 
 ##### Add Parameter Details
-```bash
+```prompt
 @/docs/reference/postman-api-parameters.yaml
 
 Peruse the postman OpenAPI 3 definition (note this is a very abrridged version of the full document, containing just the parameters objects), this time to add parameter details by matching the parameter name (e.g. The workspaceQuery in '#/components/parameters/workspaceQuery').
@@ -226,7 +260,7 @@ When completed this file, request the next summary document to continue with. Ke
 ```
 
 ##### Add Request Bodies (Paths Only)
-```bash
+```prompt
 @/docs/reference/postman-api-pathsonly.yaml
 
 Peruse the postman OpenAPI 3 definition (note this is a very abrridged version of the full document, containing just the paths objects), this time to augment the POST/PUT requests with body content add parameter details by matching the parameter name (e.g. The updateEnvironment in '#/components/requestBodies/updateEnvironment').
@@ -253,14 +287,14 @@ When completed this file, request the next summary document to continue with. Ke
 
 ##### Review for missing endpoints
 
-```bash
+```prompt
 @/docs/reference/postman-api-pathsonly.yaml
 
 Peruse the postman OpenAPI 3 paths definition (note this is a very abrridged version of the full document, containing just the paths objects). Compare to @/docs/api-docs/ .md files for missing endpoints. Add missing endpoints to the summary markdown files.
 ```
 
 ##### Add Request Bodies
-```bash
+```prompt
 @/docs/reference/postman-api-requestbodies.yaml
 
 Review the abridged Postman OpenAPI 3 definition (containing only the requestBody objects) to augment POST/PUT requests with body content by matching request body names (e.g., `updateEnvironment` in '#/components/requestBodies/updateEnvironment').
@@ -286,14 +320,14 @@ Upon completion, request the next summary document to continue. Repeat until ins
 ```
 
 ### Splitting a Single Summary File into Multiple Files
-```bash
+```prompt
 @docs/postman-api-summary.md
 
 Let's split the single summary doc into multiple docs to help keep the size manageable. Create a new directory under docs/ and split the content at the `##` header level (e.g. "## Workspaces" is one document)
 ```
 
 ### Creating a Summary Document
-```bash
+```prompt
 @/docs/reference/postman-api-index.yaml
 
 Review the postman environment, collection API from the OpenAPI 3 definition. Make a summary document that we can use to cross-check against our tool implementations (This implementation covers the basic Postman API functionality in MCP)
