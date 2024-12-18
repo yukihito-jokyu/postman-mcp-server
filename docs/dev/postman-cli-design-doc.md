@@ -1,10 +1,8 @@
 # Postman API & CLI MCP Server Design Document
 
-Note see `cline_task_dec-17-2024_6-25-08-pm.md` for latest discussion on the design.
-
 ## 1. Overview
 
-This document outlines the design for integrating Postman CLI capabilities into the existing Postman API MCP server. The design leverages the existing API infrastructure while adding CLI-specific functionality.
+This document outlines the design for integrating Postman CLI capabilities into the existing Postman API MCP server. The design leverages the existing API infrastructure while adding CLI-specific functionality to enable automated collection runs, API governance checks, and authentication management.
 
 ## 2. System Architecture
 
@@ -18,50 +16,43 @@ postman-api-server/
 │   ├── types.ts                # Shared type definitions
 │   ├── tools/                  # API operation tools
 │   │   ├── api/                # API-specific operations
-│   │   │   ├── collections.ts  # Collection operations (CRUD, forking, etc.)
+│   │   │   ├── collections.ts  # Collection operations
 │   │   │   ├── environments.ts # Environments & variables
 │   │   │   ├── users.ts        # Auth & user management
-│   │   │   └── workspaces.ts
+│   │   │   └── workspaces.ts   # Workspace operations
 │   │   └── cli/               # CLI operations
-│   │       ├── commands.ts    # Main CLI functionality
-│   │       └── session.ts     # CLI session management
-│   └── reporting/             # Reporting system
-│       ├── reporters/
-│       │   ├── base.ts
-│       │   ├── cli.ts
-│       │   ├── json.ts
-│       │   ├── junit.ts
-│       │   └── html.ts
-│       ├── factory.ts         # Reporter factory (config-based)
-│       └── manager.ts         # Reporting logistics
+│   │       ├── runner.ts      # Collection runner functionality
+│   │       ├── governance.ts  # API governance checks
+│   │       └── auth.ts        # CLI authentication
+│   └── reporting/             # Test run reporting
+       ├── formatters/
+       │   ├── cli.ts         # CLI output formatter
+       │   └── json.ts        # JSON report formatter
+       └── manager.ts         # Report generation manager
 ```
-
 
 ### 2.2 Key Design Decisions
 
 1. **Separation of Concerns**
-   - API operations remain isolated in `tools/`
-   - CLI-specific logic contained in `cli/`
-   - Reporting system modularized in `reporting/`
+   - API operations remain isolated in `tools/api/`
+   - CLI-specific logic contained in `tools/cli/`
+   - Simplified reporting system focused on CLI and JSON output
 
 2. **Pattern Usage**
-   - Factory Pattern for reporter creation
-   - Strategy Pattern for different report types
-   - Singleton Pattern for session management
+   - Strategy Pattern for report formats
+   - Singleton Pattern for CLI auth management
+   - Factory Pattern for report formatter creation
 
 3. **Extensibility**
-   - New reporters can be added by extending base reporter
-   - New CLI operations can be added without modifying API tools
-   - New report formats can be supported through factory extension
-
-
+   - New CLI commands can be added without modifying API tools
+   - Additional report formats can be supported through new formatters
+   - API governance rules configurable via external files
 
 ### 2.3 Component Relationships
 
 ```mermaid
 graph TD
     A[PostmanAPIServer] --> B[API Tools]
-    A --> N[SDK]
     A --> C[CLI Operations]
     A --> D[Report Manager]
 
@@ -70,272 +61,467 @@ graph TD
     B --> G[Users]
     B --> H[Workspaces]
 
-    C --> B
-    C --> D
-    N --> B
+    C --> I[Collection Runner]
+    C --> J[API Governance]
+    C --> K[Auth Manager]
 
-    D --> I[Reporters]
-    I --> J[CLI Reporter]
-    I --> K[JSON Reporter]
-    I --> L[JUnit Reporter]
-    I --> M[HTML Reporter]
+    I --> D
+    J --> D
 
-click B call linkCallback("/Users/d/Desktop/postman-cli-design-docs.md")
-click N call linkCallback("/Users/d/Desktop/postman-cli-design-docs.md")
-click C call linkCallback("/Users/d/Desktop/postman-cli-design-docs.md")
+    D --> L[Report Formatters]
+    L --> M[CLI Output]
+    L --> N[JSON Report]
 ```
-
-
 
 ## 3. Core Functionality
 
-### 3.1 API Operations (Existing)
-```typescript
-interface ToolHandler {
-  getToolDefinitions(): ToolDefinition[];
-  handleToolCall(name: string, args: unknown): Promise<ToolCallResponse>;
-}
+### 3.1 CLI Operations
 
-class CollectionTools implements ToolHandler {
-  // Existing implementation for API operations
-}
-```
-
-### 3.2 CLI Operations (New)
 ```typescript
 class CLIOperations implements ToolHandler {
   getToolDefinitions(): ToolDefinition[] {
     return [
       {
         name: 'cli_login',
-        description: 'Authenticate with Postman API key',
-        inputSchema: {/* schema */}
+        description: 'Sign in to Postman CLI using an API key',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            apiKey: {
+              type: 'string',
+              description: 'Postman API key'
+            }
+          },
+          required: ['apiKey']
+        }
+      },
+      {
+        name: 'cli_logout',
+        description: 'Sign out from Postman CLI',
+        inputSchema: {
+          type: 'object',
+          properties: {},
+          required: []
+        }
       },
       {
         name: 'run_collection',
-        description: 'Run a collection with configuration options',
-        inputSchema: {/* schema */}
+        description: 'Run a collection with configuration',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            collection: {
+              type: 'string',
+              description: 'Collection ID, URL, or local file path'
+            },
+            environment: {
+              type: 'string',
+              description: 'Environment ID, URL, or local file path'
+            },
+            folder: {
+              type: 'string',
+              description: 'Specific folder to run'
+            },
+            iterations: {
+              type: 'number',
+              description: 'Number of iterations to run'
+            },
+            delay: {
+              type: 'number',
+              description: 'Delay between requests in ms'
+            },
+            timeout: {
+              type: 'number',
+              description: 'Request timeout in ms'
+            },
+            reportPath: {
+              type: 'string',
+              description: 'Path to save the run report'
+            },
+            format: {
+              type: 'string',
+              enum: ['cli', 'json'],
+              description: 'Report format'
+            },
+            bail: {
+              type: 'boolean',
+              description: 'Stop on first test failure'
+            },
+            suppressExitCode: {
+              type: 'boolean',
+              description: 'Always exit with code 0'
+            }
+          },
+          required: ['collection']
+        }
       },
       {
         name: 'api_lint',
         description: 'Check API definitions against governance rules',
-        inputSchema: {/* schema */}
+        inputSchema: {
+          type: 'object',
+          properties: {
+            api: {
+              type: 'string',
+              description: 'API ID, URL, or local definition file'
+            },
+            ruleset: {
+              type: 'string',
+              description: 'Governance ruleset name or path'
+            },
+            reportPath: {
+              type: 'string',
+              description: 'Path to save the lint report'
+            }
+          },
+          required: ['api']
+        }
       },
       {
-        name: 'publish_api',
-        description: 'Publish an API version',
-        inputSchema: {/* schema */}
+        name: 'contract_test',
+        description: 'Run contract tests for an API',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            api: {
+              type: 'string',
+              description: 'API ID, URL, or local definition file'
+            },
+            collection: {
+              type: 'string',
+              description: 'Contract test collection ID or file'
+            },
+            environment: {
+              type: 'string',
+              description: 'Environment ID or file path'
+            },
+            reportPath: {
+              type: 'string',
+              description: 'Path to save the test report'
+            }
+          },
+          required: ['api', 'collection']
+        }
       }
     ];
   }
 }
 ```
 
-## 4. Reporting System
 
-### 4.1 Reporter Interface
+### 3.2 Collection Runner
+
 ```typescript
-interface Reporter {
-  generateReport(results: CollectionRunResult): Promise<void>;
-}
-```
+class CollectionRunner {
+  async runCollection(args: RunCollectionArgs): Promise<RunResult> {
+    // 1. Validate and load collection
+    const collection = await this.loadCollection(args.collection);
 
-### 4.2 Reporter Types and Options
-```typescript
-interface ReporterOptions {
-  export?: string;
-  omitRequestBodies?: boolean;
-  omitResponseBodies?: boolean;
-  omitHeaders?: boolean;
-  omitAllHeadersAndBody?: boolean;
-}
+    // 2. Set up environment if provided
+    const environment = args.environment
+      ? await this.loadEnvironment(args.environment)
+      : undefined;
 
-interface CliReporterOptions extends ReporterOptions {
-  silent?: boolean;
-  showTimestamps?: boolean;
-  noSummary?: boolean;
-  noFailures?: boolean;
-  noAssertions?: boolean;
-  noSuccessAssertions?: boolean;
-  noConsole?: boolean;
-  noBanner?: boolean;
-}
+    // 3. Configure run options
+    const options = {
+      folder: args.folder,
+      iterations: args.iterations,
+      delay: args.delay,
+      timeout: args.timeout,
+      bail: args.bail,
+      suppressExitCode: args.suppressExitCode
+    };
 
-interface JsonReporterOptions extends ReporterOptions {
-  structure?: 'native' | 'newman';
-}
-```
+    // 4. Execute collection run
+    const results = await this.executeRun(collection, environment, options);
 
-### 4.3 Report Management
-```typescript
-class ReportManager {
-  constructor(config: ReportingConfiguration) {
-    this.initializeReporters(config);
+    // 5. Generate report
+    const report = await this.reportManager.generateReport(results, {
+      format: args.format || 'cli',
+      reportPath: args.reportPath
+    });
+
+    return {
+      success: results.failures === 0,
+      summary: results.summary,
+      report
+    };
   }
 
-  async generateReports(results: CollectionRunResult): Promise<void> {
-    await Promise.all(
-      this.reporters.map(reporter => reporter.generateReport(results))
+  private async loadCollection(source: string): Promise<Collection> {
+    if (this.isLocalFile(source)) {
+      return this.loadLocalCollection(source);
+    }
+    if (this.isCollectionId(source)) {
+      return this.loadRemoteCollection(source);
+    }
+    if (this.isUrl(source)) {
+      return this.loadCollectionFromUrl(source);
+    }
+    throw new CLIError(
+      CLIErrorCode.ValidationError,
+      'Invalid collection source'
+    );
+  }
+
+  private async loadEnvironment(source: string): Promise<Environment> {
+    if (this.isLocalFile(source)) {
+      return this.loadLocalEnvironment(source);
+    }
+    if (this.isEnvironmentId(source)) {
+      return this.loadRemoteEnvironment(source);
+    }
+    if (this.isUrl(source)) {
+      return this.loadEnvironmentFromUrl(source);
+    }
+    throw new CLIError(
+      CLIErrorCode.ValidationError,
+      'Invalid environment source'
     );
   }
 }
 ```
 
-## 5. Integration Points
+### 3.3 Contract Testing
 
-### 5.1 CLI to API Integration
 ```typescript
-class CLIOperations {
-  constructor(
-    private collectionTools: CollectionTools,
-    private environmentTools: EnvironmentTools,
-    private reportManager: ReportManager
-  ) {}
+class ContractTester {
+  async runContractTests(args: ContractTestArgs): Promise<TestResult> {
+    // 1. Load API definition
+    const api = await this.loadAPIDefinition(args.api);
 
-  async runCollection(args: RunCollectionArgs): Promise<void> {
-    // 1. Use API tools to fetch resources
-    const collection = await this.collectionTools.getCollection(args.collection);
+    // 2. Load contract test collection
+    const tests = await this.loadCollection(args.collection);
+
+    // 3. Set up environment if provided
     const environment = args.environment
-      ? await this.environmentTools.getEnvironment(args.environment)
+      ? await this.loadEnvironment(args.environment)
       : undefined;
 
-    // 2. Execute collection
-    const results = await this.executeCollection(collection, environment, args.options);
+    // 4. Execute contract tests
+    const results = await this.executeTests(api, tests, environment);
 
-    // 3. Generate reports
-    await this.reportManager.generateReports(results);
+    // 5. Generate report
+    const report = await this.reportManager.generateReport(results, {
+      format: 'json',
+      reportPath: args.reportPath
+    });
+
+    return {
+      success: results.failures === 0,
+      violations: results.violations,
+      summary: results.summary,
+      report
+    };
   }
 }
 ```
 
-### 5.2 Authentication Flow
+### 3.4 API Governance
+
 ```typescript
-class SessionManager {
+class APIGovernance {
+  async lintAPI(args: LintAPIArgs): Promise<LintResult> {
+    // 1. Load API definition
+    const api = await this.loadAPIDefinition(args.api);
+
+    // 2. Load ruleset
+    const ruleset = await this.loadRuleset(args.ruleset);
+
+    // 3. Run governance checks
+    const violations = await this.checkRules(api, ruleset);
+
+    return {
+      success: violations.length === 0,
+      violations,
+      summary: this.generateSummary(violations)
+    };
+  }
+}
+```
+
+
+## 4. Authentication Management
+
+```typescript
+class AuthManager {
+  private static instance: AuthManager;
+  private apiKey: string | null = null;
+
+  private constructor() {}
+
+  static getInstance(): AuthManager {
+    if (!AuthManager.instance) {
+      AuthManager.instance = new AuthManager();
+    }
+    return AuthManager.instance;
+  }
+
   async login(apiKey: string): Promise<void> {
-    // Validate API key
-    await this.validateApiKey(apiKey);
-    // Store for session
-    await this.storeCredentials(apiKey);
+    // 1. Validate API key format
+    this.validateApiKeyFormat(apiKey);
+
+    // 2. Test API key with a simple API call
+    await this.testApiKey(apiKey);
+
+    // 3. Store API key securely
+    this.apiKey = apiKey;
   }
 
   async logout(): Promise<void> {
-    await this.clearCredentials();
+    this.apiKey = null;
+  }
+
+  getApiKey(): string {
+    if (!this.apiKey) {
+      throw new CLIError(
+        CLIErrorCode.AuthenticationError,
+        'Not authenticated. Please login first.'
+      );
+    }
+    return this.apiKey;
   }
 }
 ```
 
-## 6. Configuration
+## 5. Reporting System
 
-### 6.1 Environment Variables
+### 5.1 Report Formatters
+
 ```typescript
-interface ServerConfig {
-  POSTMAN_API_KEY: string;
-  CLI_WORKING_DIR?: string;
-  REPORT_OUTPUT_DIR?: string;
+interface ReportFormatter {
+  format(results: RunResult): Promise<string>;
+}
+
+class CLIFormatter implements ReportFormatter {
+  async format(results: RunResult): Promise<string> {
+    // Format results for CLI output with colors and formatting
+    return this.formatCLIOutput(results);
+  }
+}
+
+class JSONFormatter implements ReportFormatter {
+  async format(results: RunResult): Promise<string> {
+    // Format results as structured JSON
+    return JSON.stringify(results, null, 2);
+  }
 }
 ```
 
-### 6.2 Reporter Configuration
+### 5.2 Report Manager
+
 ```typescript
-interface ReportingConfiguration {
-  reporters: ('cli' | 'json' | 'junit' | 'html')[];
-  cliOptions?: CliReporterOptions;
-  jsonOptions?: JsonReporterOptions;
-  junitOptions?: ReporterOptions;
-  htmlOptions?: ReporterOptions;
-  globalOptions?: ReporterOptions;
+class ReportManager {
+  private formatters: Map<string, ReportFormatter>;
+
+  constructor() {
+    this.formatters = new Map([
+      ['cli', new CLIFormatter()],
+      ['json', new JSONFormatter()]
+    ]);
+  }
+
+  async generateReport(
+    results: RunResult,
+    options: ReportOptions
+  ): Promise<string> {
+    const formatter = this.formatters.get(options.format);
+    if (!formatter) {
+      throw new Error(`Unsupported format: ${options.format}`);
+    }
+
+    const report = await formatter.format(results);
+
+    if (options.exportPath) {
+      await this.exportReport(report, options.exportPath);
+    }
+
+    return report;
+  }
 }
 ```
 
-## 7. Error Handling
+## 6. Error Handling
 
-### 7.1 Error Types
 ```typescript
-enum ErrorCode {
-  AuthenticationError = 'AUTHENTICATION_ERROR',
-  ValidationError = 'VALIDATION_ERROR',
+enum CLIErrorCode {
+  AuthenticationError = 'CLI_AUTH_ERROR',
+  CollectionNotFound = 'COLLECTION_NOT_FOUND',
+  EnvironmentNotFound = 'ENVIRONMENT_NOT_FOUND',
   ExecutionError = 'EXECUTION_ERROR',
-  ReportingError = 'REPORTING_ERROR'
+  ValidationError = 'VALIDATION_ERROR'
 }
 
-class PostmanError extends Error {
+class CLIError extends Error {
   constructor(
-    public code: ErrorCode,
+    public code: CLIErrorCode,
     message: string,
     public details?: unknown
   ) {
     super(message);
   }
 }
-```
 
-### 7.2 Error Handling Strategy
-```typescript
 class ErrorHandler {
   handle(error: unknown): ToolCallResponse {
-    if (error instanceof PostmanError) {
-      return this.handlePostmanError(error);
+    if (error instanceof CLIError) {
+      return this.handleCLIError(error);
     }
     if (axios.isAxiosError(error)) {
-      return this.handleApiError(error);
+      return this.handleAPIError(error);
     }
     return this.handleUnknownError(error);
   }
 }
 ```
 
-## 8. Implementation Strategy
+## 7. Implementation Strategy
 
-1. Phase 1: Core CLI Integration
-   - Implement CLIOperations class
-   - Add session management
-   - Basic collection running
+1. Phase 1: Core Authentication & File Operations
+   - Implement CLI login/logout
+   - Add secure API key management
+   - Implement local file loading capabilities
+   - Set up error handling
 
-2. Phase 2: Reporting System
-   - Implement base Reporter class
-   - Add all reporter types
-   - Implement ReportManager
+2. Phase 2: Collection Runner
+   - Basic collection execution
+   - Support for local and remote collections
+   - CLI output formatting
+   - JSON report generation
 
-3. Phase 3: Advanced Features
-   - API governance checking
-   - Version publishing
-   - Advanced collection running options
+3. Phase 3: Contract Testing & API Governance
+   - API definition loading
+   - Contract test execution
+   - Rule checking implementation
+   - Violation reporting
 
 4. Phase 4: Testing & Documentation
    - Unit tests for all components
    - Integration tests
-   - API documentation updates
+   - CLI usage documentation
 
-This design provides a comprehensive framework for integrating Postman CLI functionality while maintaining the existing API capabilities and ensuring clean separation of concerns.
+## 8. Conclusion
 
-## 9. Conclusion
+This design provides a comprehensive implementation of Postman CLI functionality through the MCP server. It prioritizes the core features while maintaining flexibility for future extensions.
 
+Key benefits of this design:
 
-The MCP wrapper for Postman tools makes sense primarily as an AI interaction layer for complex, multi-step operations where structure and safety are paramount. However, it may be overengineered for simple operations where direct CLI or API usage would suffice. The MCP wrapper provides most value when:
+1. **Complete CLI Feature Support**
+   - Collection running from multiple sources
+   - Contract testing capabilities
+   - API governance checking
+   - Local file operations
 
-1. **Complex Operations**
-- Managing multiple collections
-- Coordinating environments
-- Generating comprehensive reports
+2. **Robust Architecture**
+   - Clear separation of concerns
+   - Flexible source loading
+   - Comprehensive error handling
+   - Extensible reporting system
 
-1. **AI-Driven Automation**
-- Automated testing workflows
-- API documentation maintenance
-- Environment management
+3. **User-Friendly Integration**
+   - Matches CLI command structure
+   - Support for local and remote resources
+   - Detailed reporting options
+   - Consistent error handling
 
-1. **Error-Sensitive Operations**
-- Critical API testing
-- Production deployments
-- Compliance checking
-
-It provides less value for:
-
-1. **Simple Operations**
-- Basic collection runs
-- Single API calls
-- Quick environment checks
-
-2. **Direct CLI Usage**
-- Developer-driven operations
-- Local testing
-- Quick iterations
+This implementation provides a solid foundation for integrating Postman CLI capabilities while maintaining the flexibility to add more features as needed.

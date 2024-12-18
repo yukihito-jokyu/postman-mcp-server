@@ -105,11 +105,37 @@ Example configuration:
 
 API documentation is available in the [Postman Public Workspace](https://www.postman.com/postman/postman-public-workspace/).
 
-See
 
-postman-api-index.yaml
+## Rationale
 
- for a local copy of the OpenAPI definition.
+The MCP wrapper for Postman tools makes sense primarily as an AI interaction layer for complex, multi-step operations where structure and safety are paramount. However, it may be overengineered for simple operations where direct CLI or API usage would suffice. The MCP wrapper provides most value when:
+
+1. **Complex Operations**
+- Managing multiple collections
+- Coordinating environments
+- Generating comprehensive reports
+
+2. **AI-Driven Automation**
+- Automated testing workflows
+- API documentation maintenance
+- Environment management
+
+3. **Error-Sensitive Operations**
+- Critical API testing
+- Production deployments
+- Compliance checking
+
+It provides less value for:
+
+1. **Simple Operations**
+- Basic collection runs
+- Single API calls
+- Quick environment checks
+2. **Direct CLI Usage**
+- Developer-driven operations
+- Local testing
+- Quick iterations
+
 
 ## Development
 
