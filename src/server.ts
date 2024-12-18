@@ -16,7 +16,7 @@ import { WorkspaceTools } from './tools/api/workspaces.js';
 import { EnvironmentTools } from './tools/api/environments.js';
 import { CollectionTools } from './tools/api/collections.js';
 import { UserTools } from './tools/api/users.js';
-import { ToolDefinition, ToolHandler } from './types.js';
+import { ToolDefinition, ToolHandler } from './types/index.js';
 
 const API_KEY = process.env.POSTMAN_API_KEY;
 if (!API_KEY) {

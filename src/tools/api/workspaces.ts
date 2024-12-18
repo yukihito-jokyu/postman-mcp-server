@@ -6,7 +6,7 @@ import {
   ToolCallResponse,
   validateArgs,
   isWorkspaceArg
-} from '../types.js';
+} from '../../types.js';
 
 interface ListWorkspacesParams {
   type?: 'personal' | 'team' | 'private' | 'public' | 'partner';
