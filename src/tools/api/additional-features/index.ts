@@ -5,10 +5,13 @@ import {
   ToolDefinition,
   ToolHandler,
 } from '../../../types/index.js';
+import { BasePostmanTool } from '../base.js';
 import { TOOL_DEFINITIONS } from './definitions.js';
 
-export class AdditionalFeatureTools implements ToolHandler {
-  constructor(public axiosInstance: AxiosInstance) {}
+export class AdditionalFeatureTools extends BasePostmanTool implements ToolHandler {
+  constructor(existingClient: AxiosInstance) {
+    super(null, {}, existingClient);
+  }
 
   getToolDefinitions(): ToolDefinition[] {
     return TOOL_DEFINITIONS;
@@ -58,22 +61,20 @@ export class AdditionalFeatureTools implements ToolHandler {
         default:
           throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
-    } catch (error: any) {
-      if (error.response?.status === 401) {
-        throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
-      }
+    } catch (error) {
+      // Let base class interceptor handle API errors
       throw error;
     }
   }
 
   // Billing Methods
   async getAccounts(): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.get('/accounts');
+    const response = await this.client.get('/accounts');
     return this.createResponse(response.data);
   }
 
   async listAccountInvoices(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.get(`/accounts/${args.accountId}/invoices`, {
+    const response = await this.client.get(`/accounts/${args.accountId}/invoices`, {
       params: { status: args.status }
     });
     return this.createResponse(response.data);
@@ -81,13 +82,13 @@ export class AdditionalFeatureTools implements ToolHandler {
 
   // Comment Resolution Methods
   async resolveCommentThread(threadId: string): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.post(`/comments-resolutions/${threadId}`);
+    const response = await this.client.post(`/comments-resolutions/${threadId}`);
     return this.createResponse(response.data);
   }
 
   // Private API Network Methods
   async listPanElements(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.get('/network/private', {
+    const response = await this.client.get('/network/private', {
       params: {
         since: args.since,
         until: args.until,
@@ -128,7 +129,7 @@ export class AdditionalFeatureTools implements ToolHandler {
         break;
     }
 
-    const response = await this.axiosInstance.post('/network/private', payload);
+    const response = await this.client.post('/network/private', payload);
     return this.createResponse(response.data);
   }
 
@@ -153,12 +154,12 @@ export class AdditionalFeatureTools implements ToolHandler {
         };
     }
 
-    const response = await this.axiosInstance.put(path, payload);
+    const response = await this.client.put(path, payload);
     return this.createResponse(response.data);
   }
 
   async removePanElement(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.delete(
+    const response = await this.client.delete(
       `/network/private/${args.elementType}/${args.elementId}`
     );
     return this.createResponse(response.data);
@@ -166,7 +167,7 @@ export class AdditionalFeatureTools implements ToolHandler {
 
   // Webhook Methods
   async createWebhook(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.post('/webhooks', {
+    const response = await this.client.post('/webhooks', {
       webhook: args.webhook
     }, {
       params: { workspace: args.workspace }
@@ -176,7 +177,7 @@ export class AdditionalFeatureTools implements ToolHandler {
 
   // Tag Methods
   async getTaggedElements(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.get(`/tags/${args.slug}/entities`, {
+    const response = await this.client.get(`/tags/${args.slug}/entities`, {
       params: {
         limit: args.limit,
         direction: args.direction,
@@ -188,12 +189,12 @@ export class AdditionalFeatureTools implements ToolHandler {
   }
 
   async getWorkspaceTags(workspaceId: string): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.get(`/workspaces/${workspaceId}/tags`);
+    const response = await this.client.get(`/workspaces/${workspaceId}/tags`);
     return this.createResponse(response.data);
   }
 
   async updateWorkspaceTags(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.put(`/workspaces/${args.workspaceId}/tags`, {
+    const response = await this.client.put(`/workspaces/${args.workspaceId}/tags`, {
       tags: args.tags
     });
     return this.createResponse(response.data);

@@ -11,7 +11,17 @@ import {
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 import axios from 'axios';
-import { WorkspaceTools, EnvironmentTools, CollectionTools, UserTools } from './tools/index.js';
+import {
+  WorkspaceTools,
+  EnvironmentTools,
+  CollectionTools,
+  UserTools,
+  ApiTools,
+  AuthTools,
+  MockTools,
+  MonitorTools,
+  AdditionalFeatureTools
+} from './tools/index.js';
 import { ToolDefinition, ToolHandler } from './types/index.js';
 
 const API_KEY = process.env.POSTMAN_API_KEY;
@@ -26,6 +36,11 @@ export class PostmanAPIServer {
   private environmentTools: EnvironmentTools;
   private collectionTools: CollectionTools;
   private userTools: UserTools;
+  private apiTools: ApiTools;
+  private authTools: AuthTools;
+  private mockTools: MockTools;
+  private monitorTools: MonitorTools;
+  private additionalFeatureTools: AdditionalFeatureTools;
   private toolDefinitions: ToolDefinition[];
   private toolHandlers: Map<string, ToolHandler>;
 
@@ -56,6 +71,11 @@ export class PostmanAPIServer {
     this.environmentTools = new EnvironmentTools(this.axiosInstance);
     this.collectionTools = new CollectionTools(this.axiosInstance);
     this.userTools = new UserTools(this.axiosInstance);
+    this.apiTools = new ApiTools(this.axiosInstance);
+    this.authTools = new AuthTools(this.axiosInstance);
+    this.mockTools = new MockTools(this.axiosInstance);
+    this.monitorTools = new MonitorTools(this.axiosInstance);
+    this.additionalFeatureTools = new AdditionalFeatureTools(this.axiosInstance);
 
     // Cache tool definitions and create handler map
     this.toolDefinitions = [
@@ -63,10 +83,16 @@ export class PostmanAPIServer {
       ...this.environmentTools.getToolDefinitions(),
       ...this.collectionTools.getToolDefinitions(),
       ...this.userTools.getToolDefinitions(),
+      ...this.apiTools.getToolDefinitions(),
+      ...this.authTools.getToolDefinitions(),
+      ...this.mockTools.getToolDefinitions(),
+      ...this.monitorTools.getToolDefinitions(),
+      ...this.additionalFeatureTools.getToolDefinitions(),
     ];
 
-    // Replace forEach loop with direct mapping
+    // Map all tool handlers
     const toolMapping = {
+      // Existing tools
       'list_workspaces': this.workspaceTools,
       'get_workspace': this.workspaceTools,
       'list_environments': this.environmentTools,
@@ -80,7 +106,18 @@ export class PostmanAPIServer {
       'update_collection': this.collectionTools,
       'delete_collection': this.collectionTools,
       'get_user': this.userTools,
-      'list_users': this.userTools
+      'list_users': this.userTools,
+
+      // API tools
+
+      // Auth tools
+
+      // Mock tools
+
+      // Monitor tools
+
+      // Additional feature tools
+
     };
 
     this.toolHandlers = new Map(Object.entries(toolMapping));
