@@ -17,7 +17,7 @@ import {
   UpdateApiVersionRequest,
   UpdateCommentRequest,
   UpdateTagsRequest
-} from '../../types/index.js';
+} from '../../../types/index.js';
 
 
 export class ApiTools implements ToolHandler {

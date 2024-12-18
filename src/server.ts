@@ -11,11 +11,7 @@ import {
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 import axios from 'axios';
-
-import { WorkspaceTools } from './tools/api/workspaces.js';
-import { EnvironmentTools } from './tools/api/environments.js';
-import { CollectionTools } from './tools/api/collections.js';
-import { UserTools } from './tools/api/users.js';
+import { WorkspaceTools, EnvironmentTools, CollectionTools, UserTools } from './tools/index.js';
 import { ToolDefinition, ToolHandler } from './types/index.js';
 
 const API_KEY = process.env.POSTMAN_API_KEY;

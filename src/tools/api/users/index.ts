@@ -1,6 +1,6 @@
 import { AxiosInstance } from 'axios';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
-import { ToolHandler, ToolDefinition, ToolCallResponse } from '../../types/index.js';
+import { ToolHandler, ToolDefinition, ToolCallResponse } from '../../../types/index.js';
 
 export class UserTools implements ToolHandler {
   constructor(public axiosInstance: AxiosInstance) {}

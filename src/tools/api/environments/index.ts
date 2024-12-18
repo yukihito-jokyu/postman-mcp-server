@@ -22,7 +22,7 @@ import {
   constructEnvironmentUid,
   isEnvironmentIdArg,
   isWorkspaceArg
-} from '../../types/index.js';
+} from '../../../types/index.js';
 
 // Tool definitions as a constant to reduce class size
 const TOOL_DEFINITIONS: ToolDefinition[] = [

@@ -11,7 +11,7 @@ import {
   ToolHandler,
   UpdateWorkspaceRequest,
   validateArgs
-} from '../../types/index.js';
+} from '../../../types/index.js';
 
 
 export class WorkspaceTools implements ToolHandler {
