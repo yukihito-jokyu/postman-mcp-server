@@ -22,7 +22,7 @@ import {
   constructEnvironmentUid,
   isEnvironmentIdArg,
   isWorkspaceArg
-} from '../types.js';
+} from '../../types.js';
 
 /**
  * Handles Postman environment-related operations
