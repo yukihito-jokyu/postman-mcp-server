@@ -25,7 +25,7 @@ import {
 } from '../../types/index.js';
 
 // Tool definitions as a constant to reduce class size
-const ENVIRONMENT_TOOL_DEFINITIONS: ToolDefinition[] = [
+const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
     name: 'list_environments',
     description: 'List all environments in a workspace',
@@ -203,7 +203,7 @@ export class EnvironmentTools implements ToolHandler {
   constructor(public axiosInstance: AxiosInstance) {}
 
   getToolDefinitions(): ToolDefinition[] {
-    return ENVIRONMENT_TOOL_DEFINITIONS;
+    return TOOL_DEFINITIONS;
   }
 
   async handleToolCall(name: string, args: unknown): Promise<ToolCallResponse> {
