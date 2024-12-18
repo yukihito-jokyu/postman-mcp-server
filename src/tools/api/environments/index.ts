@@ -13,14 +13,8 @@ import { TOOL_DEFINITIONS } from './definitions.js';
  * All environment IDs must be in the format: {ownerId}-{environmentId}
  */
 export class EnvironmentTools extends BasePostmanTool implements ToolHandler {
-  public axiosInstance: AxiosInstance;
-
-  constructor(axiosInstance: AxiosInstance) {
-    // Pass empty string as apiKey since we're using an existing client
-    super('');
-    this.axiosInstance = axiosInstance;
-    // Override the client from base class with the provided instance
-    this.client = axiosInstance;
+  constructor(existingClient: AxiosInstance) {
+    super(null, {}, existingClient);
   }
 
   getToolDefinitions(): ToolDefinition[] {

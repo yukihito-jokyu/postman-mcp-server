@@ -8,13 +8,17 @@ interface PostmanToolOptions {
 
 /**
  * Base class for Postman API tools
- * Provides common functionality and client setup
+ * Provides common functionality and HTTP client setup
  */
 export class BasePostmanTool {
-  protected client: AxiosInstance;
+  /**
+   * Protected HTTP client for making API requests
+   * All derived classes should use this for Postman API calls
+   */
+  protected readonly client: AxiosInstance;
 
   constructor(
-    apiKey: string,
+    apiKey: string | null,
     options: PostmanToolOptions = {},
     existingClient?: AxiosInstance
   ) {
@@ -23,6 +27,11 @@ export class BasePostmanTool {
     if (existingClient) {
       this.client = existingClient;
     } else {
+      // Create new client with API key
+      if (!apiKey) {
+        throw new Error('API key is required when not providing an existing client');
+      }
+
       this.client = axios.create({
         baseURL,
         headers: {

@@ -13,19 +13,10 @@ import { TOOL_DEFINITIONS } from './definitions.js';
  * All API operations require the v10 Accept header
  */
 export class ApiTools extends BasePostmanTool implements ToolHandler {
-  /**
-   * Required by ToolHandler interface but not used directly.
-   * All requests should use the protected this.client from BasePostmanTool.
-   */
-  public readonly axiosInstance: AxiosInstance;
-
-  constructor(axiosInstance: AxiosInstance) {
-    super('', {
+  constructor(existingClient: AxiosInstance) {
+    super(null, {
       acceptHeader: 'application/vnd.api.v10+json'
-    }, axiosInstance);
-
-    // Store for interface compliance only
-    this.axiosInstance = axiosInstance;
+    }, existingClient);
   }
 
   getToolDefinitions(): ToolDefinition[] {

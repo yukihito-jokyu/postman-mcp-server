@@ -20,8 +20,12 @@ export interface ToolDefinition {
   };
 }
 
+/**
+ * Interface for handling tool operations
+ * Note: The HTTP client implementation is considered an implementation detail
+ * and should not be exposed through the interface
+ */
 export interface ToolHandler {
-  axiosInstance: AxiosInstance;
   getToolDefinitions(): ToolDefinition[];
   handleToolCall(name: string, args: unknown): Promise<ToolCallResponse>;
 }
