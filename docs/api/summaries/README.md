@@ -214,8 +214,6 @@ NOTE2: The best code is code that doesn't need to be written. If we analyse the 
 ```prompt
 @https://modelcontextprotocol.io/docs/concepts/resources
 
-@https://modelcontextprotocol.io/docs/concepts/tools
-
 Peruse the Model Context Protocol documentation. In order to expose data to models automatically, server authors should use a model-controlled primitive such as Tools.
 
 Review the MCP server details to ensure the "List Resources"  endpoint is functionality fully and correctly. It should return a list of all resources that are available for the user to interact with.
@@ -226,7 +224,6 @@ Review the MCP server details to ensure the "List Resources"  endpoint is functi
 ```prompt
 @https://modelcontextprotocol.io/docs/concepts/prompts
 
-@https://modelcontextprotocol.io/docs/concepts/tools
 
 Peruse the Model Context Protocol documentation. In order to expose data to models automatically, server authors should use a model-controlled primitive such as Tools.
 
@@ -234,6 +231,17 @@ Review the MCP server details to ensure the "List Prompts"  endpoint is function
 
 ```
 
+```prompt
+
+@https://modelcontextprotocol.io/docs/concepts/tools
+
+Peruse the Model Context Protocol documentation. In order to expose data to models automatically, server authors should use a model-controlled primitive such as Tools.
+
+Review the MCP server details to ensure the "List Tools"  endpoint is functionality fully and correctly. It should return a list of all resources that are available for the user to interact with.
+
+NOTE: We may need to add a new handler interface called ToolResourceHandler. The existing ToolHandler is used for the tool itself, not the resources that the tool can interact with. See @src/types/index.ts for the existing ToolHandler, ResourceHandler interfaces.
+
+```
 
 ### Improving Documentation
 
