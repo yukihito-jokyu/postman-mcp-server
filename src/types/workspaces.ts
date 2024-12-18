@@ -1,5 +1,8 @@
+export type WorkspaceType = 'personal' | 'team' | 'private' | 'public' | 'partner';
+export type WorkspaceRole = 'Viewer' | 'Editor' | 'Admin';
+
 export interface ListWorkspacesParams {
-  type?: 'personal' | 'team' | 'private' | 'public' | 'partner';
+  type?: WorkspaceType;
   createdBy?: string;
   include?: string;
 }
@@ -7,17 +10,11 @@ export interface ListWorkspacesParams {
 export interface WorkspaceBase {
   name: string;
   description?: string;
-  type: 'personal' | 'team' | 'private' | 'public' | 'partner';
-  visibility?: 'personal' | 'team' | 'private' | 'public' | 'partner';
+  type: WorkspaceType;
 }
 
-export interface CreateWorkspaceRequest extends WorkspaceBase {
-  // Additional fields specific to creation
-}
-
-export interface UpdateWorkspaceRequest extends Partial<WorkspaceBase> {
-  // Partial allows all fields to be optional for updates
-}
+export type CreateWorkspaceRequest = WorkspaceBase;
+export type UpdateWorkspaceRequest = Partial<WorkspaceBase>;
 
 export interface GlobalVariable {
   key: string;
@@ -25,8 +22,6 @@ export interface GlobalVariable {
   type?: 'default' | 'secret';
   enabled?: boolean;
 }
-
-export type WorkspaceRole = 'Viewer' | 'Editor' | 'Admin';
 
 export interface RoleUpdate {
   op: 'add' | 'remove';

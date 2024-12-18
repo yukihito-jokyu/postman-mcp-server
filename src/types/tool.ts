@@ -1,7 +1,7 @@
 import { AxiosInstance } from 'axios';
 
 export interface ToolCallContent {
-  type: string;
+  type: 'text';  // Simplified since we only use 'text' type
   text: string;
 }
 
@@ -15,7 +15,7 @@ export interface ToolDefinition {
   description: string;
   inputSchema: {
     type: 'object';
-    properties: Record<string, any>;
+    properties: Record<string, unknown>;
     required: string[];
   };
 }
