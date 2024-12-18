@@ -6,3 +6,4 @@ export * from './environment.js';
 export * from './validation.js';
 export * from './apis.js';
 export * from './workspaces.js';
+export * from './auth.js';
