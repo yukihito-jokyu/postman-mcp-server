@@ -1,35 +1,6 @@
 import { AxiosInstance } from 'axios';
-import {
-  ToolHandler,
-  CreateCollectionArgs,
-  UpdateCollectionArgs,
-  ForkCollectionArgs,
-  GetCollectionsArgs,
-  GetCollectionArgs,
-  GetCollectionFolderArgs,
-  DeleteCollectionFolderArgs,
-  GetCollectionRequestArgs,
-  DeleteCollectionRequestArgs,
-  GetCollectionResponseArgs,
-  DeleteCollectionResponseArgs,
-  ToolDefinition,
-  ToolCallResponse,
-  validateArgs,
-  isGetCollectionsArgs,
-  isGetCollectionArgs,
-  isCreateCollectionArgs,
-  isUpdateCollectionArgs,
-  isCollectionIdArg,
-  isGetCollectionFolderArgs,
-  isDeleteCollectionFolderArgs,
-  isGetCollectionRequestArgs,
-  isDeleteCollectionRequestArgs,
-  isGetCollectionResponseArgs,
-  isDeleteCollectionResponseArgs,
-  isForkCollectionArgs,
-} from '../../../types/index.js';
+import { ToolHandler, ToolDefinition, ToolCallResponse } from '../../../types/index.js';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
-
 import { TOOL_DEFINITIONS } from './definitions.js';
 
 /**
@@ -43,319 +14,133 @@ export class CollectionTools implements ToolHandler {
     return TOOL_DEFINITIONS;
   }
 
-  async handleToolCall(name: string, args: unknown): Promise<ToolCallResponse> {
-    switch (name) {
-      case 'list_collections':
-        return await this.listCollections(
-          validateArgs(args, isGetCollectionsArgs, 'Invalid list collections arguments')
-        );
-      case 'get_collection':
-        return await this.getCollection(
-          validateArgs(args, isGetCollectionArgs, 'Invalid get collection arguments')
-        );
-      case 'create_collection':
-        return await this.createCollection(
-          validateArgs(args, isCreateCollectionArgs, 'Invalid create collection arguments')
-        );
-      case 'update_collection':
-        return await this.updateCollection(
-          validateArgs(args, isUpdateCollectionArgs, 'Invalid update collection arguments')
-        );
-      case 'delete_collection':
-        return await this.deleteCollection(
-          validateArgs(args, isCollectionIdArg, 'Invalid collection ID argument').collection_id
-        );
-      case 'get_collection_folder':
-        return await this.getCollectionFolder(
-          validateArgs(args, isGetCollectionFolderArgs, 'Invalid get collection folder arguments')
-        );
-      case 'delete_collection_folder':
-        return await this.deleteCollectionFolder(
-          validateArgs(args, isDeleteCollectionFolderArgs, 'Invalid delete collection folder arguments')
-        );
-      case 'get_collection_request':
-        return await this.getCollectionRequest(
-          validateArgs(args, isGetCollectionRequestArgs, 'Invalid get collection request arguments')
-        );
-      case 'delete_collection_request':
-        return await this.deleteCollectionRequest(
-          validateArgs(args, isDeleteCollectionRequestArgs, 'Invalid delete collection request arguments')
-        );
-      case 'get_collection_response':
-        return await this.getCollectionResponse(
-          validateArgs(args, isGetCollectionResponseArgs, 'Invalid get collection response arguments')
-        );
-      case 'delete_collection_response':
-        return await this.deleteCollectionResponse(
-          validateArgs(args, isDeleteCollectionResponseArgs, 'Invalid delete collection response arguments')
-        );
-      case 'fork_collection':
-        return await this.forkCollection(
-          validateArgs(args, isForkCollectionArgs, 'Invalid fork collection arguments')
-        );
-      default:
-        throw new McpError(
-          ErrorCode.MethodNotFound,
-          `Unknown tool: ${name}`
-        );
+  async handleToolCall(name: string, args: any): Promise<ToolCallResponse> {
+    try {
+      switch (name) {
+        case 'list_collections':
+          return await this.listCollections(args);
+        case 'get_collection':
+          return await this.getCollection(args);
+        case 'create_collection':
+          return await this.createCollection(args);
+        case 'update_collection':
+          return await this.updateCollection(args);
+        case 'delete_collection':
+          return await this.deleteCollection(args.collection_id);
+        case 'get_collection_folder':
+          return await this.getCollectionFolder(args);
+        case 'delete_collection_folder':
+          return await this.deleteCollectionFolder(args);
+        case 'get_collection_request':
+          return await this.getCollectionRequest(args);
+        case 'delete_collection_request':
+          return await this.deleteCollectionRequest(args);
+        case 'get_collection_response':
+          return await this.getCollectionResponse(args);
+        case 'delete_collection_response':
+          return await this.deleteCollectionResponse(args);
+        case 'fork_collection':
+          return await this.forkCollection(args);
+        default:
+          throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+      }
+    } catch (error) {
+      // Only transform critical errors, pass through API errors
+      if (error instanceof McpError) throw error;
+      throw error;
     }
   }
 
-  /**
-   * List all collections in a workspace
-   * @param args GetCollectionsArgs containing optional workspace ID, name filter, and pagination
-   * @returns List of collections
-   */
-  async listCollections(args: GetCollectionsArgs): Promise<ToolCallResponse> {
-    const params: Record<string, any> = {};
-    if (args.workspace) params.workspace = args.workspace;
-    if (args.name) params.name = args.name;
-    if (args.limit) params.limit = args.limit;
-    if (args.offset) params.offset = args.offset;
-
-    const response = await this.axiosInstance.get('/collections', { params });
+  private formatResponse(data: any): ToolCallResponse {
     return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(response.data, null, 2),
-        },
-      ],
+      content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
     };
   }
 
-  /**
-   * Get details of a specific collection
-   * @param args GetCollectionArgs containing collection ID and optional parameters
-   * @returns Collection details
-   */
-  async getCollection(args: GetCollectionArgs): Promise<ToolCallResponse> {
-    const params: Record<string, any> = {};
-    if (args.access_key) params.access_key = args.access_key;
-    if (args.model) params.model = args.model;
-
-    const response = await this.axiosInstance.get(`/collections/${args.collection_id}`, { params });
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(response.data, null, 2),
-        },
-      ],
-    };
+  async listCollections(args: any): Promise<ToolCallResponse> {
+    const response = await this.axiosInstance.get('/collections', { params: args });
+    return this.formatResponse(response.data);
   }
 
-  /**
-   * Create a new collection in a workspace
-   * @param args CreateCollectionArgs containing workspace and collection details
-   * @returns Created collection details
-   */
-  async createCollection({ workspace, collection }: CreateCollectionArgs): Promise<ToolCallResponse> {
+  async getCollection(args: any): Promise<ToolCallResponse> {
+    const { collection_id, ...params } = args;
+    const response = await this.axiosInstance.get(`/collections/${collection_id}`, { params });
+    return this.formatResponse(response.data);
+  }
+
+  async createCollection(args: any): Promise<ToolCallResponse> {
     const response = await this.axiosInstance.post('/collections', {
-      collection,
-      workspace: {
-        id: workspace,
-        type: 'workspace'
-      }
+      collection: args.collection,
+      workspace: { id: args.workspace, type: 'workspace' }
     });
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(response.data, null, 2),
-        },
-      ],
-    };
+    return this.formatResponse(response.data);
   }
 
-  /**
-   * Update an existing collection
-   * @param args UpdateCollectionArgs containing collection ID and updated details
-   * @returns Updated collection details
-   */
-  async updateCollection({ collection_id, collection }: UpdateCollectionArgs): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.put(`/collections/${collection_id}`, {
-      collection
+  async updateCollection(args: any): Promise<ToolCallResponse> {
+    const response = await this.axiosInstance.put(`/collections/${args.collection_id}`, {
+      collection: args.collection
     });
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(response.data, null, 2),
-        },
-      ],
-    };
+    return this.formatResponse(response.data);
   }
 
-  /**
-   * Delete a collection
-   * @param collection_id Collection ID
-   * @returns Deletion confirmation
-   */
-  async deleteCollection(collection_id: string): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.delete(`/collections/${collection_id}`);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(response.data, null, 2),
-        },
-      ],
-    };
+  async deleteCollection(collectionId: string): Promise<ToolCallResponse> {
+    const response = await this.axiosInstance.delete(`/collections/${collectionId}`);
+    return this.formatResponse(response.data);
   }
 
-  /**
-   * Get details of a specific folder in a collection
-   * @param args GetCollectionFolderArgs containing collection ID, folder ID, and optional parameters
-   * @returns Folder details
-   */
-  async getCollectionFolder(args: GetCollectionFolderArgs): Promise<ToolCallResponse> {
-    const params: Record<string, any> = {};
-    if (args.ids) params.ids = args.ids;
-    if (args.uid) params.uid = args.uid;
-    if (args.populate) params.populate = args.populate;
-
+  async getCollectionFolder(args: any): Promise<ToolCallResponse> {
+    const { collection_id, folder_id, ...params } = args;
     const response = await this.axiosInstance.get(
-      `/collections/${args.collection_id}/folders/${args.folder_id}`,
+      `/collections/${collection_id}/folders/${folder_id}`,
       { params }
     );
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(response.data, null, 2),
-        },
-      ],
-    };
+    return this.formatResponse(response.data);
   }
 
-  /**
-   * Delete a folder from a collection
-   * @param args DeleteCollectionFolderArgs containing collection ID and folder ID
-   * @returns Deletion confirmation
-   */
-  async deleteCollectionFolder(args: DeleteCollectionFolderArgs): Promise<ToolCallResponse> {
+  async deleteCollectionFolder(args: any): Promise<ToolCallResponse> {
     const response = await this.axiosInstance.delete(
       `/collections/${args.collection_id}/folders/${args.folder_id}`
     );
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(response.data, null, 2),
-        },
-      ],
-    };
+    return this.formatResponse(response.data);
   }
 
-  /**
-   * Get details of a specific request in a collection
-   * @param args GetCollectionRequestArgs containing collection ID, request ID, and optional parameters
-   * @returns Request details
-   */
-  async getCollectionRequest(args: GetCollectionRequestArgs): Promise<ToolCallResponse> {
-    const params: Record<string, any> = {};
-    if (args.ids) params.ids = args.ids;
-    if (args.uid) params.uid = args.uid;
-    if (args.populate) params.populate = args.populate;
-
+  async getCollectionRequest(args: any): Promise<ToolCallResponse> {
+    const { collection_id, request_id, ...params } = args;
     const response = await this.axiosInstance.get(
-      `/collections/${args.collection_id}/requests/${args.request_id}`,
+      `/collections/${collection_id}/requests/${request_id}`,
       { params }
     );
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(response.data, null, 2),
-        },
-      ],
-    };
+    return this.formatResponse(response.data);
   }
 
-  /**
-   * Delete a request from a collection
-   * @param args DeleteCollectionRequestArgs containing collection ID and request ID
-   * @returns Deletion confirmation
-   */
-  async deleteCollectionRequest(args: DeleteCollectionRequestArgs): Promise<ToolCallResponse> {
+  async deleteCollectionRequest(args: any): Promise<ToolCallResponse> {
     const response = await this.axiosInstance.delete(
       `/collections/${args.collection_id}/requests/${args.request_id}`
     );
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(response.data, null, 2),
-        },
-      ],
-    };
+    return this.formatResponse(response.data);
   }
 
-  /**
-   * Get details of a specific response in a collection
-   * @param args GetCollectionResponseArgs containing collection ID, response ID, and optional parameters
-   * @returns Response details
-   */
-  async getCollectionResponse(args: GetCollectionResponseArgs): Promise<ToolCallResponse> {
-    const params: Record<string, any> = {};
-    if (args.ids) params.ids = args.ids;
-    if (args.uid) params.uid = args.uid;
-    if (args.populate) params.populate = args.populate;
-
+  async getCollectionResponse(args: any): Promise<ToolCallResponse> {
+    const { collection_id, response_id, ...params } = args;
     const response = await this.axiosInstance.get(
-      `/collections/${args.collection_id}/responses/${args.response_id}`,
+      `/collections/${collection_id}/responses/${response_id}`,
       { params }
     );
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(response.data, null, 2),
-        },
-      ],
-    };
+    return this.formatResponse(response.data);
   }
 
-  /**
-   * Delete a response from a collection
-   * @param args DeleteCollectionResponseArgs containing collection ID and response ID
-   * @returns Deletion confirmation
-   */
-  async deleteCollectionResponse(args: DeleteCollectionResponseArgs): Promise<ToolCallResponse> {
+  async deleteCollectionResponse(args: any): Promise<ToolCallResponse> {
     const response = await this.axiosInstance.delete(
       `/collections/${args.collection_id}/responses/${args.response_id}`
     );
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(response.data, null, 2),
-        },
-      ],
-    };
+    return this.formatResponse(response.data);
   }
 
-  /**
-   * Fork a collection to a workspace
-   * @param args ForkCollectionArgs containing collection ID, workspace, and label
-   * @returns Forked collection details
-   */
-  async forkCollection({ collection_id, workspace, label }: ForkCollectionArgs): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.post(`/collections/fork/${collection_id}`, {
-      workspace: {
-        id: workspace,
-        type: 'workspace'
-      },
-      label
+  async forkCollection(args: any): Promise<ToolCallResponse> {
+    const response = await this.axiosInstance.post(`/collections/fork/${args.collection_id}`, {
+      workspace: { id: args.workspace, type: 'workspace' },
+      label: args.label
     });
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(response.data, null, 2),
-        },
-      ],
-    };
+    return this.formatResponse(response.data);
   }
 }

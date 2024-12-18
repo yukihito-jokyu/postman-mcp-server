@@ -5,7 +5,6 @@ import {
   ToolDefinition,
   ToolHandler,
 } from '../../../types/index.js';
-
 import { TOOL_DEFINITIONS } from './definitions.js';
 
 export class EnvironmentTools implements ToolHandler {
