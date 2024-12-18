@@ -1,125 +1,8 @@
 import { ListPromptsRequestSchema, GetPromptRequestSchema, McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 
-interface Endpoint {
-  path: string;
-  method: string;
-  description?: string;
-}
-
-interface Variable {
-  key: string;
-  value: string;
-  type: 'default' | 'secret';
-}
-
-interface Schema {
-  type: 'openapi' | 'graphql' | 'raml';
-  content: string;
-}
-
-interface Schedule {
-  cron: string;
-  timezone: string;
-}
-
-interface CreateCollectionArgs {
-  name: string;
-  description?: string;
-  endpoints: Endpoint[];
-}
-
-interface CreateEnvironmentArgs {
-  name: string;
-  variables: Variable[];
-}
-
-interface CreateApiArgs {
-  name: string;
-  description?: string;
-  schema: Schema;
-}
-
-interface CreateMockArgs {
-  name: string;
-  collection: string;
-  environment?: string;
-  private?: boolean;
-}
-
-interface CreateMonitorArgs {
-  name: string;
-  collection: string;
-  environment?: string;
-  schedule: Schedule;
-}
-
-function isEndpoint(obj: any): obj is Endpoint {
-  return typeof obj === 'object' && obj !== null
-    && typeof obj.path === 'string'
-    && typeof obj.method === 'string'
-    && (obj.description === undefined || typeof obj.description === 'string');
-}
-
-function isCreateCollectionArgs(obj: any): obj is CreateCollectionArgs {
-  return typeof obj === 'object' && obj !== null
-    && typeof obj.name === 'string'
-    && Array.isArray(obj.endpoints)
-    && obj.endpoints.every(isEndpoint)
-    && (obj.description === undefined || typeof obj.description === 'string');
-}
-
-function isVariable(obj: any): obj is Variable {
-  return typeof obj === 'object' && obj !== null
-    && typeof obj.key === 'string'
-    && typeof obj.value === 'string'
-    && (obj.type === 'default' || obj.type === 'secret');
-}
-
-function isCreateEnvironmentArgs(obj: any): obj is CreateEnvironmentArgs {
-  return typeof obj === 'object' && obj !== null
-    && typeof obj.name === 'string'
-    && Array.isArray(obj.variables)
-    && obj.variables.every(isVariable);
-}
-
-function isSchema(obj: any): obj is Schema {
-  return typeof obj === 'object' && obj !== null
-    && (obj.type === 'openapi' || obj.type === 'graphql' || obj.type === 'raml')
-    && typeof obj.content === 'string';
-}
-
-function isCreateApiArgs(obj: any): obj is CreateApiArgs {
-  return typeof obj === 'object' && obj !== null
-    && typeof obj.name === 'string'
-    && isSchema(obj.schema)
-    && (obj.description === undefined || typeof obj.description === 'string');
-}
-
-function isCreateMockArgs(obj: any): obj is CreateMockArgs {
-  return typeof obj === 'object' && obj !== null
-    && typeof obj.name === 'string'
-    && typeof obj.collection === 'string'
-    && (obj.environment === undefined || typeof obj.environment === 'string')
-    && (obj.private === undefined || typeof obj.private === 'boolean');
-}
-
-function isSchedule(obj: any): obj is Schedule {
-  return typeof obj === 'object' && obj !== null
-    && typeof obj.cron === 'string'
-    && typeof obj.timezone === 'string';
-}
-
-function isCreateMonitorArgs(obj: any): obj is CreateMonitorArgs {
-  return typeof obj === 'object' && obj !== null
-    && typeof obj.name === 'string'
-    && typeof obj.collection === 'string'
-    && (obj.environment === undefined || typeof obj.environment === 'string')
-    && isSchedule(obj.schedule);
-}
-
 /**
- * Handles prompt requests
+ * Handles prompt requests according to MCP specification
  */
 export class PromptHandler {
   constructor(private server: Server) {
@@ -135,109 +18,80 @@ export class PromptHandler {
     this.server.setRequestHandler(ListPromptsRequestSchema, async () => ({
       prompts: [
         {
-          id: 'create_collection',
-          name: 'Create Collection',
-          description: 'Create a new Postman collection with specified endpoints',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              name: { type: 'string' },
-              description: { type: 'string' },
-              endpoints: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    path: { type: 'string' },
-                    method: { type: 'string' },
-                    description: { type: 'string' },
-                  },
-                },
-              },
-            },
-            required: ['name', 'endpoints'],
-          },
+          name: "list_workspaces",
+          description: "Show all available workspaces and their details"
         },
         {
-          id: 'create_environment',
-          name: 'Create Environment',
-          description: 'Create a new Postman environment with variables',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              name: { type: 'string' },
-              variables: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    key: { type: 'string' },
-                    value: { type: 'string' },
-                    type: { type: 'string', enum: ['default', 'secret'] },
-                  },
-                },
-              },
-            },
-            required: ['name', 'variables'],
-          },
+          name: "list_collections",
+          description: "Show all collections across workspaces"
         },
         {
-          id: 'create_api',
-          name: 'Create API',
-          description: 'Create a new API definition with schema and collection',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              name: { type: 'string' },
-              description: { type: 'string' },
-              schema: {
-                type: 'object',
-                properties: {
-                  type: { type: 'string', enum: ['openapi', 'graphql', 'raml'] },
-                  content: { type: 'string' },
-                },
-              },
-            },
-            required: ['name', 'schema'],
-          },
+          name: "list_environments",
+          description: "Show all environments and their variables"
         },
         {
-          id: 'create_mock',
-          name: 'Create Mock Server',
-          description: 'Create a new mock server for a collection',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              name: { type: 'string' },
-              collection: { type: 'string' },
-              environment: { type: 'string' },
-              private: { type: 'boolean' },
-            },
-            required: ['name', 'collection'],
-          },
+          name: "list_monitors",
+          description: "Show all active monitors and their status"
         },
         {
-          id: 'create_monitor',
-          name: 'Create Monitor',
-          description: 'Create a new monitor for a collection',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              name: { type: 'string' },
-              collection: { type: 'string' },
-              environment: { type: 'string' },
-              schedule: {
-                type: 'object',
-                properties: {
-                  cron: { type: 'string' },
-                  timezone: { type: 'string' },
-                },
-              },
+          name: "list_mocks",
+          description: "Show all mock servers and their configurations"
+        },
+        {
+          name: "analyze_collection",
+          description: "Analyze a Postman collection for potential improvements and best practices",
+          arguments: [
+            {
+              name: "collection_id",
+              description: "ID of the collection to analyze",
+              required: true
+            }
+          ]
+        },
+        {
+          name: "document_api",
+          description: "Generate documentation for an API based on its collection and schema",
+          arguments: [
+            {
+              name: "api_id",
+              description: "ID of the API to document",
+              required: true
             },
-            required: ['name', 'collection', 'schedule'],
-          },
+            {
+              name: "format",
+              description: "Documentation format (markdown/html)",
+              required: false
+            }
+          ]
+        },
+        {
+          name: "suggest_tests",
+          description: "Suggest test cases for API endpoints in a collection",
+          arguments: [
+            {
+              name: "collection_id",
+              description: "ID of the collection to analyze",
+              required: true
+            },
+            {
+              name: "coverage_level",
+              description: "Desired test coverage level (basic/comprehensive)",
+              required: false
+            }
+          ]
+        },
+        {
+          name: "review_environment",
+          description: "Review environment variables for security and completeness",
+          arguments: [
+            {
+              name: "environment_id",
+              description: "ID of the environment to review",
+              required: true
+            }
+          ]
         }
-      ],
+      ]
     }));
   }
 
@@ -247,91 +101,104 @@ export class PromptHandler {
 
       try {
         switch (name) {
-          case 'create_collection': {
-            if (!args || !isCreateCollectionArgs(args)) {
-              throw new McpError(ErrorCode.InvalidParams, 'Invalid parameters for create_collection');
-            }
-
+          case 'list_workspaces': {
             return {
               messages: [
                 {
                   role: 'user',
                   content: {
                     type: 'text',
-                    text: `Create a new Postman collection named "${args.name}" with the following endpoints:\n\n` +
-                      args.endpoints.map(endpoint =>
-                        `${endpoint.method} ${endpoint.path}${endpoint.description ? ` - ${endpoint.description}` : ''}`
-                      ).join('\n')
+                    text: 'Please show all available workspaces with:\n\n' +
+                          '1. Workspace name and ID\n' +
+                          '2. Type (personal/team)\n' +
+                          '3. Number of collections\n' +
+                          '4. Number of environments\n' +
+                          '5. Last modified date'
                   }
                 }
               ]
             };
           }
 
-          case 'create_environment': {
-            if (!args || !isCreateEnvironmentArgs(args)) {
-              throw new McpError(ErrorCode.InvalidParams, 'Invalid parameters for create_environment');
-            }
-
+          case 'list_collections': {
             return {
               messages: [
                 {
                   role: 'user',
                   content: {
                     type: 'text',
-                    text: `Create a new Postman environment named "${args.name}" with the following variables:\n\n` +
-                      args.variables.map(variable =>
-                        `${variable.key}: ${variable.type === 'secret' ? '[SECURE]' : variable.value}`
-                      ).join('\n')
+                    text: 'Please show all collections with:\n\n' +
+                          '1. Collection name and ID\n' +
+                          '2. Workspace location\n' +
+                          '3. Number of requests\n' +
+                          '4. Last updated date\n' +
+                          '5. Associated environments'
                   }
                 }
               ]
             };
           }
 
-          case 'create_api': {
-            if (!args || !isCreateApiArgs(args)) {
-              throw new McpError(ErrorCode.InvalidParams, 'Invalid parameters for create_api');
-            }
-
+          case 'list_environments': {
             return {
               messages: [
                 {
                   role: 'user',
                   content: {
                     type: 'text',
-                    text: `Create a new API definition named "${args.name}" with ${args.schema.type} schema:\n\n` +
-                      `Description: ${args.description || 'N/A'}\n` +
-                      `Schema Content:\n${args.schema.content}`
+                    text: 'Please show all environments with:\n\n' +
+                          '1. Environment name and ID\n' +
+                          '2. Workspace location\n' +
+                          '3. Number of variables\n' +
+                          '4. Associated collections\n' +
+                          '5. Last modified date'
                   }
                 }
               ]
             };
           }
 
-          case 'create_mock': {
-            if (!args || !isCreateMockArgs(args)) {
-              throw new McpError(ErrorCode.InvalidParams, 'Invalid parameters for create_mock');
-            }
-
+          case 'list_monitors': {
             return {
               messages: [
                 {
                   role: 'user',
                   content: {
                     type: 'text',
-                    text: `Create a new mock server named "${args.name}" for collection "${args.collection}":\n\n` +
-                      `Environment: ${args.environment || 'None'}\n` +
-                      `Access: ${args.private ? 'Private' : 'Public'}`
+                    text: 'Please show all monitors with:\n\n' +
+                          '1. Monitor name and ID\n' +
+                          '2. Status (active/paused)\n' +
+                          '3. Schedule details\n' +
+                          '4. Associated collection\n' +
+                          '5. Last run status'
                   }
                 }
               ]
             };
           }
 
-          case 'create_monitor': {
-            if (!args || !isCreateMonitorArgs(args)) {
-              throw new McpError(ErrorCode.InvalidParams, 'Invalid parameters for create_monitor');
+          case 'list_mocks': {
+            return {
+              messages: [
+                {
+                  role: 'user',
+                  content: {
+                    type: 'text',
+                    text: 'Please show all mock servers with:\n\n' +
+                          '1. Mock server name and ID\n' +
+                          '2. Status (online/offline)\n' +
+                          '3. Associated collection\n' +
+                          '4. Environment configuration\n' +
+                          '5. Access settings'
+                  }
+                }
+              ]
+            };
+          }
+
+          case 'analyze_collection': {
+            if (!args?.collection_id) {
+              throw new McpError(ErrorCode.InvalidParams, 'Collection ID is required');
             }
 
             return {
@@ -340,9 +207,85 @@ export class PromptHandler {
                   role: 'user',
                   content: {
                     type: 'text',
-                    text: `Create a new monitor named "${args.name}" for collection "${args.collection}":\n\n` +
-                      `Environment: ${args.environment || 'None'}\n` +
-                      `Schedule: ${args.schedule.cron} (${args.schedule.timezone})`
+                    text: `Please analyze the Postman collection ${args.collection_id} for:\n\n` +
+                          '1. API design best practices\n' +
+                          '2. Request/response structure consistency\n' +
+                          '3. Error handling coverage\n' +
+                          '4. Authentication implementation\n' +
+                          '5. Documentation completeness'
+                  }
+                }
+              ]
+            };
+          }
+
+          case 'document_api': {
+            if (!args?.api_id) {
+              throw new McpError(ErrorCode.InvalidParams, 'API ID is required');
+            }
+
+            const format = args.format || 'markdown';
+
+            return {
+              messages: [
+                {
+                  role: 'user',
+                  content: {
+                    type: 'text',
+                    text: `Generate ${format} documentation for API ${args.api_id} including:\n\n` +
+                          '1. Overview and purpose\n' +
+                          '2. Authentication methods\n' +
+                          '3. Available endpoints\n' +
+                          '4. Request/response examples\n' +
+                          '5. Error codes and handling'
+                  }
+                }
+              ]
+            };
+          }
+
+          case 'suggest_tests': {
+            if (!args?.collection_id) {
+              throw new McpError(ErrorCode.InvalidParams, 'Collection ID is required');
+            }
+
+            const coverage = args.coverage_level || 'basic';
+
+            return {
+              messages: [
+                {
+                  role: 'user',
+                  content: {
+                    type: 'text',
+                    text: `Suggest ${coverage} test cases for collection ${args.collection_id} covering:\n\n` +
+                          '1. Positive test scenarios\n' +
+                          '2. Error handling\n' +
+                          '3. Edge cases\n' +
+                          '4. Performance considerations\n' +
+                          '5. Security testing'
+                  }
+                }
+              ]
+            };
+          }
+
+          case 'review_environment': {
+            if (!args?.environment_id) {
+              throw new McpError(ErrorCode.InvalidParams, 'Environment ID is required');
+            }
+
+            return {
+              messages: [
+                {
+                  role: 'user',
+                  content: {
+                    type: 'text',
+                    text: `Review environment ${args.environment_id} for:\n\n` +
+                          '1. Security of sensitive values\n' +
+                          '2. Required variables presence\n' +
+                          '3. Naming conventions\n' +
+                          '4. Value formatting\n' +
+                          '5. Environment completeness'
                   }
                 }
               ]
