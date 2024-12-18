@@ -53,7 +53,7 @@ class PostmanCLITools implements ToolHandler {
     return [
       {
         name: 'run_collection',
-        description: 'Run a Postman collection locally or in CI/CD',
+        description: 'Run a Postman collection with configurable reporting options',
         inputSchema: {
           type: 'object',
           properties: {
@@ -69,30 +69,66 @@ class PostmanCLITools implements ToolHandler {
               type: 'string',
               description: 'Postman API key'
             },
-            // Run configuration
-            iterationCount: {
-              type: 'number',
-              description: 'Number of iterations to run'
-            },
-            folderIds: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'Specific folder/request UIDs to run in order'
-            },
-            // CI/CD options
-            ciProvider: {
-              type: 'string',
-              enum: ['github', 'gitlab', 'jenkins', 'azure', 'circleci'],
-              description: 'CI/CD provider for configuration'
-            },
-            // Output options
+            // Reporter configuration
             reporters: {
               type: 'array',
               items: {
                 type: 'string',
                 enum: ['cli', 'json', 'junit', 'html']
               },
-              description: 'Report formats to generate'
+              description: 'Report formats to generate (default: cli)'
+            },
+            reporterOptions: {
+              type: 'object',
+              properties: {
+                // CLI reporter options
+                cliSilent: { type: 'boolean' },
+                cliShowTimestamps: { type: 'boolean' },
+                cliNoSummary: { type: 'boolean' },
+                cliNoFailures: { type: 'boolean' },
+                cliNoAssertions: { type: 'boolean' },
+                cliNoSuccessAssertions: { type: 'boolean' },
+                cliNoConsole: { type: 'boolean' },
+                cliNoBanner: { type: 'boolean' },
+
+                // JSON/HTML reporter options
+                exportPath: { type: 'string' },
+                omitRequestBodies: { type: 'boolean' },
+                omitResponseBodies: { type: 'boolean' },
+                omitHeaders: { type: 'boolean' },
+                omitAllHeadersAndBody: { type: 'boolean' },
+                jsonStructure: {
+                  type: 'string',
+                  enum: ['default', 'newman']
+                }
+              }
+            },
+            // Run configuration
+            iterationCount: {
+              type: 'number',
+              description: 'Number of iterations to run'
+            },
+            folderNames: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Specific folders to run'
+            },
+            // CI/CD configuration
+            ciProvider: {
+              type: 'string',
+              enum: ['github', 'gitlab', 'jenkins', 'azure', 'circleci'],
+              description: 'CI/CD provider for configuration'
+            },
+            ciOptions: {
+              type: 'object',
+              properties: {
+                workingDirectory: { type: 'string' },
+                artifactPath: { type: 'string' },
+                environmentVariables: {
+                  type: 'object',
+                  additionalProperties: { type: 'string' }
+                }
+              }
             },
             // Advanced options
             bail: {
@@ -152,7 +188,7 @@ class PostmanCLITools {
   private async runCollection(args: any): Promise<ToolCallResponse> {
     const cliArgs = ['collection', 'run'];
 
-    // Build command arguments from tool parameters
+    // Collection ID
     cliArgs.push(args.collection);
 
     // Authentication
@@ -163,21 +199,68 @@ class PostmanCLITools {
       cliArgs.push('-e', args.environment);
     }
 
+    // Reporters
+    if (args.reporters?.length) {
+      cliArgs.push('-r', args.reporters.join(','));
+    }
+
+    // Reporter options
+    if (args.reporterOptions) {
+      const opts = args.reporterOptions;
+
+      // CLI reporter options
+      if (opts.cliSilent) cliArgs.push('--reporter-cli-silent');
+      if (opts.cliShowTimestamps) cliArgs.push('--reporter-cli-show-timestamps');
+      if (opts.cliNoSummary) cliArgs.push('--reporter-cli-no-summary');
+      if (opts.cliNoFailures) cliArgs.push('--reporter-cli-no-failures');
+      if (opts.cliNoAssertions) cliArgs.push('--reporter-cli-no-assertions');
+      if (opts.cliNoSuccessAssertions) cliArgs.push('--reporter-cli-no-success-assertions');
+      if (opts.cliNoConsole) cliArgs.push('--reporter-cli-no-console');
+      if (opts.cliNoBanner) cliArgs.push('--reporter-cli-no-banner');
+
+      // JSON/HTML reporter options
+      if (opts.exportPath) {
+        args.reporters.forEach(reporter => {
+          if (reporter !== 'cli') {
+            cliArgs.push(`--reporter-${reporter}-export`, opts.exportPath);
+          }
+        });
+      }
+      if (opts.omitRequestBodies) cliArgs.push('--reporter-omitRequestBodies');
+      if (opts.omitResponseBodies) cliArgs.push('--reporter-omitResponseBodies');
+      if (opts.omitHeaders) cliArgs.push('--reporter-omitHeaders');
+      if (opts.omitAllHeadersAndBody) cliArgs.push('--reporter-omitAllHeadersAndBody');
+      if (opts.jsonStructure === 'newman') cliArgs.push('--reporter-json-structure', 'newman');
+    }
+
     // Run configuration
     if (args.iterationCount) {
       cliArgs.push('-n', args.iterationCount.toString());
     }
-
-    // Specific folder/request order
-    if (args.folderIds?.length) {
-      args.folderIds.forEach(id => {
-        cliArgs.push('-i', id);
+    if (args.folderNames?.length) {
+      args.folderNames.forEach(name => {
+        cliArgs.push('--folder', name);
       });
     }
 
-    // Reporters
-    if (args.reporters?.length) {
-      cliArgs.push('--reporters', args.reporters.join(','));
+    // CI/CD configuration
+    if (args.ciProvider) {
+      cliArgs.push('--ci-provider', args.ciProvider);
+
+      if (args.ciOptions) {
+        const opts = args.ciOptions;
+        if (opts.workingDirectory) {
+          cliArgs.push('--working-dir', opts.workingDirectory);
+        }
+        if (opts.artifactPath) {
+          cliArgs.push('--artifact-path', opts.artifactPath);
+        }
+        if (opts.environmentVariables) {
+          Object.entries(opts.environmentVariables).forEach(([key, value]) => {
+            cliArgs.push('--env-var', `${key}=${value}`);
+          });
+        }
+      }
     }
 
     // Advanced options
@@ -253,18 +336,19 @@ class PostmanAPIServer {
    - Basic collection run functionality
    - Environment support
    - Authentication handling
-   - Basic reporting
+   - Basic reporting (CLI output)
 
-2. Phase 2: Advanced Collection Features
-   - Folder/request ordering
-   - Test data file support
-   - Package integration
-   - Advanced reporting options
+2. Phase 2: Advanced Reporting
+   - Multiple reporter support
+   - Reporter configuration options
+   - Custom export paths
+   - Report content filtering
 
 3. Phase 3: CI/CD Integration
    - Provider-specific configurations
    - Environment variable handling
-   - Pipeline integration examples
+   - Artifact management
+   - Pipeline integration
 
 4. Phase 4: Testing & Documentation
    - Unit tests
@@ -277,9 +361,9 @@ class PostmanAPIServer {
 ### Features
 1. **Collection Running**
    - Local and CI/CD execution
-   - Custom run order support
-   - Multiple reporter formats
    - Environment integration
+   - Folder-specific runs
+   - Multiple iterations
 
 2. **Authentication**
    - API key based auth
@@ -287,23 +371,29 @@ class PostmanAPIServer {
    - CI/CD variable support
 
 3. **Reporting**
-   - CLI output
-   - JSON reports
-   - JUnit reports
-   - HTML reports
+   - Multiple reporter support
+   - CLI, JSON, JUnit, HTML formats
+   - Customizable output paths
+   - Content filtering options
+
+4. **CI/CD Integration**
+   - Multiple provider support
+   - Environment variable handling
+   - Artifact management
+   - Pipeline configuration
 
 ### Limitations
-1. **Test Data Files**
-   - Files must be uploaded to Postman
-   - Local file references not supported
-
-2. **OAuth 2.0**
+1. **Authentication**
    - Interactive auth flows not supported
    - Pre-configured tokens required
 
-3. **Package Support**
-   - Limited to Professional/Enterprise plans
-   - Package Library integration required
+2. **File Handling**
+   - Local file references not supported
+   - Files must be uploaded to Postman
+
+3. **Real-time Feedback**
+   - Limited to CLI reporter output
+   - No streaming response support
 
 ## 8. Conclusion
 
@@ -331,8 +421,8 @@ This design provides a streamlined implementation of Postman CLI functionality t
 
 The implementation provides a clean and efficient interface to Postman CLI capabilities while maintaining simplicity and reliability. Key improvements in this revision include:
 
-1. Simplified authentication handling
-2. Enhanced collection run options
-3. Better CI/CD integration
-4. Clearer limitations documentation
-5. More detailed reporting configuration
+1. Comprehensive reporter configuration
+2. Enhanced CI/CD integration
+3. Better authentication handling
+4. Clearer output management
+5. More focused scope
