@@ -13,6 +13,7 @@ import {
   validateArgs
 } from '../../../types/index.js';
 
+import { TOOL_DEFINITIONS } from './definitions.js';
 
 export class WorkspaceTools implements ToolHandler {
   constructor(public axiosInstance: AxiosInstance) {}
@@ -34,49 +35,7 @@ export class WorkspaceTools implements ToolHandler {
   }
 
   getToolDefinitions(): ToolDefinition[] {
-    return [
-      {
-        name: 'list_workspaces',
-        description: 'List all workspaces',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            type: {
-              type: 'string',
-              enum: ['personal', 'team', 'private', 'public', 'partner'],
-              description: 'Filter workspaces by type',
-            },
-            createdBy: {
-              type: 'string',
-              description: 'Filter workspaces by creator',
-            },
-            include: {
-              type: 'string',
-              description: 'Additional data to include in response',
-            },
-          },
-          required: [],
-        },
-      },
-      {
-        name: 'get_workspace',
-        description: 'Get details of a specific workspace',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            workspace: {
-              type: 'string',
-              description: 'Workspace ID',
-            },
-            include: {
-              type: 'string',
-              description: 'Additional data to include in response',
-            },
-          },
-          required: ['workspace'],
-        },
-      },
-    ];
+    return TOOL_DEFINITIONS;
   }
 
   async listWorkspaces(params?: ListWorkspacesParams): Promise<ToolCallResponse> {

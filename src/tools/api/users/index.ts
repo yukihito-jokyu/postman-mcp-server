@@ -2,6 +2,9 @@ import { AxiosInstance } from 'axios';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { ToolHandler, ToolDefinition, ToolCallResponse } from '../../../types/index.js';
 
+import { TOOL_DEFINITIONS } from './definitions.js';
+
+
 export class UserTools implements ToolHandler {
   constructor(public axiosInstance: AxiosInstance) {}
 
@@ -18,17 +21,7 @@ export class UserTools implements ToolHandler {
   }
 
   getToolDefinitions(): ToolDefinition[] {
-    return [
-      {
-        name: 'get_user_info',
-        description: 'Get information about the authenticated user',
-        inputSchema: {
-          type: 'object',
-          properties: {},
-          required: [],
-        },
-      },
-    ];
+    return TOOL_DEFINITIONS;
   }
 
   async getUserInfo(): Promise<ToolCallResponse> {
