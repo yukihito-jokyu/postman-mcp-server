@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-This document outlines the design for integrating Postman CLI capabilities into the existing Postman API MCP server. The design leverages the existing API infrastructure while adding CLI-specific functionality to enable automated collection runs, API governance checks, and authentication management.
+This document outlines the design for integrating Postman CLI capabilities into the existing Postman API MCP server. The design focuses on providing a simple and efficient interface to the official Postman CLI tool while leveraging the existing API infrastructure.
 
 ## 2. System Architecture
 
@@ -17,78 +17,38 @@ postman-api-server/
 │   ├── tools/                  # API operation tools
 │   │   ├── api/                # API-specific operations
 │   │   │   ├── collections.ts  # Collection operations
-│   │   │   ├── environments.ts # Environments & variables
-│   │   │   ├── users.ts        # Auth & user management
+│   │   │   ├── environments.ts # Environment operations
+│   │   │   ├── users.ts        # User management
 │   │   │   └── workspaces.ts   # Workspace operations
 │   │   └── cli/               # CLI operations
-│   │       ├── runner.ts      # Collection runner functionality
-│   │       ├── governance.ts  # API governance checks
-│   │       ├── auth.ts        # CLI authentication
-│   │       └── sync.ts        # Cloud result syncing
-│   └── reporting/             # Test run reporting
-       ├── formatters/         # Report formatters
-       │   ├── cli.ts         # CLI output formatter
-       │   ├── json.ts        # JSON report formatter
-       │   └── junit.ts       # JUnit XML formatter
-       └── manager.ts         # Report generation manager
+│   │       └── index.ts       # CLI tool implementations
 ```
 
 ### 2.2 Key Design Decisions
 
-1. **Separation of Concerns**
-   - API operations remain isolated in `tools/api/`
-   - CLI-specific logic contained in `tools/cli/`
-   - Cloud sync and reporting separated for clarity
+1. **Direct CLI Integration**
+   - Maps directly to official Postman CLI commands
+   - Uses native CLI functionality for core operations
+   - Leverages built-in reporting capabilities
 
 2. **Pattern Usage**
-   - Strategy Pattern for report formats
-   - Singleton Pattern for CLI auth management
-   - Factory Pattern for report formatter creation
-   - Observer Pattern for API rate tracking
+   - Tool Handler Pattern for consistent interface
+   - Command Pattern for CLI operations
+   - Error Handler Pattern for consistent error management
 
-3. **Extensibility**
-   - New CLI commands can be added without modifying API tools
-   - Additional report formats via new formatters
-   - Configurable governance rules
-   - Pluggable cloud sync strategies
-
-### 2.3 Component Relationships
-
-```mermaid
-graph TD
-    A[PostmanAPIServer] --> B[API Tools]
-    A --> C[CLI Operations]
-    A --> D[Report Manager]
-
-    B --> E[Collections]
-    B --> F[Environments]
-    B --> G[Users]
-    B --> H[Workspaces]
-
-    C --> I[Collection Runner]
-    C --> J[API Governance]
-    C --> K[Auth Manager]
-    C --> L[Cloud Sync]
-
-    I --> D
-    J --> D
-    D --> M[Report Formatters]
-    D --> N[Cloud Reporting]
-
-    M --> O[CLI Output]
-    M --> P[JSON Report]
-    M --> Q[JUnit XML]
-
-    N --> R[Result Sync]
-    N --> S[Rate Tracking]
-```
+3. **Simplicity First**
+   - Minimal custom logic
+   - Direct command mapping
+   - Native CLI behavior preservation
 
 ## 3. Core Functionality
 
-### 3.1 CLI Operations
+### 3.1 CLI Tools
+
+The CLI tools provide direct access to core Postman CLI capabilities:
 
 ```typescript
-class CLIOperations implements ToolHandler {
+class PostmanCLITools implements ToolHandler {
   getToolDefinitions(): ToolDefinition[] {
     return [
       {
@@ -116,54 +76,49 @@ class CLIOperations implements ToolHandler {
       },
       {
         name: 'run_collection',
-        description: 'Run a collection with configuration',
+        description: 'Run a Postman collection',
         inputSchema: {
           type: 'object',
           properties: {
             collection: {
               type: 'string',
-              description: 'Collection ID, URL, or local file path'
+              description: 'Collection ID or file path'
             },
             environment: {
               type: 'string',
-              description: 'Environment ID, URL, or local file path'
+              description: 'Environment ID or file path'
             },
             folder: {
               type: 'string',
               description: 'Specific folder to run'
             },
-            iterations: {
+            iterationCount: {
               type: 'number',
-              description: 'Number of iterations to run'
+              description: 'Number of iterations'
             },
-            delay: {
+            delayRequest: {
               type: 'number',
-              description: 'Delay between requests in ms'
+              description: 'Delay between requests (ms)'
             },
-            timeout: {
+            timeoutRequest: {
               type: 'number',
-              description: 'Request timeout in ms'
+              description: 'Request timeout (ms)'
             },
-            reportFormat: {
-              type: 'string',
-              enum: ['cli', 'json', 'junit'],
-              description: 'Report format'
-            },
-            reportPath: {
-              type: 'string',
-              description: 'Path to save the run report'
+            reporters: {
+              type: 'array',
+              items: {
+                type: 'string',
+                enum: ['cli', 'json', 'junit', 'html']
+              },
+              description: 'Report formats to generate'
             },
             bail: {
               type: 'boolean',
-              description: 'Stop on first test failure'
+              description: 'Stop on first error'
             },
-            suppressExitCode: {
-              type: 'boolean',
-              description: 'Always exit with code 0'
-            },
-            disableCloudSync: {
-              type: 'boolean',
-              description: 'Disable syncing results to Postman cloud'
+            workingDir: {
+              type: 'string',
+              description: 'Working directory for file paths'
             }
           },
           required: ['collection']
@@ -171,68 +126,54 @@ class CLIOperations implements ToolHandler {
       },
       {
         name: 'api_lint',
-        description: 'Check API definitions against governance rules',
+        description: 'Run API governance checks (Enterprise only)',
         inputSchema: {
           type: 'object',
           properties: {
             api: {
               type: 'string',
-              description: 'API ID, URL, or local definition file'
+              description: 'API ID or definition file'
             },
-            ruleset: {
+            failSeverity: {
               type: 'string',
-              description: 'Governance ruleset name or path'
-            },
-            rules: {
-              type: 'object',
-              description: 'Custom rule configurations',
-              additionalProperties: true
-            },
-            reportPath: {
-              type: 'string',
-              description: 'Path to save the lint report'
-            },
-            disableCloudSync: {
-              type: 'boolean',
-              description: 'Disable syncing results to Postman cloud'
+              enum: ['HINT', 'INFO', 'WARN', 'ERROR'],
+              description: 'Minimum severity to trigger failure'
             }
           },
           required: ['api']
         }
       },
       {
-        name: 'contract_test',
-        description: 'Run contract tests for an API',
+        name: 'publish_api',
+        description: 'Publish an API version',
         inputSchema: {
           type: 'object',
           properties: {
-            api: {
+            apiId: {
               type: 'string',
-              description: 'API ID, URL, or local definition file'
+              description: 'API ID'
             },
-            collection: {
+            name: {
               type: 'string',
-              description: 'Contract test collection ID or file'
+              description: 'Version name'
             },
-            environment: {
+            releaseNotes: {
               type: 'string',
-              description: 'Environment ID or file path'
+              description: 'Release notes (supports Markdown)'
             },
-            reportFormat: {
+            collections: {
+              type: 'array',
+              items: {
+                type: 'string'
+              },
+              description: 'Collection IDs or paths to include'
+            },
+            apiDefinition: {
               type: 'string',
-              enum: ['cli', 'json', 'junit'],
-              description: 'Report format'
-            },
-            reportPath: {
-              type: 'string',
-              description: 'Path to save the test report'
-            },
-            disableCloudSync: {
-              type: 'boolean',
-              description: 'Disable syncing results to Postman cloud'
+              description: 'API definition ID, directory, or file'
             }
           },
-          required: ['api', 'collection']
+          required: ['apiId', 'name']
         }
       }
     ];
@@ -240,364 +181,142 @@ class CLIOperations implements ToolHandler {
 }
 ```
 
-### 3.2 Collection Runner
+### 3.2 Command Execution
 
 ```typescript
-class CollectionRunner {
-  constructor(
-    private cloudSync: CloudSyncManager,
-    private rateTracker: RateTracker
-  ) {}
-
-  async runCollection(args: RunCollectionArgs): Promise<RunResult> {
-    // Track API usage
-    await this.rateTracker.checkLimit();
-
-    // 1. Validate and load collection
-    const collection = await this.loadCollection(args.collection);
-    await this.rateTracker.trackCall('collection_fetch');
-
-    // 2. Set up environment if provided
-    let environment;
-    if (args.environment) {
-      environment = await this.loadEnvironment(args.environment);
-      await this.rateTracker.trackCall('environment_fetch');
-    }
-
-    // 3. Configure run options
-    const options = {
-      folder: args.folder,
-      iterations: args.iterations,
-      delay: args.delay,
-      timeout: args.timeout,
-      bail: args.bail,
-      suppressExitCode: args.suppressExitCode
-    };
-
-    // 4. Execute collection run
-    const results = await this.executeRun(collection, environment, options);
-
-    // 5. Generate report
-    const report = await this.reportManager.generateReport(results, {
-      format: args.reportFormat || 'cli',
-      reportPath: args.reportPath
-    });
-
-    // 6. Sync results to cloud if enabled
-    if (!args.disableCloudSync) {
-      await this.cloudSync.syncResults(results);
-      await this.rateTracker.trackCall('results_sync');
-    }
-
-    return {
-      success: results.failures === 0,
-      summary: results.summary,
-      report
-    };
+class PostmanCLITools {
+  private async executeCommand(command: string, args: string[]): Promise<string> {
+    // Implementation using child_process
+    // Handles command execution and output capture
+    // Returns formatted result or throws error
   }
 
-  private async loadCollection(source: string): Promise<Collection> {
-    if (this.isLocalFile(source)) {
-      return this.loadLocalCollection(source);
-    }
-    if (this.isCollectionId(source)) {
-      return this.loadRemoteCollection(source);
-    }
-    if (this.isUrl(source)) {
-      return this.loadCollectionFromUrl(source);
-    }
-    throw new CLIError(
-      CLIErrorCode.ValidationError,
-      'Invalid collection source'
-    );
-  }
+  private async runCollection(args: any): Promise<ToolCallResponse> {
+    const cliArgs = ['collection', 'run'];
 
-  private async loadEnvironment(source: string): Promise<Environment> {
-    if (this.isLocalFile(source)) {
-      return this.loadLocalEnvironment(source);
-    }
-    if (this.isEnvironmentId(source)) {
-      return this.loadRemoteEnvironment(source);
-    }
-    if (this.isUrl(source)) {
-      return this.loadEnvironmentFromUrl(source);
-    }
-    throw new CLIError(
-      CLIErrorCode.ValidationError,
-      'Invalid environment source'
-    );
-  }
-}
-```
+    // Build command arguments from tool parameters
+    cliArgs.push(args.collection);
+    if (args.environment) cliArgs.push('-e', args.environment);
+    if (args.folder) cliArgs.push('-i', args.folder);
+    if (args.iterationCount) cliArgs.push('-n', args.iterationCount.toString());
+    if (args.delayRequest) cliArgs.push('--delay-request', args.delayRequest.toString());
+    if (args.timeoutRequest) cliArgs.push('--timeout-request', args.timeoutRequest.toString());
+    if (args.reporters?.length) cliArgs.push('--reporters', args.reporters.join(','));
+    if (args.bail) cliArgs.push('--bail');
+    if (args.workingDir) cliArgs.push('--working-dir', args.workingDir);
 
-### 3.3 API Governance
-
-```typescript
-class APIGovernance {
-  constructor(
-    private cloudSync: CloudSyncManager,
-    private rateTracker: RateTracker
-  ) {}
-
-  async lintAPI(args: LintAPIArgs): Promise<LintResult> {
-    // Track API usage
-    await this.rateTracker.checkLimit();
-
-    // 1. Load API definition
-    const api = await this.loadAPIDefinition(args.api);
-
-    // 2. Load governance rules
-    const rules = await this.loadRules(args.ruleset, args.rules);
-    await this.rateTracker.trackCall('rules_fetch');
-
-    // 3. Run governance checks
-    const violations = await this.checkRules(api, rules);
-
-    // 4. Generate report
-    const report = {
-      success: violations.length === 0,
-      violations,
-      summary: this.generateSummary(violations)
-    };
-
-    // 5. Sync results if enabled
-    if (!args.disableCloudSync) {
-      await this.cloudSync.syncLintResults(report);
-      await this.rateTracker.trackCall('results_sync');
-    }
-
-    return report;
-  }
-
-  private async loadRules(
-    ruleset?: string,
-    customRules?: Record<string, unknown>
-  ): Promise<GovernanceRules> {
-    // Load base ruleset
-    const baseRules = ruleset
-      ? await this.loadRulesetFromSource(ruleset)
-      : this.getDefaultRules();
-
-    // Merge with custom rules if provided
-    return customRules
-      ? this.mergeRules(baseRules, customRules)
-      : baseRules;
-  }
-}
-```
-
-
-## 4. Authentication Management
-
-```typescript
-class AuthManager {
-  private static instance: AuthManager;
-  private apiKey: string | null = null;
-
-  private constructor() {}
-
-  static getInstance(): AuthManager {
-    if (!AuthManager.instance) {
-      AuthManager.instance = new AuthManager();
-    }
-    return AuthManager.instance;
-  }
-
-  async login(apiKey: string): Promise<void> {
-    // 1. Validate API key format
-    this.validateApiKeyFormat(apiKey);
-
-    // 2. Test API key with a simple API call
-    await this.testApiKey(apiKey);
-
-    // 3. Store API key securely
-    this.apiKey = apiKey;
-  }
-
-  async logout(): Promise<void> {
-    this.apiKey = null;
-  }
-
-  getApiKey(): string {
-    if (!this.apiKey) {
-      throw new CLIError(
-        CLIErrorCode.AuthenticationError,
-        'Not authenticated. Please login first.'
-      );
-    }
-    return this.apiKey;
-  }
-```
-
-
-## 5. Reporting System
-
-### 5.1 Report Formatters
-
-```typescript
-interface ReportFormatter {
-  format(results: RunResult): Promise<string>;
-}
-
-class CLIFormatter implements ReportFormatter {
-  async format(results: RunResult): Promise<string> {
-    return this.formatCLIOutput(results);
-  }
-}
-
-class JSONFormatter implements ReportFormatter {
-  async format(results: RunResult): Promise<string> {
-    return JSON.stringify(results, null, 2);
-  }
-}
-
-class JUnitFormatter implements ReportFormatter {
-  async format(results: RunResult): Promise<string> {
-    return this.formatJUnitXML(results);
-  }
-}
-```
-
-### 5.2 Report Manager
-
-```typescript
-class ReportManager {
-  private formatters: Map<string, ReportFormatter>;
-
-  constructor() {
-    this.formatters = new Map([
-      ['cli', new CLIFormatter()],
-      ['json', new JSONFormatter()],
-      ['junit', new JUnitFormatter()]
-    ]);
-  }
-
-  async generateReport(
-    results: RunResult,
-    options: ReportOptions
-  ): Promise<string> {
-    const formatter = this.formatters.get(options.format);
-    if (!formatter) {
-      throw new CLIError(
-        CLIErrorCode.ValidationError,
-        `Unsupported format: ${options.format}`
-      );
-    }
-
-    const report = await formatter.format(results);
-
-    if (options.reportPath) {
-      await this.exportReport(report, options.reportPath);
-    }
-
-    return report;
-  }
-}
-```
-
-## 6. Error Handling
-
-```typescript
-enum CLIErrorCode {
-  AuthenticationError = 'CLI_AUTH_ERROR',
-  CollectionNotFound = 'COLLECTION_NOT_FOUND',
-  EnvironmentNotFound = 'ENVIRONMENT_NOT_FOUND',
-  ExecutionError = 'EXECUTION_ERROR',
-  ValidationError = 'VALIDATION_ERROR',
-  RateLimit = 'RATE_LIMIT_ERROR',
-  CloudSyncError = 'CLOUD_SYNC_ERROR'
-}
-
-class CLIError extends Error {
-  constructor(
-    public code: CLIErrorCode,
-    message: string,
-    public details?: unknown
-  ) {
-    super(message);
-  }
-}
-
-class ErrorHandler {
-  handle(error: unknown): ToolCallResponse {
-    if (error instanceof CLIError) {
-      return this.handleCLIError(error);
-    }
-    if (error instanceof RateLimitError) {
-      return this.handleRateLimit(error);
-    }
-    if (axios.isAxiosError(error)) {
-      return this.handleAPIError(error);
-    }
-    return this.handleUnknownError(error);
-  }
-
-  private handleRateLimit(error: RateLimitError): ToolCallResponse {
-    return {
-      content: [
-        {
+    try {
+      const result = await this.executeCommand('postman', cliArgs);
+      return {
+        content: [{
           type: 'text',
-          text: `Rate limit exceeded. Please wait ${error.retryAfter} seconds.`
-        }
-      ],
+          text: result
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `Collection run failed: ${error.message}`
+        }],
+        isError: true
+      };
+    }
+  }
+}
+```
+
+## 4. Error Handling
+
+```typescript
+class PostmanCLITools {
+  private handleError(error: unknown): ToolCallResponse {
+    // Standard error response format
+    return {
+      content: [{
+        type: 'text',
+        text: error instanceof Error ? error.message : 'Unknown error occurred'
+      }],
       isError: true
     };
   }
 }
 ```
 
-## 7. Implementation Strategy
+## 5. Server Integration
 
-1. Phase 1: Core Authentication & Rate Management
-   - Implement CLI login/logout
-   - Add secure API key management
-   - Implement rate tracking system
-   - Set up error handling
+```typescript
+class PostmanAPIServer {
+  constructor() {
+    // Initialize CLI tools
+    this.cliTools = new PostmanCLITools();
 
-2. Phase 2: Collection Runner & Cloud Sync
-   - Basic collection execution
-   - Support for local and remote collections
-   - Cloud result syncing
-   - Multiple report formats
+    // Add CLI tool definitions
+    this.toolDefinitions = [
+      ...this.workspaceTools.getToolDefinitions(),
+      ...this.environmentTools.getToolDefinitions(),
+      ...this.collectionTools.getToolDefinitions(),
+      ...this.userTools.getToolDefinitions(),
+      ...this.cliTools.getToolDefinitions()
+    ];
 
-3. Phase 3: API Governance
-   - API definition loading
-   - Configurable rule system
-   - Violation reporting
-   - Cloud sync integration
+    // Register CLI tool handlers
+    this.toolHandlers.set('cli_login', this.cliTools);
+    this.toolHandlers.set('cli_logout', this.cliTools);
+    this.toolHandlers.set('run_collection', this.cliTools);
+    this.toolHandlers.set('api_lint', this.cliTools);
+    this.toolHandlers.set('publish_api', this.cliTools);
+  }
+}
+```
+
+## 6. Implementation Strategy
+
+1. Phase 1: Core CLI Integration
+   - Implement CLI tool handler
+   - Add authentication commands
+   - Basic command execution infrastructure
+   - Error handling setup
+
+2. Phase 2: Collection Runner
+   - Collection run command
+   - Environment support
+   - Report generation
+   - Working directory handling
+
+3. Phase 3: API Operations
+   - API governance checks
+   - Version publishing
+   - Git integration support
 
 4. Phase 4: Testing & Documentation
-   - Unit tests for all components
-   - Integration tests
-   - Rate limit tests
-   - CLI usage documentation
+   - Unit tests for command handling
+   - Integration tests with CLI
+   - Usage documentation
+   - Example workflows
 
-## 8. Conclusion
+## 7. Conclusion
 
-This design provides a comprehensive implementation of Postman CLI functionality through the MCP server, with particular attention to:
+This design provides a streamlined implementation of Postman CLI functionality through the MCP server, with focus on:
 
-1. **Cloud Integration**
-   - Automatic result syncing
-   - Rate limit handling
-   - Usage tracking
-   - Configurable sync behavior
+1. **Simplicity**
+   - Direct CLI command mapping
+   - Minimal custom logic
+   - Clear interfaces
 
-2. **Robust Architecture**
-   - Clear separation of concerns
-   - Flexible source loading
-   - Comprehensive error handling
-   - Extensible reporting system
+2. **Reliability**
+   - Native CLI functionality
+   - Built-in reporting
+   - Standard error handling
 
-3. **User-Friendly Integration**
-   - Multiple report formats
-   - Local file support
-   - Custom rule configurations
-   - Detailed error messages
+3. **Usability**
+   - Familiar command structure
+   - Consistent interface
+   - Clear documentation
 
-4. **Performance & Reliability**
-   - Rate limit awareness
-   - Automatic retries
-   - Usage optimization
-   - Error recovery
+4. **Maintainability**
+   - Simple architecture
+   - Easy to update
+   - Well-defined boundaries
 
-This implementation provides a solid foundation for integrating Postman CLI capabilities while maintaining flexibility for future extensions and ensuring reliable cloud integration.
+The implementation provides a clean and efficient interface to Postman CLI capabilities while maintaining simplicity and reliability.
