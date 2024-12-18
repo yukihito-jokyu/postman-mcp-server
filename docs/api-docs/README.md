@@ -20,7 +20,7 @@ Each of the following documents contains a summary of the Postman API functional
 
 ## Prompts
 
-**Using Cline 2.2.2**
+**Using Cline 2.2.2 and Continue 0.9.246**
 
 ### Utilizing MCP Server Tools
 
@@ -180,10 +180,18 @@ Billing
 Add both the relevant `https://www.postman.com/postman/postman-public-workspace/` and  `https://learning.postman.com/docs` links to each of the above sections.
 ```
 
+#### Adding Authentication Details
+
 ```prompt
 @URL:https://learning.postman.com/docs/developer/postman-api/authentication/
 
 Based on the content of the postman doc linked, add a new section with concise but complete details including relevant links (`learning.postman.com`, `go.postman.com`, `www.postman.com` pages) to this readme.md
+```
+
+#### Reviewing and Updating Documentation
+
+```prompt
+Proofread and tidy this markdown readme to a professional standard. Do not make up new content to add; and do not omit existing content, except where redundant and or unclear.
 ```
 
 
