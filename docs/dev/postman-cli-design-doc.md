@@ -17,22 +17,23 @@ postman-api-server/
 │   ├── server.ts               # Main server implementation
 │   ├── types.ts                # Shared type definitions
 │   ├── tools/                  # API operation tools
-│   │   ├── collections.ts      # Collection operations (CRUD, forking, etc.)
-│   │   ├── environments.ts     # Environments & variables
-│   │   ├── users.ts            # Auth & user management
-│   │   └── workspaces.ts
-│   ├── cli/                    # CLI operations
-│   │   ├── cli-operations.ts   # Main CLI functionality
-│   │   └── session.ts          # CLI session management
-│   └── reporting/              # Reporting system
+│   │   ├── api/                # API-specific operations
+│   │   │   ├── collections.ts  # Collection operations (CRUD, forking, etc.)
+│   │   │   ├── environments.ts # Environments & variables
+│   │   │   ├── users.ts        # Auth & user management
+│   │   │   └── workspaces.ts
+│   │   └── cli/               # CLI operations
+│   │       ├── commands.ts    # Main CLI functionality
+│   │       └── session.ts     # CLI session management
+│   └── reporting/             # Reporting system
 │       ├── reporters/
 │       │   ├── base.ts
 │       │   ├── cli.ts
 │       │   ├── json.ts
 │       │   ├── junit.ts
 │       │   └── html.ts
-│       ├── factory.ts          # Reporter factory (config-based)
-│       └── manager.ts          # Reporting logistics
+│       ├── factory.ts         # Reporter factory (config-based)
+│       └── manager.ts         # Reporting logistics
 ```
 
 

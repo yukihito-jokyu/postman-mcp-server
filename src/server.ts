@@ -12,10 +12,10 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import axios from 'axios';
 
-import { WorkspaceTools } from './tools/workspaces.js';
-import { EnvironmentTools } from './tools/environments.js';
-import { CollectionTools } from './tools/collections.js';
-import { UserTools } from './tools/users.js';
+import { WorkspaceTools } from './tools/api/workspaces.js';
+import { EnvironmentTools } from './tools/api/environments.js';
+import { CollectionTools } from './tools/api/collections.js';
+import { UserTools } from './tools/api/users.js';
 import { ToolDefinition, ToolHandler } from './types.js';
 
 const API_KEY = process.env.POSTMAN_API_KEY;
