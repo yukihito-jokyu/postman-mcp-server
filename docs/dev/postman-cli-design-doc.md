@@ -20,8 +20,8 @@ postman-api-server/
 │   │   │   ├── environments.ts # Environment operations
 │   │   │   ├── users.ts        # User management
 │   │   │   └── workspaces.ts   # Workspace operations
-│   │   └── cli/               # CLI operations
-│   │       └── index.ts       # CLI tool implementations
+│   │   └── cli/                # CLI operations
+│   │       └── index.ts        # CLI tool implementations
 ```
 
 ### 2.2 Key Design Decisions
@@ -52,58 +52,40 @@ class PostmanCLITools implements ToolHandler {
   getToolDefinitions(): ToolDefinition[] {
     return [
       {
-        name: 'cli_login',
-        description: 'Sign in to Postman CLI using an API key',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            apiKey: {
-              type: 'string',
-              description: 'Postman API key'
-            }
-          },
-          required: ['apiKey']
-        }
-      },
-      {
-        name: 'cli_logout',
-        description: 'Sign out from Postman CLI',
-        inputSchema: {
-          type: 'object',
-          properties: {},
-          required: []
-        }
-      },
-      {
         name: 'run_collection',
-        description: 'Run a Postman collection',
+        description: 'Run a Postman collection locally or in CI/CD',
         inputSchema: {
           type: 'object',
           properties: {
             collection: {
               type: 'string',
-              description: 'Collection ID or file path'
+              description: 'Collection ID'
             },
             environment: {
               type: 'string',
-              description: 'Environment ID or file path'
+              description: 'Optional environment ID'
             },
-            folder: {
+            apiKey: {
               type: 'string',
-              description: 'Specific folder to run'
+              description: 'Postman API key'
             },
+            // Run configuration
             iterationCount: {
               type: 'number',
-              description: 'Number of iterations'
+              description: 'Number of iterations to run'
             },
-            delayRequest: {
-              type: 'number',
-              description: 'Delay between requests (ms)'
+            folderIds: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Specific folder/request UIDs to run in order'
             },
-            timeoutRequest: {
-              type: 'number',
-              description: 'Request timeout (ms)'
+            // CI/CD options
+            ciProvider: {
+              type: 'string',
+              enum: ['github', 'gitlab', 'jenkins', 'azure', 'circleci'],
+              description: 'CI/CD provider for configuration'
             },
+            // Output options
             reporters: {
               type: 'array',
               items: {
@@ -112,16 +94,21 @@ class PostmanCLITools implements ToolHandler {
               },
               description: 'Report formats to generate'
             },
+            // Advanced options
             bail: {
               type: 'boolean',
-              description: 'Stop on first error'
+              description: 'Stop on first test failure'
             },
-            workingDir: {
-              type: 'string',
-              description: 'Working directory for file paths'
+            delayRequest: {
+              type: 'number',
+              description: 'Delay between requests in ms'
+            },
+            timeoutRequest: {
+              type: 'number',
+              description: 'Request timeout in ms'
             }
           },
-          required: ['collection']
+          required: ['collection', 'apiKey']
         }
       },
       {
@@ -134,46 +121,17 @@ class PostmanCLITools implements ToolHandler {
               type: 'string',
               description: 'API ID or definition file'
             },
+            apiKey: {
+              type: 'string',
+              description: 'Postman API key'
+            },
             failSeverity: {
               type: 'string',
               enum: ['HINT', 'INFO', 'WARN', 'ERROR'],
               description: 'Minimum severity to trigger failure'
             }
           },
-          required: ['api']
-        }
-      },
-      {
-        name: 'publish_api',
-        description: 'Publish an API version',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            apiId: {
-              type: 'string',
-              description: 'API ID'
-            },
-            name: {
-              type: 'string',
-              description: 'Version name'
-            },
-            releaseNotes: {
-              type: 'string',
-              description: 'Release notes (supports Markdown)'
-            },
-            collections: {
-              type: 'array',
-              items: {
-                type: 'string'
-              },
-              description: 'Collection IDs or paths to include'
-            },
-            apiDefinition: {
-              type: 'string',
-              description: 'API definition ID, directory, or file'
-            }
-          },
-          required: ['apiId', 'name']
+          required: ['api', 'apiKey']
         }
       }
     ];
@@ -196,14 +154,36 @@ class PostmanCLITools {
 
     // Build command arguments from tool parameters
     cliArgs.push(args.collection);
-    if (args.environment) cliArgs.push('-e', args.environment);
-    if (args.folder) cliArgs.push('-i', args.folder);
-    if (args.iterationCount) cliArgs.push('-n', args.iterationCount.toString());
+
+    // Authentication
+    cliArgs.push('--api-key', args.apiKey);
+
+    // Environment
+    if (args.environment) {
+      cliArgs.push('-e', args.environment);
+    }
+
+    // Run configuration
+    if (args.iterationCount) {
+      cliArgs.push('-n', args.iterationCount.toString());
+    }
+
+    // Specific folder/request order
+    if (args.folderIds?.length) {
+      args.folderIds.forEach(id => {
+        cliArgs.push('-i', id);
+      });
+    }
+
+    // Reporters
+    if (args.reporters?.length) {
+      cliArgs.push('--reporters', args.reporters.join(','));
+    }
+
+    // Advanced options
+    if (args.bail) cliArgs.push('--bail');
     if (args.delayRequest) cliArgs.push('--delay-request', args.delayRequest.toString());
     if (args.timeoutRequest) cliArgs.push('--timeout-request', args.timeoutRequest.toString());
-    if (args.reporters?.length) cliArgs.push('--reporters', args.reporters.join(','));
-    if (args.bail) cliArgs.push('--bail');
-    if (args.workingDir) cliArgs.push('--working-dir', args.workingDir);
 
     try {
       const result = await this.executeCommand('postman', cliArgs);
@@ -261,41 +241,71 @@ class PostmanAPIServer {
     ];
 
     // Register CLI tool handlers
-    this.toolHandlers.set('cli_login', this.cliTools);
-    this.toolHandlers.set('cli_logout', this.cliTools);
     this.toolHandlers.set('run_collection', this.cliTools);
     this.toolHandlers.set('api_lint', this.cliTools);
-    this.toolHandlers.set('publish_api', this.cliTools);
   }
 }
 ```
 
 ## 6. Implementation Strategy
 
-1. Phase 1: Core CLI Integration
-   - Implement CLI tool handler
-   - Add authentication commands
-   - Basic command execution infrastructure
-   - Error handling setup
-
-2. Phase 2: Collection Runner
-   - Collection run command
+1. Phase 1: Core Collection Runner
+   - Basic collection run functionality
    - Environment support
-   - Report generation
-   - Working directory handling
+   - Authentication handling
+   - Basic reporting
 
-3. Phase 3: API Operations
-   - API governance checks
-   - Version publishing
-   - Git integration support
+2. Phase 2: Advanced Collection Features
+   - Folder/request ordering
+   - Test data file support
+   - Package integration
+   - Advanced reporting options
+
+3. Phase 3: CI/CD Integration
+   - Provider-specific configurations
+   - Environment variable handling
+   - Pipeline integration examples
 
 4. Phase 4: Testing & Documentation
-   - Unit tests for command handling
-   - Integration tests with CLI
-   - Usage documentation
-   - Example workflows
+   - Unit tests
+   - Integration tests
+   - Usage examples
+   - CI/CD workflow examples
 
-## 7. Conclusion
+## 7. Key Features & Limitations
+
+### Features
+1. **Collection Running**
+   - Local and CI/CD execution
+   - Custom run order support
+   - Multiple reporter formats
+   - Environment integration
+
+2. **Authentication**
+   - API key based auth
+   - Secure key handling
+   - CI/CD variable support
+
+3. **Reporting**
+   - CLI output
+   - JSON reports
+   - JUnit reports
+   - HTML reports
+
+### Limitations
+1. **Test Data Files**
+   - Files must be uploaded to Postman
+   - Local file references not supported
+
+2. **OAuth 2.0**
+   - Interactive auth flows not supported
+   - Pre-configured tokens required
+
+3. **Package Support**
+   - Limited to Professional/Enterprise plans
+   - Package Library integration required
+
+## 8. Conclusion
 
 This design provides a streamlined implementation of Postman CLI functionality through the MCP server, with focus on:
 
@@ -319,4 +329,10 @@ This design provides a streamlined implementation of Postman CLI functionality t
    - Easy to update
    - Well-defined boundaries
 
-The implementation provides a clean and efficient interface to Postman CLI capabilities while maintaining simplicity and reliability.
+The implementation provides a clean and efficient interface to Postman CLI capabilities while maintaining simplicity and reliability. Key improvements in this revision include:
+
+1. Simplified authentication handling
+2. Enhanced collection run options
+3. Better CI/CD integration
+4. Clearer limitations documentation
+5. More detailed reporting configuration
