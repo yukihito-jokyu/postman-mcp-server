@@ -5,10 +5,23 @@ import {
   ToolDefinition,
   ToolHandler,
 } from '../../../types/index.js';
+import { BasePostmanTool } from '../base.js';
 import { TOOL_DEFINITIONS } from './definitions.js';
 
-export class EnvironmentTools implements ToolHandler {
-  constructor(public axiosInstance: AxiosInstance) {}
+/**
+ * Implements Postman Environment API endpoints
+ * All environment IDs must be in the format: {ownerId}-{environmentId}
+ */
+export class EnvironmentTools extends BasePostmanTool implements ToolHandler {
+  public axiosInstance: AxiosInstance;
+
+  constructor(axiosInstance: AxiosInstance) {
+    // Pass empty string as apiKey since we're using an existing client
+    super('');
+    this.axiosInstance = axiosInstance;
+    // Override the client from base class with the provided instance
+    this.client = axiosInstance;
+  }
 
   getToolDefinitions(): ToolDefinition[] {
     return TOOL_DEFINITIONS;
@@ -45,56 +58,82 @@ export class EnvironmentTools implements ToolHandler {
           throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
     } catch (error: any) {
-      if (error.response?.status === 401) {
-        throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
-      }
+      // Let base class interceptor handle API errors
       throw error;
     }
   }
 
+  /**
+   * List all environments in a workspace
+   * If workspace not specified, lists environments in "My Workspace"
+   */
   async listEnvironments(workspace?: string): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.get('/environments', {
+    const response = await this.client.get('/environments', {
       params: workspace ? { workspace } : undefined
     });
     return this.createResponse(response.data);
   }
 
+  /**
+   * Get details of a specific environment
+   * @param environmentId Environment ID in format: {ownerId}-{environmentId}
+   */
   async getEnvironment(environmentId: string): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.get(`/environments/${environmentId}`);
+    const response = await this.client.get(`/environments/${environmentId}`);
     return this.createResponse(response.data);
   }
 
+  /**
+   * Create a new environment in a workspace
+   * Creates in "My Workspace" if workspace not specified
+   */
   async createEnvironment(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.post('/environments', {
+    const response = await this.client.post('/environments', {
       environment: args.environment,
       workspace: args.workspace ? { id: args.workspace, type: 'workspace' } : undefined
     });
     return this.createResponse(response.data);
   }
 
+  /**
+   * Update an existing environment
+   * @param args.environmentId Environment ID in format: {ownerId}-{environmentId}
+   */
   async updateEnvironment(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.put(
+    const response = await this.client.put(
       `/environments/${args.environmentId}`,
       { environment: args.environment }
     );
     return this.createResponse(response.data);
   }
 
+  /**
+   * Delete an environment
+   * @param environmentId Environment ID in format: {ownerId}-{environmentId}
+   */
   async deleteEnvironment(environmentId: string): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.delete(`/environments/${environmentId}`);
+    const response = await this.client.delete(`/environments/${environmentId}`);
     return this.createResponse(response.data);
   }
 
+  /**
+   * Create a fork of an environment in a workspace
+   * @param args.environmentId Environment ID in format: {ownerId}-{environmentId}
+   */
   async createEnvironmentFork(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.post(`/environments/${args.environmentId}/forks`, {
+    const response = await this.client.post(`/environments/${args.environmentId}/forks`, {
       forkName: args.label,
       workspace: { id: args.workspace, type: 'workspace' }
     });
     return this.createResponse(response.data);
   }
 
+  /**
+   * Get a list of environment forks
+   * @param args.environmentId Environment ID in format: {ownerId}-{environmentId}
+   */
   async getEnvironmentForks(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.get(`/environments/${args.environmentId}/forks`, {
+    const response = await this.client.get(`/environments/${args.environmentId}/forks`, {
       params: {
         cursor: args.cursor,
         direction: args.direction,
@@ -105,8 +144,14 @@ export class EnvironmentTools implements ToolHandler {
     return this.createResponse(response.data);
   }
 
+  /**
+   * Merge a forked environment back into its parent
+   * @param args.environmentId Environment ID in format: {ownerId}-{environmentId}
+   * @param args.source Source environment ID in format: {ownerId}-{environmentId}
+   * @param args.destination Destination environment ID in format: {ownerId}-{environmentId}
+   */
   async mergeEnvironmentFork(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.post(`/environments/${args.environmentId}/merges`, {
+    const response = await this.client.post(`/environments/${args.environmentId}/merges`, {
       source: args.source,
       destination: args.destination,
       deleteSource: args.strategy?.deleteSource
@@ -114,8 +159,14 @@ export class EnvironmentTools implements ToolHandler {
     return this.createResponse(response.data);
   }
 
+  /**
+   * Pull changes from parent environment into forked environment
+   * @param args.environmentId Environment ID in format: {ownerId}-{environmentId}
+   * @param args.source Source environment ID in format: {ownerId}-{environmentId}
+   * @param args.destination Destination environment ID in format: {ownerId}-{environmentId}
+   */
   async pullEnvironment(args: any): Promise<ToolCallResponse> {
-    const response = await this.axiosInstance.post(`/environments/${args.environmentId}/pulls`, {
+    const response = await this.client.post(`/environments/${args.environmentId}/pulls`, {
       source: args.source,
       destination: args.destination
     });

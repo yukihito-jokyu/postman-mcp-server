@@ -69,31 +69,14 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
               type: 'object',
               required: ['name', 'schema'],
               properties: {
-                name: {
-                  type: 'string',
-                  description: "The collection's name"
-                },
-                description: {
-                  type: 'string',
-                  description: "The collection's description"
-                },
-                schema: {
-                  type: 'string',
-                  description: "The collection's schema URL"
-                }
-              }
-            },
-            item: {
-              type: 'array',
-              description: 'Collection items (requests, folders)',
-              items: {
-                type: 'object'
+                name: { type: 'string' },
+                schema: { type: 'string' }
               }
             }
           }
         }
       },
-      required: ['workspace', 'collection'],
+      required: ['collection'],
     },
   },
   {
@@ -115,25 +98,36 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
               type: 'object',
               required: ['name', 'schema'],
               properties: {
-                name: {
-                  type: 'string',
-                  description: "The collection's name"
-                },
-                description: {
-                  type: 'string',
-                  description: "The collection's description"
-                },
-                schema: {
-                  type: 'string',
-                  description: "The collection's schema URL"
-                }
+                name: { type: 'string' },
+                schema: { type: 'string' }
               }
             },
-            item: {
-              type: 'array',
-              description: 'Collection items (requests, folders)',
-              items: {
-                type: 'object'
+            item: { type: 'array' }
+          }
+        }
+      },
+      required: ['collection_id', 'collection'],
+    },
+  },
+  {
+    name: 'patch_collection',
+    description: 'Partially update a collection. Only updates provided fields.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        collection_id: {
+          type: 'string',
+          description: 'Collection ID',
+        },
+        collection: {
+          type: 'object',
+          description: 'Collection fields to update',
+          properties: {
+            info: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                description: { type: 'string' }
               }
             }
           }
@@ -154,6 +148,28 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         },
       },
       required: ['collection_id'],
+    },
+  },
+  {
+    name: 'create_collection_folder',
+    description: 'Create a new folder in a collection',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        collection_id: {
+          type: 'string',
+          description: 'Collection ID',
+        },
+        folder: {
+          type: 'object',
+          description: 'Folder details',
+          properties: {
+            name: { type: 'string' },
+            description: { type: 'string' }
+          }
+        }
+      },
+      required: ['collection_id', 'folder'],
     },
   },
   {
@@ -187,6 +203,32 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
+    name: 'update_collection_folder',
+    description: 'Update a folder in a collection. Acts like PATCH, only updates provided values.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        collection_id: {
+          type: 'string',
+          description: 'Collection ID',
+        },
+        folder_id: {
+          type: 'string',
+          description: 'Folder ID',
+        },
+        folder: {
+          type: 'object',
+          description: 'Folder details to update',
+          properties: {
+            name: { type: 'string' },
+            description: { type: 'string' }
+          }
+        }
+      },
+      required: ['collection_id', 'folder_id', 'folder'],
+    },
+  },
+  {
     name: 'delete_collection_folder',
     description: 'Delete a folder from a collection',
     inputSchema: {
@@ -202,6 +244,33 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         },
       },
       required: ['collection_id', 'folder_id'],
+    },
+  },
+  {
+    name: 'create_collection_request',
+    description: 'Create a new request in a collection',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        collection_id: {
+          type: 'string',
+          description: 'Collection ID',
+        },
+        folder_id: {
+          type: 'string',
+          description: 'Optional folder ID to create request in',
+        },
+        request: {
+          type: 'object',
+          description: 'Request details',
+          properties: {
+            name: { type: 'string' },
+            method: { type: 'string' },
+            url: { type: 'string' }
+          }
+        }
+      },
+      required: ['collection_id', 'request'],
     },
   },
   {
@@ -235,6 +304,33 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
+    name: 'update_collection_request',
+    description: 'Update a request in a collection. Cannot change request folder.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        collection_id: {
+          type: 'string',
+          description: 'Collection ID',
+        },
+        request_id: {
+          type: 'string',
+          description: 'Request ID',
+        },
+        request: {
+          type: 'object',
+          description: 'Request details to update',
+          properties: {
+            name: { type: 'string' },
+            method: { type: 'string' },
+            url: { type: 'string' }
+          }
+        }
+      },
+      required: ['collection_id', 'request_id', 'request'],
+    },
+  },
+  {
     name: 'delete_collection_request',
     description: 'Delete a request from a collection',
     inputSchema: {
@@ -250,6 +346,33 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         },
       },
       required: ['collection_id', 'request_id'],
+    },
+  },
+  {
+    name: 'create_collection_response',
+    description: 'Create a new response in a collection',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        collection_id: {
+          type: 'string',
+          description: 'Collection ID',
+        },
+        request_id: {
+          type: 'string',
+          description: 'Parent request ID',
+        },
+        response: {
+          type: 'object',
+          description: 'Response details',
+          properties: {
+            name: { type: 'string' },
+            code: { type: 'number' },
+            status: { type: 'string' }
+          }
+        }
+      },
+      required: ['collection_id', 'request_id', 'response'],
     },
   },
   {
@@ -280,6 +403,33 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         },
       },
       required: ['collection_id', 'response_id'],
+    },
+  },
+  {
+    name: 'update_collection_response',
+    description: 'Update a response in a collection. Acts like PATCH, only updates provided values.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        collection_id: {
+          type: 'string',
+          description: 'Collection ID',
+        },
+        response_id: {
+          type: 'string',
+          description: 'Response ID',
+        },
+        response: {
+          type: 'object',
+          description: 'Response details to update',
+          properties: {
+            name: { type: 'string' },
+            code: { type: 'number' },
+            status: { type: 'string' }
+          }
+        }
+      },
+      required: ['collection_id', 'response_id', 'response'],
     },
   },
   {
@@ -322,5 +472,115 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
       required: ['collection_id', 'workspace', 'label'],
     },
   },
-
+  {
+    name: 'get_collection_forks',
+    description: 'Get a list of collection forks',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        collection_id: {
+          type: 'string',
+          description: 'Collection ID',
+        },
+        cursor: {
+          type: 'string',
+          description: 'Pagination cursor',
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of results to return',
+        },
+        direction: {
+          type: 'string',
+          enum: ['asc', 'desc'],
+          description: 'Sort direction',
+        },
+        sort: {
+          type: 'string',
+          enum: ['createdAt'],
+          description: 'Sort field',
+        }
+      },
+      required: ['collection_id'],
+    },
+  },
+  {
+    name: 'merge_collection_fork',
+    description: 'Merge a forked collection back into its parent',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        source: {
+          type: 'string',
+          description: 'Source collection ID',
+        },
+        destination: {
+          type: 'string',
+          description: 'Destination collection ID',
+        },
+        strategy: {
+          type: 'string',
+          enum: ['default', 'updateSourceWithDestination', 'deleteSource'],
+          description: 'Merge strategy',
+        }
+      },
+      required: ['source', 'destination', 'strategy'],
+    },
+  },
+  {
+    name: 'pull_collection_changes',
+    description: 'Pull changes from parent collection into forked collection',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        collection_id: {
+          type: 'string',
+          description: 'Collection ID',
+        }
+      },
+      required: ['collection_id'],
+    },
+  },
+  {
+    name: 'transfer_collection_items',
+    description: 'Transfer items between collections',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        type: {
+          type: 'string',
+          enum: ['folder', 'request', 'response'],
+          description: 'Type of items to transfer',
+        },
+        ids: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'IDs of items to transfer',
+        },
+        target: {
+          type: 'object',
+          properties: {
+            model: { type: 'string' },
+            id: { type: 'string' }
+          },
+          description: 'Target collection/folder information',
+        },
+        location: {
+          type: 'object',
+          properties: {
+            position: { type: 'string' },
+            model: { type: 'string' },
+            id: { type: 'string' }
+          },
+          description: 'Location details for placement',
+        },
+        mode: {
+          type: 'string',
+          enum: ['copy', 'move'],
+          description: 'Transfer mode',
+        }
+      },
+      required: ['type', 'ids', 'target', 'mode'],
+    },
+  },
 ];

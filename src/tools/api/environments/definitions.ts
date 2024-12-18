@@ -3,16 +3,16 @@ import { ToolDefinition } from '../../../types/index.js';
 export const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
     name: 'list_environments',
-    description: 'List all environments in a workspace',
+    description: 'List all environments in a workspace. If workspace not specified, lists environments in "My Workspace".',
     inputSchema: {
       type: 'object',
       properties: {
         workspace: {
           type: 'string',
-          description: 'Workspace ID',
+          description: 'Workspace ID (optional)',
         },
       },
-      required: ['workspace'],
+      required: [], // Empty array since workspace is optional
     },
   },
   {
@@ -55,7 +55,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
               }
             }
           },
-          required: ['name', 'values']
+          required: ['name']
         },
         workspace: { type: 'string', description: 'Workspace ID (optional)' }
       },
@@ -117,7 +117,10 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     inputSchema: {
       type: 'object',
       properties: {
-        environmentId: { type: 'string', description: 'Environment ID' },
+        environmentId: {
+          type: 'string',
+          description: 'Environment ID in format: {ownerId}-{environmentId}'
+        },
         label: { type: 'string', description: 'Label/name for the forked environment' },
         workspace: { type: 'string', description: 'Target workspace ID' }
       },
@@ -130,7 +133,10 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     inputSchema: {
       type: 'object',
       properties: {
-        environmentId: { type: 'string', description: 'Environment ID' },
+        environmentId: {
+          type: 'string',
+          description: 'Environment ID in format: {ownerId}-{environmentId}'
+        },
         cursor: { type: 'string', description: 'Pagination cursor' },
         direction: { type: 'string', enum: ['asc', 'desc'], description: 'Sort direction' },
         limit: { type: 'number', description: 'Number of results per page' },
@@ -145,9 +151,18 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     inputSchema: {
       type: 'object',
       properties: {
-        environmentId: { type: 'string', description: 'Environment ID' },
-        source: { type: 'string', description: 'Source environment ID' },
-        destination: { type: 'string', description: 'Destination environment ID' },
+        environmentId: {
+          type: 'string',
+          description: 'Environment ID in format: {ownerId}-{environmentId}'
+        },
+        source: {
+          type: 'string',
+          description: 'Source environment ID in format: {ownerId}-{environmentId}'
+        },
+        destination: {
+          type: 'string',
+          description: 'Destination environment ID in format: {ownerId}-{environmentId}'
+        },
         strategy: {
           type: 'object',
           description: 'Merge strategy options',
@@ -165,9 +180,18 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     inputSchema: {
       type: 'object',
       properties: {
-        environmentId: { type: 'string', description: 'Environment ID' },
-        source: { type: 'string', description: 'Source (parent) environment ID' },
-        destination: { type: 'string', description: 'Destination (fork) environment ID' }
+        environmentId: {
+          type: 'string',
+          description: 'Environment ID in format: {ownerId}-{environmentId}'
+        },
+        source: {
+          type: 'string',
+          description: 'Source (parent) environment ID in format: {ownerId}-{environmentId}'
+        },
+        destination: {
+          type: 'string',
+          description: 'Destination (fork) environment ID in format: {ownerId}-{environmentId}'
+        }
       },
       required: ['environmentId', 'source', 'destination']
     }
