@@ -1,7 +1,17 @@
 # Postman MCP Server
-**Version:** v0.1.0
+**Version:** v0.2.0
 
-An MCP server that provides seamless access to [Postman](https://www.postman.com/).
+An MCP server that provides seamless access to [Postman](https://www.postman.com/). Functionality is based on the OpenAPI specification. For more information, see the [Postman API documentation](https://www.postman.com/postman-public-workspace/).
+
+This project is part of the Model Context Protocol (MCP) initiative. For more information, visit the [MCP GitHub repository]([https://github.com/mcp-project/mcp](https://github.com/modelcontextprotocol)).
+
+
+
+> [!WARNING]
+> This project is currently under active development. Please use with caution and expect breaking changes.
+
+> [!NOTE]
+> AI Generated Code. I used Cline v2.2.2 with Claude 3.5 Sonnet (2024-10-22). See docs/README.md for prompts and details about how this code was generated.
 
 ## Overview
 
@@ -72,6 +82,14 @@ To use with Claude Desktop, add the server config:
 - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows:** `%APPDATA%/Claude/claude_desktop_config.json`
 
+> [!IMPORTANT]
+> If you're updating this provider, Claude must be restarted to pick up API changes from the input schema (i.e. When the MCP server's ToolDefinition elements have changed). This is because Claude caches the tool definitions when it starts up.
+>
+> To restart Claude:
+> 1. Close the Claude application completely
+> 2. Relaunch Claude
+> 3. Claude will reload with the updated tool definitions from the MCP server
+
 Example configuration:
 ```json
 {
@@ -87,11 +105,37 @@ Example configuration:
 
 API documentation is available in the [Postman Public Workspace](https://www.postman.com/postman/postman-public-workspace/).
 
-See
 
-postman-api-index.yaml
+## Rationale
 
- for a local copy of the OpenAPI definition.
+The MCP wrapper for Postman tools makes sense primarily as an AI interaction layer for complex, multi-step operations where structure and safety are paramount. However, it may be overengineered for simple operations where direct CLI or API usage would suffice. The MCP wrapper provides most value when:
+
+1. **Complex Operations**
+- Managing multiple collections
+- Coordinating environments
+- Generating comprehensive reports
+
+2. **AI-Driven Automation**
+- Automated testing workflows
+- API documentation maintenance
+- Environment management
+
+3. **Error-Sensitive Operations**
+- Critical API testing
+- Production deployments
+- Compliance checking
+
+It provides less value for:
+
+1. **Simple Operations**
+- Basic collection runs
+- Single API calls
+- Quick environment checks
+2. **Direct CLI Usage**
+- Developer-driven operations
+- Local testing
+- Quick iterations
+
 
 ## Development
 
@@ -118,7 +162,9 @@ Since MCP servers communicate over stdio, debugging can be challenging. We recom
 pnpm run inspector
 ```
 
-The Inspector will provide a URL to access debugging tools in your browser.
+[Docs](https://modelcontextprotocol.io/docs/tools/inspector)
+
+The Inspector will provide a URL to access debugging tools in your browser: http://localhost:5173. You will need to add the POSTMAN_API_KEY before connecting. Navigate to "Tools" to get started.
 
 ## Other MCP Servers
 

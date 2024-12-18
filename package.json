@@ -1,6 +1,6 @@
 {
   "name": "postman-api-server",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "an MCP server for Postman API",
   "private": true,
   "type": "module",
@@ -19,7 +19,8 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "0.6.0",
     "@types/axios": "^0.14.4",
-    "axios": "^1.7.9"
+    "axios": "^1.7.9",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",
