@@ -190,7 +190,7 @@ NOTE: this MCP server is a wrapper around existing API functionality that will b
 #### Reviewing tool implementations
 
 ```prompt
-@/docs/api/summaries/collections.md
+@/docs/api/summaries/apis.md
 
 @/docs/api/summaries/common-features.md
 
@@ -198,7 +198,7 @@ NOTE: this MCP server is a wrapper around existing API functionality that will b
 
 @/docs/api/references/postman-api-requestBodies.yaml
 
-Review the postman md docs and yaml definitions to cross check our MCP tools implementation `src/tools/api/collections/index.ts`. Understand the details and nuance of parameters and request bodies for POST/PUT/PATCH/GET/HEAD/OPTION/DELETE  requests. Modify out MCP tools implementation accordingly, including inline jsdocs. Use `src/tools/api/environments/index.ts` as a reference for how to implement the wrapper.
+Review the postman md docs and yaml definitions to cross check our MCP tools implementation `src/tools/api/apis/index.ts`. Understand the details and nuance of parameters and request bodies for POST/PUT/PATCH/GET/HEAD/OPTION/DELETE  requests. Modify out MCP tools implementation accordingly, including inline jsdocs. Use `src/tools/api/environments/index.ts` as a reference for how to implement the wrapper.
 
 NOTE: this MCP server is a wrapper around existing API functionality that will be doing the actual validation so simplify the validation to just required fields. Keep the basic types and enums for type safety and documentation.
 

@@ -5,16 +5,28 @@ import {
   ToolDefinition,
   ToolHandler,
 } from '../../../types/index.js';
+import { BasePostmanTool } from '../base.js';
 import { TOOL_DEFINITIONS } from './definitions.js';
 
-const V10_ACCEPT_HEADER = 'application/vnd.api.v10+json';
-
 /**
- * Handles API-related operations in the Postman API
- * Implements endpoints for managing APIs, schemas, versions, comments, and tags
+ * Implements Postman API endpoints for managing APIs, schemas, versions, comments, and tags
+ * All API operations require the v10 Accept header
  */
-export class ApiTools implements ToolHandler {
-  constructor(public axiosInstance: AxiosInstance) {}
+export class ApiTools extends BasePostmanTool implements ToolHandler {
+  /**
+   * Required by ToolHandler interface but not used directly.
+   * All requests should use the protected this.client from BasePostmanTool.
+   */
+  public readonly axiosInstance: AxiosInstance;
+
+  constructor(axiosInstance: AxiosInstance) {
+    super('', {
+      acceptHeader: 'application/vnd.api.v10+json'
+    }, axiosInstance);
+
+    // Store for interface compliance only
+    this.axiosInstance = axiosInstance;
+  }
 
   getToolDefinitions(): ToolDefinition[] {
     return TOOL_DEFINITIONS;
@@ -24,12 +36,6 @@ export class ApiTools implements ToolHandler {
     return {
       content: [{ type: 'text', text: JSON.stringify(data, null, 2) }]
     };
-  }
-
-  private validateCommentLength(content: string) {
-    if (content.length > 10000) {
-      throw new McpError(ErrorCode.InvalidParams, 'Comment content cannot exceed 10,000 characters');
-    }
   }
 
   /**
@@ -94,429 +100,353 @@ export class ApiTools implements ToolHandler {
         default:
           throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
-    } catch (error: any) {
-      // Map Postman API errors to appropriate MCP errors
-      if (error.response) {
-        switch (error.response.status) {
-          case 400:
-            throw new McpError(ErrorCode.InvalidRequest, error.response.data?.message || 'Invalid request parameters');
-          case 401:
-            throw new McpError(ErrorCode.InvalidRequest, 'Unauthorized access');
-          case 403:
-            throw new McpError(ErrorCode.InvalidRequest, 'Forbidden: Insufficient permissions or feature unavailable');
-          case 404:
-            throw new McpError(ErrorCode.InvalidRequest, 'Resource not found');
-          case 422:
-            throw new McpError(ErrorCode.InvalidRequest, error.response.data?.message || 'Invalid request parameters');
-          case 429:
-            throw new McpError(ErrorCode.InvalidRequest, 'Rate limit exceeded');
-          case 500:
-            throw new McpError(ErrorCode.InternalError, 'Internal server error');
-          default:
-            throw new McpError(ErrorCode.InternalError, error.response.data?.message || 'Unknown error occurred');
-        }
-      }
+    } catch (error) {
+      // Let base class interceptor handle API errors
       throw error;
     }
   }
 
   /**
    * List all APIs in a workspace
-   * @param params Query parameters including workspaceId (required), createdBy, cursor, description, limit
+   * @param params Query parameters including workspaceId (required)
    */
   async listApis(params: any): Promise<ToolCallResponse> {
     if (!params.workspaceId) {
       throw new McpError(ErrorCode.InvalidParams, 'workspaceId is required');
     }
-    const response = await this.axiosInstance.get('/apis', {
-      params,
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    const response = await this.client.get('/apis', { params });
     return this.createResponse(response.data);
   }
 
   /**
    * Get details of a specific API
-   * @param params Parameters including apiId (required) and optional include array
+   * @param params Parameters including apiId (required)
    */
   async getApi(params: any): Promise<ToolCallResponse> {
     if (!params.apiId) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId is required');
     }
-    const response = await this.axiosInstance.get(`/apis/${params.apiId}`, {
-      params: { include: params.include?.join(',') },
-      headers: { 'Accept': V10_ACCEPT_HEADER }
+    const response = await this.client.get(`/apis/${params.apiId}`, {
+      params: { include: params.include?.join(',') }
     });
     return this.createResponse(response.data);
   }
 
   /**
    * Create a new API
-   * @param data API data including name (required), summary, description, workspaceId (required)
+   * @param data API data including name (required), workspaceId (required)
    */
   async createApi(data: any): Promise<ToolCallResponse> {
     if (!data.name || !data.workspaceId) {
       throw new McpError(ErrorCode.InvalidParams, 'name and workspaceId are required');
     }
-    const response = await this.axiosInstance.post('/apis', data, {
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    const response = await this.client.post('/apis', data);
     return this.createResponse(response.data);
   }
 
   /**
    * Update an existing API
-   * @param args Parameters including apiId (required) and update data
+   * @param args Parameters including apiId (required)
    */
   async updateApi(args: any): Promise<ToolCallResponse> {
     if (!args.apiId) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId is required');
     }
     const { apiId, ...data } = args;
-    const response = await this.axiosInstance.put(`/apis/${apiId}`, data, {
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    const response = await this.client.put(`/apis/${apiId}`, data);
     return this.createResponse(response.data);
   }
 
   /**
    * Delete an API
-   * @param apiId The ID of the API to delete
+   * @param apiId The ID of the API to delete (required)
    */
   async deleteApi(apiId: string): Promise<ToolCallResponse> {
     if (!apiId) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId is required');
     }
-    await this.axiosInstance.delete(`/apis/${apiId}`, {
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    await this.client.delete(`/apis/${apiId}`);
     return this.createResponse({ message: 'API deleted successfully' });
   }
 
   /**
    * Add a collection to an API
-   * @param args Parameters including apiId, operationType, and operation-specific data
+   * @param args Parameters including apiId (required), operationType (required)
    */
   async addApiCollection(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.operationType) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId and operationType are required');
     }
     const { apiId, ...data } = args;
-    const response = await this.axiosInstance.post(`/apis/${apiId}/collections`, data, {
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    const response = await this.client.post(`/apis/${apiId}/collections`, data);
     return this.createResponse(response.data);
   }
 
   /**
    * Get a specific collection from an API
-   * @param args Parameters including apiId, collectionId, and optional versionId
+   * @param args Parameters including apiId (required), collectionId (required)
    */
   async getApiCollection(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.collectionId) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId and collectionId are required');
     }
     const { apiId, collectionId, ...params } = args;
-    const response = await this.axiosInstance.get(`/apis/${apiId}/collections/${collectionId}`, {
-      params,
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    const response = await this.client.get(`/apis/${apiId}/collections/${collectionId}`, { params });
     return this.createResponse(response.data);
   }
 
   /**
    * Create a schema for an API
-   * @param args Parameters including apiId, type, and files array
+   * @param args Parameters including apiId (required), type (required), files (required)
    */
   async createApiSchema(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.type || !args.files) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId, type, and files are required');
     }
     const { apiId, ...data } = args;
-    const response = await this.axiosInstance.post(`/apis/${apiId}/schemas`, data, {
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    const response = await this.client.post(`/apis/${apiId}/schemas`, data);
     return this.createResponse(response.data);
   }
 
   /**
    * Get a specific schema from an API
-   * @param args Parameters including apiId, schemaId, and optional versionId and output format
+   * @param args Parameters including apiId (required), schemaId (required)
    */
   async getApiSchema(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.schemaId) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId and schemaId are required');
     }
     const { apiId, schemaId, ...params } = args;
-    const response = await this.axiosInstance.get(`/apis/${apiId}/schemas/${schemaId}`, {
-      params,
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    const response = await this.client.get(`/apis/${apiId}/schemas/${schemaId}`, { params });
     return this.createResponse(response.data);
   }
 
   /**
    * Create a new version of an API
-   * @param args Parameters including apiId, name, schemas, collections, and optional fields
+   * @param args Parameters including apiId (required), name (required), schemas (required), collections (required)
    */
   async createApiVersion(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.name || !args.schemas || !args.collections) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId, name, schemas, and collections are required');
     }
     const { apiId, ...data } = args;
-    const response = await this.axiosInstance.post(`/apis/${apiId}/versions`, data, {
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    const response = await this.client.post(`/apis/${apiId}/versions`, data);
     return this.createResponse(response.data);
   }
 
   /**
    * Get all versions of an API
-   * @param args Parameters including apiId and optional pagination
+   * @param args Parameters including apiId (required)
    */
   async getApiVersions(args: any): Promise<ToolCallResponse> {
     if (!args.apiId) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId is required');
     }
     const { apiId, ...params } = args;
-    const response = await this.axiosInstance.get(`/apis/${apiId}/versions`, {
-      params,
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    const response = await this.client.get(`/apis/${apiId}/versions`, { params });
     return this.createResponse(response.data);
   }
 
   /**
    * Get a specific version of an API
-   * @param args Parameters including apiId and versionId
+   * @param args Parameters including apiId (required), versionId (required)
    */
   async getApiVersion(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.versionId) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId and versionId are required');
     }
-    const response = await this.axiosInstance.get(`/apis/${args.apiId}/versions/${args.versionId}`, {
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    const response = await this.client.get(`/apis/${args.apiId}/versions/${args.versionId}`);
     return this.createResponse(response.data);
   }
 
   /**
    * Update an API version
-   * @param args Parameters including apiId, versionId, and update data
+   * @param args Parameters including apiId (required), versionId (required), name (required)
    */
   async updateApiVersion(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.versionId || !args.name) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId, versionId, and name are required');
     }
     const { apiId, versionId, ...data } = args;
-    const response = await this.axiosInstance.put(`/apis/${apiId}/versions/${versionId}`, data, {
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    const response = await this.client.put(`/apis/${apiId}/versions/${versionId}`, data);
     return this.createResponse(response.data);
   }
 
   /**
    * Delete an API version
-   * @param args Parameters including apiId and versionId
+   * @param args Parameters including apiId (required), versionId (required)
    */
   async deleteApiVersion(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.versionId) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId and versionId are required');
     }
-    await this.axiosInstance.delete(`/apis/${args.apiId}/versions/${args.versionId}`, {
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    await this.client.delete(`/apis/${args.apiId}/versions/${args.versionId}`);
     return this.createResponse({ message: 'API version deleted successfully' });
   }
 
   /**
    * Get comments for an API
-   * @param args Parameters including apiId and optional pagination
+   * @param args Parameters including apiId (required)
    */
   async getApiComments(args: any): Promise<ToolCallResponse> {
     if (!args.apiId) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId is required');
     }
     const { apiId, ...params } = args;
-    const response = await this.axiosInstance.get(`/apis/${apiId}/comments`, {
-      params,
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    const response = await this.client.get(`/apis/${apiId}/comments`, { params });
     return this.createResponse(response.data);
   }
 
   /**
    * Create a new comment on an API
-   * @param args Parameters including apiId, content, and optional threadId
+   * @param args Parameters including apiId (required), content (required)
    */
   async createApiComment(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.content) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId and content are required');
     }
-    this.validateCommentLength(args.content);
     const { apiId, ...data } = args;
-    const response = await this.axiosInstance.post(`/apis/${apiId}/comments`, data, {
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    const response = await this.client.post(`/apis/${apiId}/comments`, data);
     return this.createResponse(response.data);
   }
 
   /**
    * Update an existing API comment
-   * @param args Parameters including apiId, commentId, and content
+   * @param args Parameters including apiId (required), commentId (required), content (required)
    */
   async updateApiComment(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.commentId || !args.content) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId, commentId, and content are required');
     }
-    this.validateCommentLength(args.content);
-    const response = await this.axiosInstance.put(
+    const response = await this.client.put(
       `/apis/${args.apiId}/comments/${args.commentId}`,
-      { content: args.content },
-      { headers: { 'Accept': V10_ACCEPT_HEADER } }
+      { content: args.content }
     );
     return this.createResponse(response.data);
   }
 
   /**
    * Delete an API comment
-   * @param args Parameters including apiId and commentId
+   * @param args Parameters including apiId (required), commentId (required)
    */
   async deleteApiComment(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.commentId) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId and commentId are required');
     }
-    await this.axiosInstance.delete(`/apis/${args.apiId}/comments/${args.commentId}`, {
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    await this.client.delete(`/apis/${args.apiId}/comments/${args.commentId}`);
     return this.createResponse({ message: 'Comment deleted successfully' });
   }
 
   /**
    * Get tags for an API
-   * @param apiId The ID of the API
+   * @param apiId The ID of the API (required)
    */
   async getApiTags(apiId: string): Promise<ToolCallResponse> {
     if (!apiId) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId is required');
     }
-    const response = await this.axiosInstance.get(`/apis/${apiId}/tags`, {
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    const response = await this.client.get(`/apis/${apiId}/tags`);
     return this.createResponse(response.data);
   }
 
   /**
    * Update tags for an API
-   * @param args Parameters including apiId and tags array
+   * @param args Parameters including apiId (required), tags (required)
    */
   async updateApiTags(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.tags) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId and tags are required');
     }
-    const response = await this.axiosInstance.put(
+    const response = await this.client.put(
       `/apis/${args.apiId}/tags`,
-      { tags: args.tags },
-      { headers: { 'Accept': V10_ACCEPT_HEADER } }
+      { tags: args.tags }
     );
     return this.createResponse(response.data);
   }
 
   /**
    * Get files in an API schema
-   * @param args Parameters including apiId, schemaId, and optional pagination/version
+   * @param args Parameters including apiId (required), schemaId (required)
    */
   async getApiSchemaFiles(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.schemaId) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId and schemaId are required');
     }
     const { apiId, schemaId, ...params } = args;
-    const response = await this.axiosInstance.get(`/apis/${apiId}/schemas/${schemaId}/files`, {
-      params,
-      headers: { 'Accept': V10_ACCEPT_HEADER }
-    });
+    const response = await this.client.get(`/apis/${apiId}/schemas/${schemaId}/files`, { params });
     return this.createResponse(response.data);
   }
 
   /**
    * Get contents of a schema file
-   * @param args Parameters including apiId, schemaId, filePath, and optional versionId
+   * @param args Parameters including apiId (required), schemaId (required), filePath (required)
    */
   async getSchemaFileContents(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.schemaId || !args.filePath) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId, schemaId, and filePath are required');
     }
     const { apiId, schemaId, filePath, versionId } = args;
-    const response = await this.axiosInstance.get(
+    const response = await this.client.get(
       `/apis/${apiId}/schemas/${schemaId}/files/${filePath}`,
-      {
-        params: { versionId },
-        headers: { 'Accept': V10_ACCEPT_HEADER }
-      }
+      { params: { versionId } }
     );
     return this.createResponse(response.data);
   }
 
   /**
    * Create or update a schema file
-   * @param args Parameters including apiId, schemaId, filePath, content, and optional root settings
+   * @param args Parameters including apiId (required), schemaId (required), filePath (required), content (required)
    */
   async createUpdateSchemaFile(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.schemaId || !args.filePath || !args.content) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId, schemaId, filePath, and content are required');
     }
     const { apiId, schemaId, filePath, ...data } = args;
-    const response = await this.axiosInstance.put(
+    const response = await this.client.put(
       `/apis/${apiId}/schemas/${schemaId}/files/${filePath}`,
-      data,
-      { headers: { 'Accept': V10_ACCEPT_HEADER } }
+      data
     );
     return this.createResponse(response.data);
   }
 
   /**
    * Delete a schema file
-   * @param args Parameters including apiId, schemaId, and filePath
+   * @param args Parameters including apiId (required), schemaId (required), filePath (required)
    */
   async deleteSchemaFile(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.schemaId || !args.filePath) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId, schemaId, and filePath are required');
     }
-    await this.axiosInstance.delete(
-      `/apis/${args.apiId}/schemas/${args.schemaId}/files/${args.filePath}`,
-      { headers: { 'Accept': V10_ACCEPT_HEADER } }
+    await this.client.delete(
+      `/apis/${args.apiId}/schemas/${args.schemaId}/files/${args.filePath}`
     );
     return this.createResponse({ message: 'Schema file deleted successfully' });
   }
 
   /**
    * Sync a collection with its schema
-   * @param args Parameters including apiId and collectionId
+   * @param args Parameters including apiId (required), collectionId (required)
    */
   async syncCollectionWithSchema(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.collectionId) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId and collectionId are required');
     }
-    const response = await this.axiosInstance.put(
+    const response = await this.client.put(
       `/apis/${args.apiId}/collections/${args.collectionId}/sync-with-schema-tasks`,
-      {},
-      { headers: { 'Accept': V10_ACCEPT_HEADER } }
+      {}
     );
     return this.createResponse(response.data);
   }
 
   /**
    * Get status of an asynchronous task
-   * @param args Parameters including apiId and taskId
+   * @param args Parameters including apiId (required), taskId (required)
    */
   async getTaskStatus(args: any): Promise<ToolCallResponse> {
     if (!args.apiId || !args.taskId) {
       throw new McpError(ErrorCode.InvalidParams, 'apiId and taskId are required');
     }
-    const response = await this.axiosInstance.get(
-      `/apis/${args.apiId}/tasks/${args.taskId}`,
-      { headers: { 'Accept': V10_ACCEPT_HEADER } }
-    );
+    const response = await this.client.get(`/apis/${args.apiId}/tasks/${args.taskId}`);
     return this.createResponse(response.data);
   }
 }
