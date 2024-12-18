@@ -23,11 +23,13 @@ postman-api-server/
 │   │   └── cli/               # CLI operations
 │   │       ├── runner.ts      # Collection runner functionality
 │   │       ├── governance.ts  # API governance checks
-│   │       └── auth.ts        # CLI authentication
+│   │       ├── auth.ts        # CLI authentication
+│   │       └── sync.ts        # Cloud result syncing
 │   └── reporting/             # Test run reporting
-       ├── formatters/
+       ├── formatters/         # Report formatters
        │   ├── cli.ts         # CLI output formatter
-       │   └── json.ts        # JSON report formatter
+       │   ├── json.ts        # JSON report formatter
+       │   └── junit.ts       # JUnit XML formatter
        └── manager.ts         # Report generation manager
 ```
 
@@ -36,17 +38,19 @@ postman-api-server/
 1. **Separation of Concerns**
    - API operations remain isolated in `tools/api/`
    - CLI-specific logic contained in `tools/cli/`
-   - Simplified reporting system focused on CLI and JSON output
+   - Cloud sync and reporting separated for clarity
 
 2. **Pattern Usage**
    - Strategy Pattern for report formats
    - Singleton Pattern for CLI auth management
    - Factory Pattern for report formatter creation
+   - Observer Pattern for API rate tracking
 
 3. **Extensibility**
    - New CLI commands can be added without modifying API tools
-   - Additional report formats can be supported through new formatters
-   - API governance rules configurable via external files
+   - Additional report formats via new formatters
+   - Configurable governance rules
+   - Pluggable cloud sync strategies
 
 ### 2.3 Component Relationships
 
@@ -64,13 +68,19 @@ graph TD
     C --> I[Collection Runner]
     C --> J[API Governance]
     C --> K[Auth Manager]
+    C --> L[Cloud Sync]
 
     I --> D
     J --> D
+    D --> M[Report Formatters]
+    D --> N[Cloud Reporting]
 
-    D --> L[Report Formatters]
-    L --> M[CLI Output]
-    L --> N[JSON Report]
+    M --> O[CLI Output]
+    M --> P[JSON Report]
+    M --> Q[JUnit XML]
+
+    N --> R[Result Sync]
+    N --> S[Rate Tracking]
 ```
 
 ## 3. Core Functionality
@@ -134,14 +144,14 @@ class CLIOperations implements ToolHandler {
               type: 'number',
               description: 'Request timeout in ms'
             },
+            reportFormat: {
+              type: 'string',
+              enum: ['cli', 'json', 'junit'],
+              description: 'Report format'
+            },
             reportPath: {
               type: 'string',
               description: 'Path to save the run report'
-            },
-            format: {
-              type: 'string',
-              enum: ['cli', 'json'],
-              description: 'Report format'
             },
             bail: {
               type: 'boolean',
@@ -150,6 +160,10 @@ class CLIOperations implements ToolHandler {
             suppressExitCode: {
               type: 'boolean',
               description: 'Always exit with code 0'
+            },
+            disableCloudSync: {
+              type: 'boolean',
+              description: 'Disable syncing results to Postman cloud'
             }
           },
           required: ['collection']
@@ -169,9 +183,18 @@ class CLIOperations implements ToolHandler {
               type: 'string',
               description: 'Governance ruleset name or path'
             },
+            rules: {
+              type: 'object',
+              description: 'Custom rule configurations',
+              additionalProperties: true
+            },
             reportPath: {
               type: 'string',
               description: 'Path to save the lint report'
+            },
+            disableCloudSync: {
+              type: 'boolean',
+              description: 'Disable syncing results to Postman cloud'
             }
           },
           required: ['api']
@@ -195,9 +218,18 @@ class CLIOperations implements ToolHandler {
               type: 'string',
               description: 'Environment ID or file path'
             },
+            reportFormat: {
+              type: 'string',
+              enum: ['cli', 'json', 'junit'],
+              description: 'Report format'
+            },
             reportPath: {
               type: 'string',
               description: 'Path to save the test report'
+            },
+            disableCloudSync: {
+              type: 'boolean',
+              description: 'Disable syncing results to Postman cloud'
             }
           },
           required: ['api', 'collection']
@@ -208,19 +240,29 @@ class CLIOperations implements ToolHandler {
 }
 ```
 
-
 ### 3.2 Collection Runner
 
 ```typescript
 class CollectionRunner {
+  constructor(
+    private cloudSync: CloudSyncManager,
+    private rateTracker: RateTracker
+  ) {}
+
   async runCollection(args: RunCollectionArgs): Promise<RunResult> {
+    // Track API usage
+    await this.rateTracker.checkLimit();
+
     // 1. Validate and load collection
     const collection = await this.loadCollection(args.collection);
+    await this.rateTracker.trackCall('collection_fetch');
 
     // 2. Set up environment if provided
-    const environment = args.environment
-      ? await this.loadEnvironment(args.environment)
-      : undefined;
+    let environment;
+    if (args.environment) {
+      environment = await this.loadEnvironment(args.environment);
+      await this.rateTracker.trackCall('environment_fetch');
+    }
 
     // 3. Configure run options
     const options = {
@@ -237,9 +279,15 @@ class CollectionRunner {
 
     // 5. Generate report
     const report = await this.reportManager.generateReport(results, {
-      format: args.format || 'cli',
+      format: args.reportFormat || 'cli',
       reportPath: args.reportPath
     });
+
+    // 6. Sync results to cloud if enabled
+    if (!args.disableCloudSync) {
+      await this.cloudSync.syncResults(results);
+      await this.rateTracker.trackCall('results_sync');
+    }
 
     return {
       success: results.failures === 0,
@@ -282,60 +330,58 @@ class CollectionRunner {
 }
 ```
 
-### 3.3 Contract Testing
-
-```typescript
-class ContractTester {
-  async runContractTests(args: ContractTestArgs): Promise<TestResult> {
-    // 1. Load API definition
-    const api = await this.loadAPIDefinition(args.api);
-
-    // 2. Load contract test collection
-    const tests = await this.loadCollection(args.collection);
-
-    // 3. Set up environment if provided
-    const environment = args.environment
-      ? await this.loadEnvironment(args.environment)
-      : undefined;
-
-    // 4. Execute contract tests
-    const results = await this.executeTests(api, tests, environment);
-
-    // 5. Generate report
-    const report = await this.reportManager.generateReport(results, {
-      format: 'json',
-      reportPath: args.reportPath
-    });
-
-    return {
-      success: results.failures === 0,
-      violations: results.violations,
-      summary: results.summary,
-      report
-    };
-  }
-}
-```
-
-### 3.4 API Governance
+### 3.3 API Governance
 
 ```typescript
 class APIGovernance {
+  constructor(
+    private cloudSync: CloudSyncManager,
+    private rateTracker: RateTracker
+  ) {}
+
   async lintAPI(args: LintAPIArgs): Promise<LintResult> {
+    // Track API usage
+    await this.rateTracker.checkLimit();
+
     // 1. Load API definition
     const api = await this.loadAPIDefinition(args.api);
 
-    // 2. Load ruleset
-    const ruleset = await this.loadRuleset(args.ruleset);
+    // 2. Load governance rules
+    const rules = await this.loadRules(args.ruleset, args.rules);
+    await this.rateTracker.trackCall('rules_fetch');
 
     // 3. Run governance checks
-    const violations = await this.checkRules(api, ruleset);
+    const violations = await this.checkRules(api, rules);
 
-    return {
+    // 4. Generate report
+    const report = {
       success: violations.length === 0,
       violations,
       summary: this.generateSummary(violations)
     };
+
+    // 5. Sync results if enabled
+    if (!args.disableCloudSync) {
+      await this.cloudSync.syncLintResults(report);
+      await this.rateTracker.trackCall('results_sync');
+    }
+
+    return report;
+  }
+
+  private async loadRules(
+    ruleset?: string,
+    customRules?: Record<string, unknown>
+  ): Promise<GovernanceRules> {
+    // Load base ruleset
+    const baseRules = ruleset
+      ? await this.loadRulesetFromSource(ruleset)
+      : this.getDefaultRules();
+
+    // Merge with custom rules if provided
+    return customRules
+      ? this.mergeRules(baseRules, customRules)
+      : baseRules;
   }
 }
 ```
@@ -381,8 +427,8 @@ class AuthManager {
     }
     return this.apiKey;
   }
-}
 ```
+
 
 ## 5. Reporting System
 
@@ -395,15 +441,19 @@ interface ReportFormatter {
 
 class CLIFormatter implements ReportFormatter {
   async format(results: RunResult): Promise<string> {
-    // Format results for CLI output with colors and formatting
     return this.formatCLIOutput(results);
   }
 }
 
 class JSONFormatter implements ReportFormatter {
   async format(results: RunResult): Promise<string> {
-    // Format results as structured JSON
     return JSON.stringify(results, null, 2);
+  }
+}
+
+class JUnitFormatter implements ReportFormatter {
+  async format(results: RunResult): Promise<string> {
+    return this.formatJUnitXML(results);
   }
 }
 ```
@@ -417,7 +467,8 @@ class ReportManager {
   constructor() {
     this.formatters = new Map([
       ['cli', new CLIFormatter()],
-      ['json', new JSONFormatter()]
+      ['json', new JSONFormatter()],
+      ['junit', new JUnitFormatter()]
     ]);
   }
 
@@ -427,13 +478,16 @@ class ReportManager {
   ): Promise<string> {
     const formatter = this.formatters.get(options.format);
     if (!formatter) {
-      throw new Error(`Unsupported format: ${options.format}`);
+      throw new CLIError(
+        CLIErrorCode.ValidationError,
+        `Unsupported format: ${options.format}`
+      );
     }
 
     const report = await formatter.format(results);
 
-    if (options.exportPath) {
-      await this.exportReport(report, options.exportPath);
+    if (options.reportPath) {
+      await this.exportReport(report, options.reportPath);
     }
 
     return report;
@@ -449,7 +503,9 @@ enum CLIErrorCode {
   CollectionNotFound = 'COLLECTION_NOT_FOUND',
   EnvironmentNotFound = 'ENVIRONMENT_NOT_FOUND',
   ExecutionError = 'EXECUTION_ERROR',
-  ValidationError = 'VALIDATION_ERROR'
+  ValidationError = 'VALIDATION_ERROR',
+  RateLimit = 'RATE_LIMIT_ERROR',
+  CloudSyncError = 'CLOUD_SYNC_ERROR'
 }
 
 class CLIError extends Error {
@@ -467,50 +523,64 @@ class ErrorHandler {
     if (error instanceof CLIError) {
       return this.handleCLIError(error);
     }
+    if (error instanceof RateLimitError) {
+      return this.handleRateLimit(error);
+    }
     if (axios.isAxiosError(error)) {
       return this.handleAPIError(error);
     }
     return this.handleUnknownError(error);
+  }
+
+  private handleRateLimit(error: RateLimitError): ToolCallResponse {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Rate limit exceeded. Please wait ${error.retryAfter} seconds.`
+        }
+      ],
+      isError: true
+    };
   }
 }
 ```
 
 ## 7. Implementation Strategy
 
-1. Phase 1: Core Authentication & File Operations
+1. Phase 1: Core Authentication & Rate Management
    - Implement CLI login/logout
    - Add secure API key management
-   - Implement local file loading capabilities
+   - Implement rate tracking system
    - Set up error handling
 
-2. Phase 2: Collection Runner
+2. Phase 2: Collection Runner & Cloud Sync
    - Basic collection execution
    - Support for local and remote collections
-   - CLI output formatting
-   - JSON report generation
+   - Cloud result syncing
+   - Multiple report formats
 
-3. Phase 3: Contract Testing & API Governance
+3. Phase 3: API Governance
    - API definition loading
-   - Contract test execution
-   - Rule checking implementation
+   - Configurable rule system
    - Violation reporting
+   - Cloud sync integration
 
 4. Phase 4: Testing & Documentation
    - Unit tests for all components
    - Integration tests
+   - Rate limit tests
    - CLI usage documentation
 
 ## 8. Conclusion
 
-This design provides a comprehensive implementation of Postman CLI functionality through the MCP server. It prioritizes the core features while maintaining flexibility for future extensions.
+This design provides a comprehensive implementation of Postman CLI functionality through the MCP server, with particular attention to:
 
-Key benefits of this design:
-
-1. **Complete CLI Feature Support**
-   - Collection running from multiple sources
-   - Contract testing capabilities
-   - API governance checking
-   - Local file operations
+1. **Cloud Integration**
+   - Automatic result syncing
+   - Rate limit handling
+   - Usage tracking
+   - Configurable sync behavior
 
 2. **Robust Architecture**
    - Clear separation of concerns
@@ -519,9 +589,15 @@ Key benefits of this design:
    - Extensible reporting system
 
 3. **User-Friendly Integration**
-   - Matches CLI command structure
-   - Support for local and remote resources
-   - Detailed reporting options
-   - Consistent error handling
+   - Multiple report formats
+   - Local file support
+   - Custom rule configurations
+   - Detailed error messages
 
-This implementation provides a solid foundation for integrating Postman CLI capabilities while maintaining the flexibility to add more features as needed.
+4. **Performance & Reliability**
+   - Rate limit awareness
+   - Automatic retries
+   - Usage optimization
+   - Error recovery
+
+This implementation provides a solid foundation for integrating Postman CLI capabilities while maintaining flexibility for future extensions and ensuring reliable cloud integration.
