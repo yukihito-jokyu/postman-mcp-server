@@ -7,3 +7,4 @@ export * from './collections/index.js';
 export * from './users/index.js';
 export * from './apis/index.js';
 export * from './monitors/index.js';
+export * from './additional-features/index.js';
