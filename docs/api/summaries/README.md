@@ -22,9 +22,22 @@ Each of the following documents contains a summary of the Postman API functional
 
 **Using Cline 2.2.2 and Continue 0.9.246**
 
+Building out the Postman API functionality within the MCP server tools follows this general order of operations:
+
+1. Split Postman API OpenAPI 3 definition into individual yaml files.
+2. Peruse the individual yaml files to produce summary markdown documents.
+3. Use the summary markdown documents to first implement the MCP server tools and later to cross-check against the implementation.
+4. Using MCP documentation, ensure the MCP server tools are correctly implemented.
+
+The OoO is not strictly linear and the processes involved are iterative. The goal is to continually add and correct details each time we review. The process is more additive and augmentative early on; later on it becomes more about cross-checking, correcting, and reducing. The goal is to keep files concise and focused.
+
+Some version of this process can be repeated to implement changes to the Postman API spec. The same can be done for the MCP server tools implementation.
+
+
 ### Utilizing MCP Server Tools
 
 #### List Workspaces
+
 ```prompt
 Use Postman tools to list our workspaces.
 ```
@@ -214,8 +227,6 @@ NOTE2: The best code is code that doesn't need to be written. If we analyse the 
 ```prompt
 @https://modelcontextprotocol.io/docs/concepts/resources
 
-@https://modelcontextprotocol.io/docs/concepts/tools
-
 Peruse the Model Context Protocol documentation. In order to expose data to models automatically, server authors should use a model-controlled primitive such as Tools.
 
 Review the MCP server details to ensure the "List Resources"  endpoint is functionality fully and correctly. It should return a list of all resources that are available for the user to interact with.
@@ -226,13 +237,37 @@ Review the MCP server details to ensure the "List Resources"  endpoint is functi
 ```prompt
 @https://modelcontextprotocol.io/docs/concepts/prompts
 
-@https://modelcontextprotocol.io/docs/concepts/tools
 
 Peruse the Model Context Protocol documentation. In order to expose data to models automatically, server authors should use a model-controlled primitive such as Tools.
 
 Review the MCP server details to ensure the "List Prompts"  endpoint is functionality fully and correctly. It should return a list of all resources that are available for the user to interact with.
 
 ```
+
+```prompt
+
+@https://modelcontextprotocol.io/docs/concepts/tools
+
+Peruse the Model Context Protocol documentation. In order to expose data to models automatically, server authors should use a model-controlled primitive such as Tools.
+
+Review the MCP server details to ensure the "List Tools"  endpoint is functionality fully and correctly. It should return a list of all resources that are available for the user to interact with.
+
+NOTE: We may need to add a new handler interface called ToolResourceHandler. The existing ToolHandler is used for the tool itself, not the resources that the tool can interact with. See @src/types/index.ts for the existing ToolHandler, ResourceHandler interfaces.
+
+```
+
+```prompt
+
+@https://modelcontextprotocol.io/docs/concepts/transports
+
+Peruse the Model Context Protocol transports documentation. Transports in the Model Context Protocol (MCP) provide the foundation for communication between clients and servers. A transport handles the underlying mechanics of how messages are sent and received.
+
+While the TypeScript MCP SDK handles all of the server <=> client communication including implementing the transport layer, the server still needs to implement the SDK correctly.
+
+Review @src/server.ts to ensure the MCP server is correctly implementing the TypeScript SDK following best practices and security recommendations.
+
+```
+
 
 
 ### Improving Documentation

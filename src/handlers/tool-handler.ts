@@ -4,9 +4,19 @@ import {
   McpError,
   ErrorCode
 } from '@modelcontextprotocol/sdk/types.js';
+import { z } from 'zod';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { ToolDefinition, ToolHandler as IToolHandler } from '../types/index.js';
+import {
+  ToolDefinition,
+  ToolHandler as IToolHandler,
+  ToolResource
+} from '../types/index.js';
 import axios from 'axios';
+
+// Schema for listing tool resources
+const ListToolResourcesRequestSchema = z.object({
+  method: z.literal('tools/resources/list')
+});
 
 /**
  * Handles tool-related requests and connects them to tool implementations
@@ -23,12 +33,49 @@ export class ToolHandler {
   private setupHandlers() {
     this.setupListTools();
     this.setupCallTool();
+    this.setupListToolResources();
   }
 
   private setupListTools() {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
       tools: this.toolDefinitions,
     }));
+  }
+
+  private setupListToolResources() {
+    this.server.setRequestHandler(ListToolResourcesRequestSchema, async () => {
+      try {
+        const allResources: ToolResource[] = [];
+
+        // Gather resources from all tool handlers
+        for (const [toolName, handler] of this.toolHandlers.entries()) {
+          if ('listToolResources' in handler) {
+            const resources = await handler.listToolResources();
+            allResources.push(...resources);
+          }
+        }
+
+        return {
+          resources: allResources
+        };
+      } catch (error) {
+        if (error instanceof McpError) {
+          throw error;
+        }
+        throw new McpError(
+          ErrorCode.InternalError,
+          error instanceof Error ? error.message : 'Failed to list tool resources'
+        );
+      }
+    });
+  }
+
+  private async validateToolResource(toolName: string, resourceUri: string): Promise<boolean> {
+    const handler = this.toolHandlers.get(toolName);
+    if (!handler || !('canHandleResource' in handler)) {
+      return false;
+    }
+    return handler.canHandleResource(resourceUri);
   }
 
   private setupCallTool() {
@@ -52,6 +99,17 @@ export class ToolHandler {
             ErrorCode.MethodNotFound,
             `No handler found for tool: ${name}`
           );
+        }
+
+        // If the tool is operating on a resource, validate access
+        if ('resourceUri' in args && typeof args.resourceUri === 'string') {
+          const canHandle = await this.validateToolResource(name, args.resourceUri);
+          if (!canHandle) {
+            throw new McpError(
+              ErrorCode.InvalidRequest,
+              `Tool ${name} cannot operate on resource: ${args.resourceUri}`
+            );
+          }
         }
 
         // Execute the tool call
