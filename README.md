@@ -17,6 +17,8 @@ This project is part of the Model Context Protocol (MCP) initiative from Anthrop
 > [!NOTE]
 > AI Generated Code. I used Cline v2.2.2 with Claude 3.5 Sonnet (2024-10-22). See docs/README.md for prompts and details about how this code was generated.
 
+<a href="https://glama.ai/mcp/servers/zoig549xfd"><img width="380" height="200" src="https://glama.ai/mcp/servers/zoig549xfd/badge" alt="postman-mcp-server MCP server" /></a>
+
 ---
 
 * [Overview](#overview)
