@@ -1,4 +1,5 @@
 # Postman MCP Server
+[![smithery badge](https://smithery.ai/badge/postman-api-server)](https://smithery.ai/server/postman-api-server)
 **Version:** v0.2.0
 
 An MCP server that provides access to the [Postman](https://www.postman.com/) API. Functionality is based on the [official OpenAPI specification](https://www.postman.com/postman/postman-public-workspace/documentation/i2uqzpp/postman-api). For more information, see the [Postman API documentation](https://www.postman.com/postman-public-workspace/).
@@ -79,6 +80,14 @@ Postman MCP Server is a TypeScript-based MCP server that integrates with the Pos
 - **Enterprise Features**: Advanced role controls and SCIM support for enterprise environments.
 
 ## Installation
+
+### Installing via Smithery
+
+To install Postman MCP Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/postman-api-server):
+
+```bash
+npx -y @smithery/cli install postman-api-server --client claude
+```
 
 ### Prerequisites
 - [Node.js](https://nodejs.org/) installed.
