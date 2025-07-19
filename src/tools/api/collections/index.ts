@@ -197,7 +197,7 @@ export class CollectionTools extends BasePostmanTool implements ToolHandler {
     const response = await this.client.post(
       `/collections/${args.collection_id}/requests`,
       args.request,
-      { params: args.folder_id ? { folder_id: args.folder_id } : undefined }
+      { params: args.folder_id ? { folder: args.folder_id } : undefined }
     );
     return this.createResponse(response.data);
   }
